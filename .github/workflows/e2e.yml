@@ -57,14 +57,33 @@ jobs:
             npx playwright install-deps chromium
           fi
 
-      # global-setup.ts handles: Firebase emulators, Firestore seeding,
-      # mock Socket.IO server, and Next.js warmup.
-      # playwright.config.ts webServer starts Next.js on :3001.
+      # Start Firebase emulators BEFORE Playwright so that:
+      #   1. next build can SSR pages that read Firestore (production mode in CI)
+      #   2. global-setup.ts detects them as "already running" and just seeds data
+      - name: Start Firebase emulators
+        run: |
+          firebase emulators:start \
+            --project chat-vote-dev \
+            --only auth,firestore \
+            --config firebase-test.json &
+          # Wait until both emulators are reachable
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8081 > /dev/null 2>&1 && \
+            curl -sf http://localhost:9099 > /dev/null 2>&1 && break
+            sleep 2
+          done
+          echo "Firebase emulators ready"
+        working-directory: CHATVOTE-BackEnd/firebase
+
+      # global-setup.ts handles: Firestore seeding, mock Socket.IO server, and
+      # Next.js warmup. playwright.config.ts webServer builds + starts Next.js on :3001.
       - name: Run Playwright E2E tests
         working-directory: CHATVOTE-FrontEnd
         run: npx playwright test --reporter=list
         env:
           CI: 'true'
+          FIRESTORE_EMULATOR_HOST: localhost:8081
+          FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
 
       - name: Upload Playwright report
         if: failure()
