@@ -137,6 +137,7 @@ test.describe('Authentication Extended', () => {
 
     await page.locator('input[type="email"]').fill(TEST_EMAIL);
     await page.locator('input[type="password"]').fill(TEST_PASSWORD);
+
     await getSubmitButton(page).click();
 
     // On success, one of two things happens:

@@ -212,6 +212,17 @@ async function seedEmulatorData() {
   await muniBatch.commit();
   console.log(`Seeded ${testMunicipalities.length} municipalities`);
 
+  // Seed a test chat session (used by navigation test 1.9)
+  await db.collection('chat_sessions').doc('e2e-nav-test-session').set({
+    user_id: 'anonymous',
+    party_ids: [],
+    title: 'E2E Test Session',
+    is_public: false,
+    created_at: admin.firestore.Timestamp.now(),
+    updated_at: admin.firestore.Timestamp.now(),
+  });
+  console.log('Seeded test chat session');
+
   // Seed system status
   await db.collection('system_status').doc('llm_status').set({ is_at_rate_limit: false });
   console.log('Seeded system status');

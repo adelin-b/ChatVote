@@ -3,8 +3,11 @@ import { goToChat } from '../support/test-helpers';
 
 test.describe('Navigation Extended', () => {
   test('1.9 Direct navigation to /chat with chat_id redirects to /chat/:chatId', async ({ page }) => {
-    const testId = 'some-test-id';
+    // Use a session ID that is seeded in global-setup.ts so the SSR layer
+    // finds the document and does not redirect back to /chat.
+    const testId = 'e2e-nav-test-session';
     await page.goto(`/chat?chat_id=${testId}`);
+
     // The server-side redirect should send the browser to /chat/<chatId>
     await page.waitForURL(`**/chat/${testId}`, { timeout: 10000 });
     await expect(page).toHaveURL(new RegExp(`/chat/${testId}`));
