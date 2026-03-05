@@ -1,8 +1,8 @@
 """
 Auto-generate golden test cases from crawled content using DeepEval Synthesizer.
 
-Reads markdown files from firebase/firestore_data/dev/crawled_content/
-and generates question/answer pairs suitable for RAG evaluation.
+Reads markdown files from firebase/firestore_data/dev/crawled_content/,
+chunks them with LangChain, and generates question/answer pairs for RAG evaluation.
 
 Usage:
     poetry run python scripts/generate_goldens.py
@@ -13,6 +13,8 @@ import argparse
 import json
 import os
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +33,6 @@ def _build_ollama_model():
     ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
 
-    # Check Ollama is reachable
     try:
         import urllib.request
         urllib.request.urlopen(ollama_url, timeout=3)
@@ -43,14 +44,9 @@ def _build_ollama_model():
     return OllamaModel(model=ollama_model, base_url=ollama_url, temperature=0.0)
 
 
-def _collect_markdown_files(content_dir: Path, entity_type: str | None = None) -> list[str]:
-    """Collect markdown file paths from crawled content directory.
-
-    Args:
-        content_dir: Root crawled_content directory
-        entity_type: Optional filter — "parties" or "candidates"
-    """
-    md_files = []
+def _collect_markdown_files(content_dir: Path, entity_type: str | None = None) -> list[dict]:
+    """Collect markdown files with metadata from crawled content directory."""
+    results = []
     search_dirs = []
 
     if entity_type:
@@ -58,20 +54,30 @@ def _collect_markdown_files(content_dir: Path, entity_type: str | None = None) -
     else:
         search_dirs.extend([content_dir / "parties", content_dir / "candidates"])
 
+    skip_names = {"mentions-legales", "politique-de-confidentialite", "cgu", "mentions",
+                  "copie-de-mentions-legales", "desabonnement-des-listes-de-diffusion",
+                  "informations-juridiques", "presse", "contacts-presse", "kit-graphique",
+                  "charte-graphique"}
+
     for search_dir in search_dirs:
         if not search_dir.exists():
             continue
         for md_file in sorted(search_dir.rglob("*.md")):
-            # Skip tiny files (< 200 chars) and legal/privacy pages
-            content = md_file.read_text(errors="ignore")
+            content = md_file.read_text(errors="ignore").strip()
             if len(content) < 200:
                 continue
-            skip_names = {"mentions-legales", "politique-de-confidentialite", "cgu", "mentions"}
             if md_file.stem in skip_names:
                 continue
-            md_files.append(str(md_file))
 
-    return md_files
+            info = _extract_entity_info(str(md_file))
+            results.append({
+                "path": str(md_file),
+                "content": content,
+                "name": md_file.stem,
+                **info,
+            })
+
+    return results
 
 
 def _extract_entity_info(filepath: str) -> dict:
@@ -79,78 +85,109 @@ def _extract_entity_info(filepath: str) -> dict:
     path = Path(filepath)
     parts = path.parts
 
-    # Find the entity type and ID from path
-    # e.g., .../crawled_content/parties/renaissance/markdown/index.md
     try:
         cc_idx = parts.index("crawled_content")
-        entity_type = parts[cc_idx + 1]  # "parties" or "candidates"
-        entity_id = parts[cc_idx + 2]    # e.g., "renaissance"
+        entity_type = parts[cc_idx + 1]
+        entity_id = parts[cc_idx + 2]
         return {"entity_type": entity_type, "entity_id": entity_id}
     except (ValueError, IndexError):
         return {"entity_type": "unknown", "entity_id": "unknown"}
 
 
+def _chunk_documents(docs: list[dict], chunk_size: int = 800, chunk_overlap: int = 100) -> list[list[str]]:
+    """Chunk documents into context groups using LangChain splitter.
+
+    Returns list of contexts, where each context is a list of 1-3 related chunks
+    from the same document.
+    """
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ". ", " ", ""],
+    )
+
+    contexts = []
+    for doc in docs:
+        chunks = splitter.split_text(doc["content"])
+        if not chunks:
+            continue
+
+        # Add entity info as prefix to each chunk for context
+        prefix = f"[Source: {doc['entity_type']}/{doc['entity_id']} — {doc['name']}]\n"
+        chunks = [prefix + c for c in chunks]
+
+        # Group chunks into contexts of 2-3 related chunks
+        for i in range(0, len(chunks), 2):
+            context_group = chunks[i:i + 3]
+            if len(context_group) >= 1:
+                contexts.append(context_group)
+
+    return contexts
+
+
 def generate_goldens(
-    max_per_doc: int = 2,
+    max_per_context: int = 2,
     max_docs: int = 20,
     output_path: Path = DEFAULT_OUTPUT,
     entity_type: str | None = None,
 ):
     """Generate golden test cases from crawled documents."""
     from deepeval.synthesizer import Synthesizer
-    from deepeval.synthesizer.config import (
-        ContextConstructionConfig,
-        EvolutionConfig,
-        FiltrationConfig,
-    )
+    from deepeval.synthesizer.config import EvolutionConfig, FiltrationConfig
     from deepeval.synthesizer.types import Evolution
+
+    start_time = time.time()
 
     print("Building Ollama model for synthesis...")
     model = _build_ollama_model()
 
     print(f"Collecting markdown files from {CRAWLED_CONTENT_DIR}...")
-    md_files = _collect_markdown_files(CRAWLED_CONTENT_DIR, entity_type)
+    docs = _collect_markdown_files(CRAWLED_CONTENT_DIR, entity_type)
 
-    if not md_files:
+    if not docs:
         print("ERROR: No markdown files found in crawled content directory.")
         print(f"Expected at: {CRAWLED_CONTENT_DIR}")
         sys.exit(1)
 
-    # Limit documents to process
-    if len(md_files) > max_docs:
-        # Prefer programme/projet/index files
+    # Limit and prioritize documents
+    if len(docs) > max_docs:
         priority_stems = {"programme", "projet", "index", "nos-valeurs", "les-urgences",
-                          "engagements", "pacte-lyonnais", "lyon-de-demain", "nos-ambitions-municipales"}
-        priority = [f for f in md_files if Path(f).stem in priority_stems]
-        rest = [f for f in md_files if f not in priority]
-        md_files = (priority + rest)[:max_docs]
+                          "engagements", "pacte-lyonnais", "lyon-de-demain",
+                          "nos-ambitions-municipales", "notre-programme", "notre-projet"}
+        priority = [d for d in docs if d["name"] in priority_stems]
+        rest = [d for d in docs if d not in priority]
+        docs = (priority + rest)[:max_docs]
 
-    print(f"Using {len(md_files)} documents for golden generation:")
-    for f in md_files:
-        info = _extract_entity_info(f)
-        print(f"  - [{info['entity_type']}/{info['entity_id']}] {Path(f).name}")
+    print(f"Using {len(docs)} documents for golden generation:")
+    for d in docs:
+        print(f"  - [{d['entity_type']}/{d['entity_id']}] {d['name']}.md ({len(d['content'])} chars)")
 
-    # Configure synthesizer for political Q&A
-    context_config = ContextConstructionConfig(
-        chunk_size=800,
-        chunk_overlap=100,
-        max_contexts_per_document=3,
-        min_contexts_per_document=1,
-        context_quality_threshold=0.3,  # Lower for Ollama
-    )
+    # Chunk documents manually (avoids chromadb dependency)
+    print("\nChunking documents...")
+    contexts = _chunk_documents(docs)
+    print(f"Created {len(contexts)} context groups from {len(docs)} documents")
 
+    # Limit contexts to keep generation time reasonable
+    max_contexts = max_docs * 3
+    if len(contexts) > max_contexts:
+        contexts = contexts[:max_contexts]
+        print(f"Limited to {max_contexts} contexts")
+
+    # Configure synthesizer
     evolution_config = EvolutionConfig(
         num_evolutions=1,
         evolutions={
-            Evolution.REASONING: 0.3,      # "Why does X propose Y?"
-            Evolution.COMPARATIVE: 0.3,    # "Compare X and Y positions"
-            Evolution.CONCRETIZING: 0.2,   # "Give specific examples"
-            Evolution.IN_BREADTH: 0.2,     # Broader topic coverage
+            Evolution.REASONING: 0.3,
+            Evolution.COMPARATIVE: 0.3,
+            Evolution.CONCRETIZING: 0.2,
+            Evolution.IN_BREADTH: 0.2,
         },
     )
 
     filtration_config = FiltrationConfig(
-        synthetic_input_quality_threshold=0.3,  # Lower for Ollama
+        synthetic_input_quality_threshold=0.3,
         max_quality_retries=2,
         critic_model=model,
     )
@@ -163,32 +200,38 @@ def generate_goldens(
         filtration_config=filtration_config,
     )
 
-    print("Generating goldens (this may take a while with Ollama)...")
+    print(f"Generating goldens from {len(contexts)} contexts (this may take a while with Ollama)...")
     try:
-        goldens = synthesizer.generate_goldens_from_docs(
-            document_paths=md_files,
-            max_goldens_per_context=max_per_doc,
+        goldens = synthesizer.generate_goldens_from_contexts(
+            contexts=contexts,
+            max_goldens_per_context=max_per_context,
             include_expected_output=True,
-            context_construction_config=context_config,
         )
     except Exception as e:
         print(f"Error during generation: {e}")
-        print("Trying with fewer documents...")
-        md_files = md_files[:5]
-        goldens = synthesizer.generate_goldens_from_docs(
-            document_paths=md_files,
-            max_goldens_per_context=max_per_doc,
+        print("Trying with fewer contexts (first 10)...")
+        goldens = synthesizer.generate_goldens_from_contexts(
+            contexts=contexts[:10],
+            max_goldens_per_context=max_per_context,
             include_expected_output=True,
-            context_construction_config=context_config,
         )
+
+    elapsed = time.time() - start_time
 
     # Convert to our test format
     result = {
         "generated": [],
         "metadata": {
-            "source_docs": len(md_files),
+            "timestamp": datetime.now().isoformat(),
+            "source_docs": len(docs),
+            "total_contexts": len(contexts),
             "total_goldens": len(goldens),
             "model": os.environ.get("OLLAMA_MODEL", "llama3.2"),
+            "elapsed_s": round(elapsed, 1),
+            "docs_used": [
+                {"entity_type": d["entity_type"], "entity_id": d["entity_id"], "name": d["name"]}
+                for d in docs
+            ],
         },
     }
 
@@ -198,12 +241,19 @@ def generate_goldens(
             "expected_output": golden.expected_output or "",
             "retrieval_context": golden.context or [],
         }
+        # Extract source info from context if available
+        if golden.context:
+            for ctx in golden.context:
+                if ctx.startswith("[Source:"):
+                    source_line = ctx.split("]")[0] + "]"
+                    entry["source"] = source_line
+                    break
         result["generated"].append(entry)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(result, indent=2, ensure_ascii=False))
 
-    print(f"\nGenerated {len(goldens)} golden test cases")
+    print(f"\nGenerated {len(goldens)} golden test cases in {elapsed:.0f}s")
     print(f"Saved to: {output_path}")
 
     # Show samples
@@ -215,14 +265,14 @@ def generate_goldens(
 
 def main():
     parser = argparse.ArgumentParser(description="Generate golden test cases from crawled content")
-    parser.add_argument("--max-per-doc", type=int, default=2, help="Max goldens per document context")
+    parser.add_argument("--max-per-context", type=int, default=2, help="Max goldens per context group")
     parser.add_argument("--max-docs", type=int, default=20, help="Max documents to process")
     parser.add_argument("--output", type=str, default=str(DEFAULT_OUTPUT), help="Output JSON path")
     parser.add_argument("--type", choices=["parties", "candidates"], help="Filter by entity type")
     args = parser.parse_args()
 
     generate_goldens(
-        max_per_doc=args.max_per_doc,
+        max_per_context=args.max_per_context,
         max_docs=args.max_docs,
         output_path=Path(args.output),
         entity_type=args.type,

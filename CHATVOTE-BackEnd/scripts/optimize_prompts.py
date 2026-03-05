@@ -161,6 +161,7 @@ Question de l'utilisateur : {input}"""
         algorithm=gepa,
         model_callback=model_callback,
         metrics=metrics,
+        optimizer_model=model,  # Use Ollama for prompt mutations too
     )
 
     optimized_prompt = optimizer.optimize(
@@ -230,6 +231,7 @@ Requête optimisée:"""
         algorithm=gepa,
         model_callback=model_callback,
         metrics=metrics,
+        optimizer_model=model,  # Use Ollama for prompt mutations too
     )
 
     optimized_prompt = optimizer.optimize(
