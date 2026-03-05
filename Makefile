@@ -25,11 +25,16 @@ setup:
 	cd CHATVOTE-BackEnd/firebase && npm install
 	@echo ""
 	@echo "==> Setting up Ollama (LLM engine)..."
-	@if command -v ollama > /dev/null 2>&1; then \
+	@CHAT_MODEL=$$(grep -E '^OLLAMA_MODEL=' CHATVOTE-BackEnd/.env 2>/dev/null | tail -1 | cut -d= -f2); \
+	EMBED_MODEL=$$(grep -E '^OLLAMA_EMBED_MODEL=' CHATVOTE-BackEnd/.env 2>/dev/null | tail -1 | cut -d= -f2); \
+	CHAT_MODEL=$${CHAT_MODEL:-llama3.2}; \
+	EMBED_MODEL=$${EMBED_MODEL:-nomic-embed-text}; \
+	if command -v ollama > /dev/null 2>&1; then \
 		echo "     Ollama is installed natively (GPU accelerated)."; \
 		echo "     Pulling models (this may take a few minutes on first run)..."; \
-		ollama pull llama3.2 || true; \
-		ollama pull nomic-embed-text || true; \
+		echo "     Chat: $$CHAT_MODEL, Embed: $$EMBED_MODEL"; \
+		ollama pull $$CHAT_MODEL || true; \
+		ollama pull $$EMBED_MODEL || true; \
 	else \
 		echo "     Ollama not found. For best performance on macOS, install natively:"; \
 		echo "       brew install ollama && ollama serve"; \
