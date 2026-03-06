@@ -8,6 +8,7 @@ Run:
     poetry run deepeval test run tests/eval/test_rag_generator.py -v
 """
 
+import asyncio
 import json
 import os
 import sys
@@ -26,6 +27,23 @@ DATASETS_DIR = Path(__file__).parent / "datasets"
 def _load_golden(category: str) -> list[dict]:
     data = json.loads((DATASETS_DIR / "golden_questions.json").read_text())
     return data.get(category, [])
+
+
+_module_loop = None
+
+
+def _get_loop():
+    global _module_loop
+    if _module_loop is None or _module_loop.is_closed():
+        _module_loop = asyncio.new_event_loop()
+    return _module_loop
+
+
+def teardown_module(module):
+    global _module_loop
+    if _module_loop and not _module_loop.is_closed():
+        _module_loop.close()
+        _module_loop = None
 
 
 def _skip_if_no_llm():
@@ -110,15 +128,16 @@ def test_generator_faithfulness(
     generate_fn, Party, LLMSize, Document = llm_generator
 
     party_id = golden["party_ids"][0]
-    party = Party(party_id=party_id, name=party_id, long_name=party_id)
+    party = Party(
+        party_id=party_id, name=party_id, long_name=party_id,
+        description="", website_url="", candidate="", election_manifesto_url="",
+    )
 
     docs = _build_docs(party_id)
     retrieval_context = [doc.page_content for doc in docs]
 
     if not retrieval_context:
         pytest.skip(f"No mock context for party {party_id}")
-
-    import asyncio
 
     async def _generate():
         stream = await generate_fn(
@@ -134,9 +153,8 @@ def test_generator_faithfulness(
             chunks.append(chunk.content if hasattr(chunk, "content") else str(chunk))
         return "".join(chunks)
 
-    loop = asyncio.new_event_loop()
+    loop = _get_loop()
     actual_output = loop.run_until_complete(_generate())
-    loop.close()
 
     test_case = LLMTestCase(
         input=golden["input"],

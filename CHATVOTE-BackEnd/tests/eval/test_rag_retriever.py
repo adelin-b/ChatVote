@@ -8,6 +8,7 @@ Run:
     poetry run deepeval test run tests/eval/test_rag_retriever.py -v
 """
 
+import asyncio
 import json
 import os
 import sys
@@ -40,6 +41,27 @@ def _skip_if_no_qdrant():
 
 
 # ---------------------------------------------------------------------------
+# Shared event loop for all tests in this module (avoids gRPC loop issues)
+# ---------------------------------------------------------------------------
+
+_module_loop = None
+
+
+def _get_loop():
+    global _module_loop
+    if _module_loop is None or _module_loop.is_closed():
+        _module_loop = asyncio.new_event_loop()
+    return _module_loop
+
+
+def teardown_module(module):
+    global _module_loop
+    if _module_loop and not _module_loop.is_closed():
+        _module_loop.close()
+        _module_loop = None
+
+
+# ---------------------------------------------------------------------------
 # Retriever integration test: run actual retrieval, measure context quality
 # ---------------------------------------------------------------------------
 
@@ -65,6 +87,13 @@ def qdrant_retriever():
     return identify_relevant_docs, Party
 
 
+def _make_party(Party, party_id: str):
+    return Party(
+        party_id=party_id, name=party_id, long_name=party_id,
+        description="", website_url="", candidate="", election_manifesto_url="",
+    )
+
+
 @pytest.mark.parametrize(
     "golden",
     _load_golden("single_party"),
@@ -79,21 +108,13 @@ def test_retriever_single_party(
     """Test that retriever finds relevant docs for single-party questions."""
     identify_relevant_docs, Party = qdrant_retriever
 
-    # Build a minimal Party object for retrieval
     party_id = golden["party_ids"][0]
+    party = _make_party(Party, party_id)
 
-    import asyncio
-
-    party = Party(
-        party_id=party_id, name=party_id, long_name=party_id,
-        description="", website_url="", candidate="", election_manifesto_url="",
-    )
-
-    loop = asyncio.new_event_loop()
+    loop = _get_loop()
     docs = loop.run_until_complete(
         identify_relevant_docs(party=party, rag_query=golden["input"], n_docs=5)
     )
-    loop.close()
     retrieval_context = [doc.page_content for doc in docs]
 
     test_case = LLMTestCase(
@@ -119,20 +140,14 @@ def test_retriever_multi_party(
     """Test that retriever finds docs across multiple parties."""
     identify_relevant_docs, Party = qdrant_retriever
 
-    import asyncio
-
-    loop = asyncio.new_event_loop()
+    loop = _get_loop()
     all_context = []
     for party_id in golden["party_ids"]:
-        party = Party(
-            party_id=party_id, name=party_id, long_name=party_id,
-            description="", website_url="", candidate="", election_manifesto_url="",
-        )
+        party = _make_party(Party, party_id)
         docs = loop.run_until_complete(
             identify_relevant_docs(party=party, rag_query=golden["input"], n_docs=3)
         )
         all_context.extend([doc.page_content for doc in docs])
-    loop.close()
 
     test_case = LLMTestCase(
         input=golden["input"],

@@ -10,6 +10,7 @@ Run:
     poetry run deepeval test run tests/eval/test_rag_e2e.py -v
 """
 
+import asyncio
 import json
 import os
 import sys
@@ -28,6 +29,23 @@ DATASETS_DIR = Path(__file__).parent / "datasets"
 def _load_golden(category: str) -> list[dict]:
     data = json.loads((DATASETS_DIR / "golden_questions.json").read_text())
     return data.get(category, [])
+
+
+_module_loop = None
+
+
+def _get_loop():
+    global _module_loop
+    if _module_loop is None or _module_loop.is_closed():
+        _module_loop = asyncio.new_event_loop()
+    return _module_loop
+
+
+def teardown_module(module):
+    global _module_loop
+    if _module_loop and not _module_loop.is_closed():
+        _module_loop.close()
+        _module_loop = None
 
 
 def _skip_if_no_infra():
@@ -132,15 +150,12 @@ def test_e2e_single_party(
     contextual_recall_metric,
 ):
     """Full E2E test for single-party questions."""
-    import asyncio
-
     party_id = golden["party_ids"][0]
 
-    loop = asyncio.new_event_loop()
+    loop = _get_loop()
     actual_output, retrieval_context = loop.run_until_complete(
         _run_single_party_pipeline(rag_pipeline, golden["input"], party_id)
     )
-    loop.close()
 
     test_case = LLMTestCase(
         input=golden["input"],
@@ -169,15 +184,12 @@ def test_e2e_edge_cases(
     if not golden.get("party_ids"):
         pytest.skip("Edge case without party_ids — tested in red_team tests")
 
-    import asyncio
-
     party_id = golden["party_ids"][0]
 
-    loop = asyncio.new_event_loop()
+    loop = _get_loop()
     actual_output, retrieval_context = loop.run_until_complete(
         _run_single_party_pipeline(rag_pipeline, golden["input"], party_id)
     )
-    loop.close()
 
     test_case = LLMTestCase(
         input=golden["input"],

@@ -142,7 +142,10 @@ def create_qdrant_collections():
     from qdrant_client.models import VectorParams, Distance
 
     qdrant_url = os.environ["QDRANT_URL"]
-    embed_dim = int(os.environ.get("OLLAMA_EMBED_DIM", "768"))
+    # Use the same embedding provider logic as the app
+    from src.vector_store_helper import _get_embeddings as get_embeddings
+    _, embed_dim = get_embeddings()
+    logger.info(f"Embedding dimension: {embed_dim}")
 
     logger.info(f"Connecting to Qdrant at {qdrant_url}...")
     client = QdrantClient(url=qdrant_url, check_compatibility=False)
@@ -214,32 +217,11 @@ def seed_crawled_vectors():
 
     qdrant_url = os.environ["QDRANT_URL"]
 
-    # Choose embedding provider: Scaleway (cloud) or Ollama (local)
-    scaleway_key = os.environ.get("SCALEWAY_EMBED_API_KEY") or os.environ.get("QWEN3_8B_SCW_SECRET_KEY")
-    embedding_provider = os.environ.get("EMBEDDING_PROVIDER", "").lower()
+    # Use the same embedding provider as the app (Google, Scaleway, OpenAI, or Ollama)
+    from src.vector_store_helper import _get_embeddings as get_embeddings
+    embeddings, embed_dim = get_embeddings()
+    logger.info(f"Embedding provider ready ({embed_dim}d)")
 
-    if embedding_provider == "scaleway" or (scaleway_key and embedding_provider != "ollama"):
-        from langchain_openai import OpenAIEmbeddings
-
-        base_url = os.environ.get(
-            "SCALEWAY_EMBED_BASE_URL",
-            "https://api.scaleway.ai/78c3d473-15a8-46bf-9c9a-339d618c75b5/v1",
-        )
-        model = os.environ.get("SCALEWAY_EMBED_MODEL", "qwen3-embedding-8b")
-        logger.info(f"Generating embeddings via Scaleway ({model})...")
-        embeddings = OpenAIEmbeddings(
-            model=model,
-            openai_api_key=scaleway_key,
-            openai_api_base=base_url,
-            dimensions=int(os.environ.get("SCALEWAY_EMBED_DIM", "4096")),
-        )
-    else:
-        from langchain_ollama import OllamaEmbeddings
-
-        ollama_base_url = os.environ["OLLAMA_BASE_URL"]
-        embed_model = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-        logger.info(f"Generating embeddings via Ollama ({embed_model})...")
-        embeddings = OllamaEmbeddings(model=embed_model, base_url=ollama_base_url)
     client = QdrantClient(url=qdrant_url)
 
     text_splitter = RecursiveCharacterTextSplitter(
@@ -319,7 +301,9 @@ def seed_crawled_vectors():
                 continue
             party_id = party_dir.name
             party_name = party_names.get(party_id, party_id)
-            md_files = sorted(party_dir.glob("*.md"))
+            # Markdown files live in markdown/ subdirectory (from crawler output)
+            md_dir = party_dir / "markdown"
+            md_files = sorted(md_dir.glob("*.md")) if md_dir.exists() else sorted(party_dir.glob("*.md"))
             if not md_files:
                 continue
 
@@ -357,7 +341,9 @@ def seed_crawled_vectors():
             party_ids = cand_info.get("party_ids", [])
             party_ids_str = ",".join(party_ids) if isinstance(party_ids, list) else str(party_ids)
 
-            md_files = sorted(cand_dir.glob("*.md"))
+            # Markdown files live in markdown/ subdirectory (from crawler output)
+            md_dir = cand_dir / "markdown"
+            md_files = sorted(md_dir.glob("*.md")) if md_dir.exists() else sorted(cand_dir.glob("*.md"))
             if not md_files:
                 continue
 
