@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # Tool/plugin state
 .osgrep
 .omc/
