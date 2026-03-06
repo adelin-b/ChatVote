@@ -92,6 +92,19 @@ dev-infra:
 	@PROFILES=""; \
 	if curl -sf http://localhost:11434/ > /dev/null 2>&1; then \
 		echo "Native Ollama detected on :11434 — skipping Docker Ollama (GPU accelerated)."; \
+	elif command -v ollama > /dev/null 2>&1; then \
+		echo "Native Ollama found but not serving — starting it..."; \
+		ollama serve > .logs/ollama.log 2>&1 & \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			if curl -sf http://localhost:11434/ > /dev/null 2>&1; then break; fi; \
+			sleep 1; \
+		done; \
+		if curl -sf http://localhost:11434/ > /dev/null 2>&1; then \
+			echo "Native Ollama started on :11434 (GPU accelerated)."; \
+		else \
+			echo "Failed to start native Ollama — falling back to Docker (CPU only)."; \
+			PROFILES="$$PROFILES --profile ollama"; \
+		fi; \
 	else \
 		echo "No native Ollama found — starting Ollama in Docker (CPU only, slow on macOS)."; \
 		echo "TIP: For Apple Silicon, install natively: brew install ollama && ollama serve"; \
