@@ -50,6 +50,7 @@ mypy = "~1.12.1"
 pre-commit = "~4.0.1"
 ruff = "~0.8.6"
 deepeval = "^3.8.8"
+google-genai = "^1.66.0"
 
 [tool.mypy]
 ignore_missing_imports = true

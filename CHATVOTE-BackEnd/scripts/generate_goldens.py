@@ -84,17 +84,27 @@ def _check_ollama(url: str) -> None:
         sys.exit(1)
 
 
-def _build_ollama_model():
-    """Build OllamaModel for the DeepEval Synthesizer."""
-    from deepeval.models import OllamaModel
+def _build_model():
+    """Build LLM model for the DeepEval Synthesizer (Gemini or Ollama)."""
+    provider = os.environ.get("GOLDEN_PROVIDER", "ollama").lower()
 
+    if provider == "gemini":
+        from deepeval.models import GeminiModel
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if not api_key or api_key.startswith("your_"):
+            print("ERROR: GOOGLE_API_KEY not set for Gemini golden generation")
+            sys.exit(1)
+        gemini_model = os.environ.get("GOLDEN_GEMINI_MODEL", "gemini-2.0-flash")
+        print(f"Using Gemini ({gemini_model}) for golden generation")
+        return GeminiModel(model=gemini_model, api_key=api_key, temperature=0.3), "gemini"
+
+    from deepeval.models import OllamaModel
     # Model defaults — see src/model_config.py for the central registry
     ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_model = os.environ.get("OLLAMA_MODEL", "qwen3:32b")
-
     _check_ollama(ollama_url)
-
-    return OllamaModel(model=ollama_model, base_url=ollama_url, temperature=0.3)
+    print(f"Using Ollama ({ollama_model}) for golden generation")
+    return OllamaModel(model=ollama_model, base_url=ollama_url, temperature=0.3), "ollama"
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +128,20 @@ def _call_ollama(url: str, model: str, prompt: str) -> str:
     with urllib.request.urlopen(req, timeout=120) as resp:
         result = json.loads(resp.read().decode())
     return result.get("response", "")
+
+
+def _call_gemini(prompt: str) -> str:
+    """Call Gemini via google-genai SDK and return the response text."""
+    from google import genai
+
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    gemini_model = os.environ.get("GOLDEN_GEMINI_MODEL", "gemini-2.0-flash")
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model=gemini_model,
+        contents=prompt,
+    )
+    return response.text or ""
 
 
 def _extract_json_array(text: str) -> list[dict]:
@@ -291,8 +315,9 @@ def _generate_via_direct(
     max_per_context: int,
     ollama_url: str,
     ollama_model: str,
+    provider: str = "ollama",
 ) -> list[dict]:
-    """Generate goldens using direct Ollama HTTP calls (fallback mode)."""
+    """Generate goldens using direct API calls (Ollama or Gemini)."""
     goldens = []
     failed = 0
 
@@ -313,7 +338,10 @@ def _generate_via_direct(
         )
 
         try:
-            response_text = _call_ollama(ollama_url, ollama_model, prompt)
+            if provider == "gemini":
+                response_text = _call_gemini(prompt)
+            else:
+                response_text = _call_ollama(ollama_url, ollama_model, prompt)
             pairs = _extract_json_array(response_text)
 
             new_count = 0
@@ -359,12 +387,16 @@ def generate_goldens(
     """
     start_time = time.time()
 
+    provider = os.environ.get("GOLDEN_PROVIDER", "ollama").lower()
     ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_model = os.environ.get("OLLAMA_MODEL", "qwen3:32b")
 
-    print(f"Using Ollama at {ollama_url} with model {ollama_model}")
+    if provider == "gemini":
+        print(f"Using Gemini for golden generation")
+    else:
+        print(f"Using Ollama at {ollama_url} with model {ollama_model}")
+        _check_ollama(ollama_url)
     print(f"Generation mode: {mode}")
-    _check_ollama(ollama_url)
 
     print(f"\nCollecting markdown files from {CRAWLED_CONTENT_DIR}...")
     docs = _collect_markdown_files(CRAWLED_CONTENT_DIR, entity_type)
@@ -403,7 +435,7 @@ def generate_goldens(
 
     if mode == "synthesizer":
         try:
-            model = _build_ollama_model()
+            model, provider = _build_model()
             synth_goldens = _generate_via_synthesizer(contexts, max_per_context, model)
 
             # Convert Synthesizer output to our format
@@ -418,15 +450,15 @@ def generate_goldens(
 
         except Exception as e:
             print(f"\nSynthesizer failed: {e}")
-            print("Falling back to direct Ollama generation...")
+            print("Falling back to direct generation...")
             mode = "direct"
             raw_goldens = _generate_via_direct(
-                contexts, max_per_context, ollama_url, ollama_model,
+                contexts, max_per_context, ollama_url, ollama_model, provider,
             )
 
     elif mode == "direct":
         raw_goldens = _generate_via_direct(
-            contexts, max_per_context, ollama_url, ollama_model,
+            contexts, max_per_context, ollama_url, ollama_model, provider,
         )
 
     # Post-process: apply French quality filters to ALL goldens

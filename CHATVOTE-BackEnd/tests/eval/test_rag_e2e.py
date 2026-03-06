@@ -78,7 +78,10 @@ async def _run_single_party_pipeline(pipeline, question: str, party_id: str) -> 
     Party = pipeline["Party"]
     LLMSize = pipeline["LLMSize"]
 
-    party = Party(party_id=party_id, name=party_id, long_name=party_id)
+    party = Party(
+        party_id=party_id, name=party_id, long_name=party_id,
+        description="", website_url="", candidate="", election_manifesto_url="",
+    )
 
     # Step 1: Improve query
     improved_query = await pipeline["improve_query"](

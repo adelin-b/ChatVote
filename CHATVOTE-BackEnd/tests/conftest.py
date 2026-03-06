@@ -31,8 +31,9 @@ def _build_judge():
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key or api_key.startswith("your_"):
             return None, "GOOGLE_API_KEY not set"
+        gemini_model = os.environ.get("DEEPEVAL_GEMINI_MODEL", GEMINI_2_FLASH)
         return GeminiModel(
-            model=GEMINI_2_FLASH,
+            model=gemini_model,
             api_key=api_key,
             temperature=0.0,
         ), None

@@ -84,7 +84,10 @@ def test_retriever_single_party(
 
     import asyncio
 
-    party = Party(party_id=party_id, name=party_id, long_name=party_id)
+    party = Party(
+        party_id=party_id, name=party_id, long_name=party_id,
+        description="", website_url="", candidate="", election_manifesto_url="",
+    )
 
     loop = asyncio.new_event_loop()
     docs = loop.run_until_complete(
@@ -121,7 +124,10 @@ def test_retriever_multi_party(
     loop = asyncio.new_event_loop()
     all_context = []
     for party_id in golden["party_ids"]:
-        party = Party(party_id=party_id, name=party_id, long_name=party_id)
+        party = Party(
+            party_id=party_id, name=party_id, long_name=party_id,
+            description="", website_url="", candidate="", election_manifesto_url="",
+        )
         docs = loop.run_until_complete(
             identify_relevant_docs(party=party, rag_query=golden["input"], n_docs=3)
         )

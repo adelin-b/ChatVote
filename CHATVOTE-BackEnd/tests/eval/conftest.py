@@ -138,7 +138,7 @@ def source_attribution_metric(judge_model):
 @pytest.fixture(scope="session")
 def multiparty_completeness_metric(judge_model):
     """Ensures all relevant parties are covered when comparing."""
-    threshold = 0.7 if os.environ.get("DEEPEVAL_JUDGE") == "gemini" else 0.5
+    threshold = 0.9 if os.environ.get("DEEPEVAL_JUDGE") == "gemini" else 0.5
     return GEval(
         name="Multi-party Completeness",
         criteria="""When the user's question asks about multiple parties' positions,
