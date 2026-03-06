@@ -121,3 +121,25 @@ def test_theme_taxonomy_exists():
     assert len(THEME_TAXONOMY) == 14
     assert "economie" in THEME_TAXONOMY
     assert "securite" in THEME_TAXONOMY
+
+
+def test_theme_classification_schema():
+    from src.models.structured_outputs import ChunkThemeClassification
+    tc = ChunkThemeClassification(theme="economie", sub_theme="pouvoir d'achat")
+    assert tc.theme == "economie"
+    assert tc.sub_theme == "pouvoir d'achat"
+
+
+def test_theme_classification_none_theme():
+    from src.models.structured_outputs import ChunkThemeClassification
+    tc = ChunkThemeClassification(theme=None, sub_theme=None)
+    assert tc.theme is None
+
+
+def test_theme_classification_valid_taxonomy():
+    from src.models.structured_outputs import ChunkThemeClassification
+    from src.models.chunk_metadata import THEME_TAXONOMY
+    # Any taxonomy theme should work
+    for theme in THEME_TAXONOMY:
+        tc = ChunkThemeClassification(theme=theme, sub_theme=None)
+        assert tc.theme == theme
