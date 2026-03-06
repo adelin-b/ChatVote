@@ -75,6 +75,46 @@ def test_candidate_docs_total_chunks():
         assert doc.metadata["total_chunks"] == len(docs)
 
 
+def test_candidate_docs_incumbent_and_tete_de_liste():
+    """Incumbent and tête de liste flags are propagated from Candidate model."""
+    from src.services.candidate_indexer import create_documents_from_scraped_website
+
+    candidate = Candidate(
+        candidate_id="cand-sortant-001",
+        first_name="Marie",
+        last_name="Dupont",
+        municipality_code="71302",
+        municipality_name="Montcenis",
+        party_ids=["en-marche"],
+        website_url="https://example.com",
+        election_type_id="municipales-2026",
+        is_incumbent=True,
+        position="Tête de liste",
+    )
+    scraped = _make_scraped_website()
+    scraped.candidate_id = candidate.candidate_id
+    docs = create_documents_from_scraped_website(candidate, scraped)
+
+    meta = docs[0].metadata
+    assert meta["is_incumbent"] is True
+    assert meta["is_tete_de_liste"] is True
+    assert meta["candidate_ids"] == ["cand-sortant-001"]
+
+
+def test_candidate_docs_no_incumbent_excluded():
+    """When is_incumbent is False and position is not tête de liste, fields are excluded."""
+    from src.services.candidate_indexer import create_documents_from_scraped_website
+
+    candidate = _make_candidate()  # is_incumbent=False, position=None
+    scraped = _make_scraped_website()
+    docs = create_documents_from_scraped_website(candidate, scraped)
+
+    meta = docs[0].metadata
+    # None values should be excluded from payload
+    assert "is_incumbent" not in meta
+    assert "is_tete_de_liste" not in meta
+
+
 def test_candidate_docs_blog_page_type():
     """Blog page type should get PRESS fiabilite (3)."""
     from src.services.candidate_indexer import create_documents_from_scraped_website

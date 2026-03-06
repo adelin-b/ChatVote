@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 
+import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import {
@@ -12,7 +13,13 @@ import {
   SelectValue,
 } from "@components/ui/select";
 import { Separator } from "@components/ui/separator";
-import { SearchIcon, Loader2Icon, FlaskConicalIcon } from "lucide-react";
+import {
+  SearchIcon,
+  Loader2Icon,
+  FlaskConicalIcon,
+  ExternalLinkIcon,
+  FileTextIcon,
+} from "lucide-react";
 
 import {
   FiabiliteBadge,
@@ -248,17 +255,19 @@ function ResultPanel({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${highlight ? "border-blue-300 dark:border-blue-700" : "border-border"}`}
+      className={`flex max-h-[75vh] flex-col rounded-lg border ${highlight ? "border-blue-300 dark:border-blue-700" : "border-border"}`}
     >
-      <h3 className="font-semibold">{title}</h3>
-      <p className="text-muted-foreground mb-3 text-xs">{subtitle}</p>
+      <div className="shrink-0 p-4 pb-2">
+        <h3 className="font-semibold">{title}</h3>
+        <p className="text-muted-foreground text-xs">{subtitle}</p>
+      </div>
 
       {results.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
           No results
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-y-auto px-4 pb-4">
           {results.map((r, i) => (
             <ResultCard key={i} result={r} index={i} />
           ))}
@@ -272,21 +281,94 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
   const [expanded, setExpanded] = useState(false);
   const m = result.metadata;
 
+  const partyName = m.party_name as string | undefined;
+  const documentName = m.document_name as string | undefined;
+  const url = m.url as string | undefined;
+  const page = m.page as number | undefined;
+  const namespace = m.namespace as string | undefined;
+  const subTheme = m.sub_theme as string | undefined;
+  const candidateName = m.candidate_name as string | undefined;
+  const municipalityName = m.municipality_name as string | undefined;
+  const municipalityPostalCode = m.municipality_postal_code as string | undefined;
+  const nuancePolitique = m.nuance_politique as string | undefined;
+  const electionYear = m.election_year as number | undefined;
+  const epciNom = m.epci_nom as string | undefined;
+  const isTeteDeListe = m.is_tete_de_liste as boolean | undefined;
+  const isIncumbent = m.is_incumbent as boolean | undefined;
+
+  const sourceLabel = partyName || candidateName || namespace || "Unknown source";
+  const communeDisplay = municipalityName
+    ? municipalityPostalCode
+      ? `${municipalityName} (${municipalityPostalCode})`
+      : municipalityName
+    : undefined;
+
   return (
     <button
       type="button"
       className="hover:bg-muted/50 cursor-pointer rounded-md border p-3 text-left transition-colors"
       onClick={() => setExpanded(!expanded)}
     >
-      {/* Header row */}
-      <div className="mb-1 flex flex-wrap items-center gap-1.5">
+      {/* Header: badges */}
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
         <span className="bg-muted inline-flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
           {index + 1}
         </span>
         <ScoreBadge score={result.score} />
         <FiabiliteBadge level={m.fiabilite as number} />
         <ThemeBadge theme={m.theme as string} />
+        {subTheme && <ThemeBadge theme={subTheme} />}
         <SourceDocBadge sourceDoc={m.source_document as string} />
+        {nuancePolitique && (
+          <Badge variant="outline" className="text-[10px] font-mono">
+            {nuancePolitique}
+          </Badge>
+        )}
+      </div>
+
+      {/* Source attribution */}
+      <div className="bg-muted/40 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded px-2 py-1.5 text-xs">
+        <span className="font-semibold">{sourceLabel}</span>
+        {isTeteDeListe && (
+          <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+            Tête de liste
+          </span>
+        )}
+        {isIncumbent && (
+          <span className="text-amber-600 dark:text-amber-400 text-[10px] font-medium">
+            Sortant
+          </span>
+        )}
+        {documentName && (
+          <span className="text-muted-foreground flex items-center gap-1">
+            <FileTextIcon className="size-3" />
+            {documentName}
+          </span>
+        )}
+        {page != null && (
+          <span className="text-muted-foreground">p. {page}</span>
+        )}
+        {communeDisplay && (
+          <span className="text-muted-foreground">{communeDisplay}</span>
+        )}
+        {epciNom && (
+          <span className="text-muted-foreground text-[10px]">{epciNom}</span>
+        )}
+        {electionYear && (
+          <span className="text-muted-foreground text-[10px]">{electionYear}</span>
+        )}
+        {url && (
+          <a
+            href={page != null ? `${url}#page=${page}` : url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLinkIcon className="size-3" />
+            source
+          </a>
+        )}
       </div>
 
       {/* Content preview */}
@@ -294,11 +376,11 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
         {expanded ? result.content : result.content.slice(0, 200) + (result.content.length > 200 ? "..." : "")}
       </p>
 
-      {/* Metadata details (expanded) */}
+      {/* Full metadata (expanded) */}
       {expanded && (
         <div className="bg-muted/30 mt-2 rounded border p-2">
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider">
-            Full Metadata
+            All Metadata
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
             {Object.entries(m).map(([key, value]) => (
