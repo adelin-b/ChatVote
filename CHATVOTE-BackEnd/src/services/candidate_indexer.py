@@ -160,6 +160,8 @@ def create_documents_from_scraped_website(
                 municipality_code=candidate.municipality_code or "",
                 municipality_name=candidate.municipality_name or "",
                 election_type_id=candidate.election_type_id,
+                is_incumbent=candidate.is_incumbent or None,
+                is_tete_de_liste=(candidate.position == "Tête de liste") or None,
                 document_name=f"{candidate.full_name} - {page.page_type.capitalize()}",
                 url=page.url,
                 page_title=page.title,

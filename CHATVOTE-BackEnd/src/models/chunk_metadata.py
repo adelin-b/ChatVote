@@ -79,12 +79,26 @@ class ChunkMetadata(BaseModel):
     candidate_name: Optional[str] = None
     municipality_code: Optional[str] = None
     municipality_name: Optional[str] = None
+    municipality_postal_code: Optional[str] = None
     election_type_id: Optional[str] = None
+    election_year: Optional[int] = None
+
+    # Inter-communal grouping
+    epci_nom: Optional[str] = None
+    epci_code: Optional[str] = None
+
+    # Electoral list context
+    is_tete_de_liste: Optional[bool] = None
+    liste_nombre_candidats: Optional[int] = None
+    nuance_politique: Optional[str] = None
+    is_incumbent: Optional[bool] = None
 
     # Source display info
     document_name: Optional[str] = None
+    document_id: Optional[str] = None
     url: Optional[str] = None
     document_publish_date: Optional[str] = None
+    date_scraping: Optional[str] = None
     page_title: Optional[str] = None
     page_type: Optional[str] = None
 

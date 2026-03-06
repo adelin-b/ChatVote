@@ -499,6 +499,8 @@ async def experiment_search(request):
         theme = data.get("theme")
         max_fiabilite = data.get("max_fiabilite", 4)
         party_id = data.get("party_id")
+        nuance_politique = data.get("nuance_politique")
+        municipality_code = data.get("municipality_code")
         limit = min(data.get("limit", 10), 30)
 
         from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
@@ -516,6 +518,14 @@ async def experiment_search(request):
         if theme:
             must_conditions.append(
                 FieldCondition(key="metadata.theme", match=MatchValue(value=theme))
+            )
+        if nuance_politique:
+            must_conditions.append(
+                FieldCondition(key="metadata.nuance_politique", match=MatchValue(value=nuance_politique))
+            )
+        if municipality_code:
+            must_conditions.append(
+                FieldCondition(key="metadata.municipality_code", match=MatchValue(value=municipality_code))
             )
         if max_fiabilite < 4:
             must_not_conditions.append(
@@ -550,7 +560,10 @@ async def experiment_search(request):
         return web.json_response({
             "query": query,
             "collection": collection,
-            "filters": {"theme": theme, "max_fiabilite": max_fiabilite, "party_id": party_id},
+            "filters": {
+                "theme": theme, "max_fiabilite": max_fiabilite, "party_id": party_id,
+                "nuance_politique": nuance_politique, "municipality_code": municipality_code,
+            },
             "results_count": len(docs),
             "results": docs,
         })
@@ -564,18 +577,23 @@ async def experiment_metadata_schema(request):
     """Return the chunk metadata schema, theme taxonomy, and fiabilite levels."""
     from src.models.chunk_metadata import THEME_TAXONOMY, Fiabilite
 
-    # Get available namespaces from both collections
+    # Get available namespaces and nuance_politique values from both collections
     namespaces = set()
+    nuances = set()
     for col_name in [PARTY_INDEX_NAME, CANDIDATES_INDEX_NAME]:
         try:
             points = qdrant_client.scroll(
                 collection_name=col_name, limit=100,
-                with_payload=["metadata.namespace"], with_vectors=False,
+                with_payload=["metadata.namespace", "metadata.nuance_politique"], with_vectors=False,
             )
             for p in points[0]:
-                ns = (p.payload or {}).get("metadata", {}).get("namespace")
+                meta = (p.payload or {}).get("metadata", {})
+                ns = meta.get("namespace")
                 if ns:
                     namespaces.add(ns)
+                np_val = meta.get("nuance_politique")
+                if np_val:
+                    nuances.add(np_val)
         except Exception:
             pass
 
@@ -583,6 +601,7 @@ async def experiment_metadata_schema(request):
         "themes": THEME_TAXONOMY,
         "fiabilite_levels": {str(f.value): f.name for f in Fiabilite},
         "namespaces": sorted(namespaces),
+        "nuances_politiques": sorted(nuances),
         "collections": ["parties", "candidates"],
     })
 
