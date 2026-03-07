@@ -1314,6 +1314,7 @@ async def generate_streaming_global_combined_response(
     use_premium_llms: bool = False,
     is_single_party_focus: bool = False,
     locale: Locale = DEFAULT_LOCALE,
+    selected_electoral_lists: Optional[List[dict]] = None,
 ) -> AsyncIterator[BaseMessageChunk]:
     """
     Generate a streaming response combining information from parties and candidates.
@@ -1419,6 +1420,18 @@ async def generate_streaming_global_combined_response(
                 local_candidates_info = f"\n## Candidates present in {municipality_name}\nNo candidate registered for this municipality.\n"
             else:
                 local_candidates_info = f"\n## Candidats présents à {municipality_name}\nAucun candidat enregistré pour cette commune.\n"
+
+        # Append selected electoral lists info if user selected specific lists
+        if selected_electoral_lists:
+            if locale == "en":
+                local_candidates_info += f"\n## Electoral lists selected by the user in {municipality_name}\n"
+                local_candidates_info += "The user is specifically interested in the following electoral lists. Prioritize information about these lists and their candidates:\n"
+            else:
+                local_candidates_info += f"\n## Listes électorales sélectionnées par l'utilisateur à {municipality_name}\n"
+                local_candidates_info += "L'utilisateur s'intéresse spécifiquement aux listes électorales suivantes. Priorise les informations sur ces listes et leurs candidats :\n"
+            for el_list in selected_electoral_lists:
+                head_name = f"{el_list.get('head_first_name', '')} {el_list.get('head_last_name', '')}".strip()
+                local_candidates_info += f"- **{el_list.get('list_label', '')}** ({el_list.get('list_short_label', '')}) — Tête de liste : {head_name}\n"
     else:
         if locale == "en":
             scope_description = "NATIONAL level - You respond about the proposals of ALL parties and all candidates in France."

@@ -10,7 +10,7 @@ import ChatSidebarGroupSelect from "@components/chat/sidebar/chat-sidebar-group-
 import DonationDialog from "@components/donation-dialog";
 import FeedbackDialog from "@components/feedback-dialog";
 import { Button } from "@components/ui/button";
-import { SidebarTrigger } from "@components/ui/sidebar";
+import { SidebarTrigger, useSidebar } from "@components/ui/sidebar";
 import { type Auth } from "@lib/types/auth";
 import { cn } from "@lib/utils";
 import { Heart, MessageSquareWarning, User, UserCheck } from "lucide-react";
@@ -20,7 +20,10 @@ type Props = {
 };
 
 const ChatSidebarDesktop = ({ auth }: Props) => {
+  const { state } = useSidebar();
   const isAuthenticated = auth.session !== null && !auth.session.isAnonymous;
+
+  if (state === "expanded") return null;
 
   return (
     <div className="hidden h-screen w-16 flex-none flex-col items-center gap-12 overflow-hidden border-r border-border-subtle bg-surface px-2 py-4 md:flex">

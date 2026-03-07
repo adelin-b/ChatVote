@@ -14,6 +14,8 @@ export const initializeChatSession: ChatStoreActionHandlerFor<
     getLLMSize,
     scope,
     municipalityCode,
+    selectedElectoralLists,
+    electoralListsData,
     locale,
   } = get();
 
@@ -49,6 +51,16 @@ export const initializeChatSession: ChatStoreActionHandlerFor<
     chat_response_llm_size: getLLMSize(),
     scope,
     municipality_code: municipalityCode,
+    electoral_list_panel_numbers: selectedElectoralLists,
+    selected_electoral_lists: electoralListsData
+      .filter((l) => selectedElectoralLists.includes(l.panel_number))
+      .map((l) => ({
+        panel_number: l.panel_number,
+        list_label: l.list_label,
+        list_short_label: l.list_short_label,
+        head_first_name: l.head_first_name,
+        head_last_name: l.head_last_name,
+      })),
     locale,
   });
 };

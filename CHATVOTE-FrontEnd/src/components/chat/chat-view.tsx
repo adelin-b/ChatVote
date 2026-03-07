@@ -5,7 +5,9 @@ import LoadingSpinner from "@components/loading-spinner";
 import { getAuth, getSystemStatus } from "@lib/firebase/firebase-server";
 import { cn } from "@lib/utils";
 
+import ChatContextSidebar from "./chat-context-sidebar";
 import ChatSidebar from "./sidebar/chat-sidebar";
+import ChatSidebarDesktop from "./sidebar/chat-sidebar-desktop";
 import DevMetadataSidebar from "./dev-metadata-sidebar";
 import ChatDynamicChatInput from "./chat-dynamic-chat-input";
 import ChatHeader from "./chat-header";
@@ -33,8 +35,10 @@ async function ChatView({
     <div className="relative flex size-full h-full items-stretch overflow-hidden">
       {/* Sidebar - full panel on desktop, overlay on mobile */}
       <ChatSidebar />
+      <ChatSidebarDesktop auth={auth} />
+      <ChatContextSidebar />
       <DevMetadataSidebar />
-      <div className="flex w-full flex-col overflow-hidden">
+      <div className="relative flex w-full flex-col overflow-hidden">
         <ChatHeader />
         {/* Main content - adds padding when sidebar is expanded */}
         <ChatMainContent>

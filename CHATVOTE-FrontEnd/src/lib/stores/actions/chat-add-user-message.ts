@@ -31,9 +31,9 @@ export const chatAddUserMessage: ChatStoreActionHandlerFor<"addUserMessage"> =
       return;
     }
 
-    if (chatId !== localPreliminaryChatId) {
-      initializeChatSession();
-    }
+    // Always re-initialize the session so the backend has the latest context
+    // (e.g. electoral list selection changes since last init).
+    initializeChatSession();
 
     chatViewScrollToBottom();
 

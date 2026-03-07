@@ -1,4 +1,5 @@
 import type ChatSocket from "@lib/chat-socket";
+import { type ElectoralList } from "@lib/election/election.types";
 import { type ChatSession, type Tenant } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
 import {
@@ -117,6 +118,8 @@ export type ChatStoreState = {
   tenant?: Tenant;
   scope: ChatScope;
   municipalityCode?: string;
+  selectedElectoralLists: number[];
+  electoralListsData: ElectoralList[];
   locale: string;
 };
 
@@ -219,6 +222,9 @@ export type ChatStoreActions = {
     message: string,
   ) => void;
   setPartyIds: (partyIds: string[]) => void;
+  setSelectedElectoralLists: (panelNumbers: number[]) => void;
+  setElectoralListsData: (lists: ElectoralList[]) => void;
+  toggleElectoralList: (panelNumber: number) => void;
   getLLMSize: () => LLMSize;
   resetStreamingMessage: (
     sessionId: string,

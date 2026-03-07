@@ -67,6 +67,8 @@ const defaultState: ChatStoreState = {
   tenant: undefined,
   scope: "national",
   municipalityCode: undefined,
+  selectedElectoralLists: [],
+  electoralListsData: [],
   locale: "fr",
 };
 
@@ -120,6 +122,19 @@ export function createChatStore(initialState?: Partial<ChatStore>) {
         addVotingBehaviorSummaryChunk: addVotingBehaviorSummaryChunk(get, set),
         completeVotingBehavior: completeVotingBehavior(get, set),
         setPartyIds: setPartyIds(get, set),
+        setSelectedElectoralLists: (panelNumbers: number[]) =>
+          set({ selectedElectoralLists: panelNumbers }),
+        setElectoralListsData: (lists) =>
+          set({ electoralListsData: lists }),
+        toggleElectoralList: (panelNumber: number) =>
+          set((state) => {
+            const idx = state.selectedElectoralLists.indexOf(panelNumber);
+            if (idx >= 0) {
+              state.selectedElectoralLists.splice(idx, 1);
+            } else {
+              state.selectedElectoralLists.push(panelNumber);
+            }
+          }),
         getLLMSize: () => get().tenant?.llm_size ?? DEFAULT_LLM_SIZE,
         resetStreamingMessage: resetStreamingMessage(get, set),
       })),

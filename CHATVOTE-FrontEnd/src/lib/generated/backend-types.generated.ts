@@ -125,6 +125,8 @@ export interface InitChatSessionDto {
   is_cacheable: boolean;
   scope: ChatScope;
   municipality_code: string | null;
+  electoral_list_panel_numbers: number[];
+  selected_electoral_lists: Record<string, unknown>[];
   locale: "fr" | "en";
 }
 
