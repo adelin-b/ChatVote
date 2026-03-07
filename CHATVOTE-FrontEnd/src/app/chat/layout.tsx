@@ -12,7 +12,7 @@ async function Layout({ children }: Props) {
     <ChatStoreProvider>
       <AnonymousUserChatStoreUpdater />
       <SocketProvider>
-        <SidebarProvider defaultOpen={true}>{children}</SidebarProvider>
+        <SidebarProvider defaultOpen={false}>{children}</SidebarProvider>
       </SocketProvider>
     </ChatStoreProvider>
   );

@@ -103,6 +103,14 @@ export type ChatSessionInitPayload = {
   last_quick_replies: string[];
   scope: ChatScope;
   municipality_code?: string;
+  electoral_list_panel_numbers?: number[];
+  selected_electoral_lists?: {
+    panel_number: number;
+    list_label: string;
+    list_short_label: string;
+    head_first_name: string;
+    head_last_name: string;
+  }[];
   locale: string;
 };
 

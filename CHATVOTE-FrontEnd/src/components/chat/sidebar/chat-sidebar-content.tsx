@@ -18,7 +18,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-  useSidebar,
 } from "@components/ui/sidebar";
 import { config } from "@config";
 import { type ChatSession } from "@lib/firebase/firebase.types";
@@ -27,7 +26,6 @@ import { HeartHandshakeIcon, MessageCircleIcon, UserIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import ChatSidebarGroupSelect from "./chat-sidebar-group-select";
-import SidebarElectoralLists from "./sidebar-electoral-lists";
 import SidebarHistory from "./sidebar-history";
 import SidebarNewChatButtons from "./sidebar-new-chat-buttons";
 
@@ -41,11 +39,10 @@ type Props = {
 
 const ChatSidebarContent = ({ auth, history }: Props) => {
   const t = useTranslations("chat.sidebar");
-  const { isMobile } = useSidebar();
   const isAuthenticated = auth.session !== null && !auth.session.isAnonymous;
 
   return (
-    <Sidebar variant={"sidebar"} collapsible={isMobile ? "offcanvas" : "none"}>
+    <Sidebar variant={"sidebar"}>
       <SidebarContent>
         <div className={"flex w-full items-center justify-between gap-2"}>
           <div className={"flex items-center"}>
@@ -71,7 +68,7 @@ const ChatSidebarContent = ({ auth, history }: Props) => {
             </Link>
           </div>
 
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
         </div>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -81,8 +78,6 @@ const ChatSidebarContent = ({ auth, history }: Props) => {
             <ChatSidebarGroupSelect />
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarElectoralLists />
 
         <SidebarGroup>
           <SidebarGroupLabel>{t("supportChatvote")}</SidebarGroupLabel>

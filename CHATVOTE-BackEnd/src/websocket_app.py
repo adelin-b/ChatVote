@@ -173,6 +173,8 @@ async def init_chat_session(sid: str, body: dict):
         is_cacheable=create_session_dto.is_cacheable,
         scope=create_session_dto.scope.value,
         municipality_code=create_session_dto.municipality_code,
+        electoral_list_panel_numbers=create_session_dto.electoral_list_panel_numbers,
+        selected_electoral_lists=create_session_dto.selected_electoral_lists,
         locale=normalize_locale(create_session_dto.locale),
     )
 
@@ -1050,6 +1052,7 @@ async def handle_combined_answer_request(
             use_premium_llms=chat_message_data.user_is_logged_in,
             is_single_party_focus=has_specific_parties,
             locale=chat_session.locale,
+            selected_electoral_lists=chat_session.selected_electoral_lists,
         )
 
         # Stream the response

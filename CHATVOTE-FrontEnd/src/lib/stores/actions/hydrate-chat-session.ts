@@ -60,6 +60,10 @@ export const hydrateChatSession: ChatStoreActionHandlerFor<
       state.userId = userId;
       state.tenant = tenant;
       state.scope = scope;
+      if (state.municipalityCode !== municipalityCode) {
+        state.selectedElectoralLists = [];
+        state.electoralListsData = [];
+      }
       state.municipalityCode = municipalityCode;
       state.locale = locale;
     });

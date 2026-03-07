@@ -77,6 +77,14 @@ class GroupChatSession(BaseModel):
         description="The INSEE code of the municipality. Required when scope is 'local'.",
         default=None,
     )
+    electoral_list_panel_numbers: List[int] = Field(
+        description="Panel numbers of electoral lists selected by the user for local scope.",
+        default=[],
+    )
+    selected_electoral_lists: List[dict] = Field(
+        description="Details of electoral lists selected by the user (panel_number, list_label, list_short_label, head_first_name, head_last_name).",
+        default=[],
+    )
     locale: Literal["fr", "en"] = Field(
         description="The locale for responses (fr or en). Defaults to French.",
         default="fr",
