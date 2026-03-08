@@ -1,9 +1,12 @@
+import { isNearBottom, chatViewScrollToBottom } from "@lib/scroll-utils";
 import { type ChatStoreActionHandlerFor } from "@lib/stores/chat-store.types";
 import { generateUuid } from "@lib/utils";
 
 export const mergeStreamingChunkPayloadForMessage: ChatStoreActionHandlerFor<
   "mergeStreamingChunkPayloadForMessage"
 > = (get, set) => (sessionId, partyId, chunkPayload) => {
+  const wasNearBottom = isNearBottom();
+
   set((state) => {
     if (!state.currentStreamingMessages) return;
     if (state.chatId !== sessionId) return;
@@ -28,4 +31,8 @@ export const mergeStreamingChunkPayloadForMessage: ChatStoreActionHandlerFor<
         ? currentStreamingMessage.content + chunkPayload.chunk_content
         : chunkPayload.chunk_content;
   });
+
+  if (wasNearBottom) {
+    chatViewScrollToBottom({ behavior: "instant" });
+  }
 };
