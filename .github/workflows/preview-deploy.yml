@@ -326,18 +326,15 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Pull Vercel environment
-        working-directory: CHATVOTE-FrontEnd
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
-        working-directory: CHATVOTE-FrontEnd
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
           NEXT_PUBLIC_SOCKET_URL: ${{ needs.deploy-preview-infra.outputs.backend_url || '' }}
 
       - name: Deploy
         id: deploy
-        working-directory: CHATVOTE-FrontEnd
         run: |
           URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"

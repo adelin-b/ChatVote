@@ -40,6 +40,9 @@ WORKDIR /app
 # Configure poetry to not create virtual env (use system python)
 RUN poetry config virtualenvs.create false
 
+# Install CPU-only PyTorch first (saves ~1.5GB vs CUDA version)
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 # Install dependencies (production only)
 RUN poetry install --no-root --only main
 
