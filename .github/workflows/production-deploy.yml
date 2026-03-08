@@ -169,12 +169,19 @@ jobs:
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
-        run: |
-          # Load env vars from Vercel pull into the build environment
-          set -a
-          [ -f .vercel/.env.production.local ] && source .vercel/.env.production.local
-          set +a
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyA6UWlwAZ5x4iP6oFjIwq7VJwiIl7OHszc
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: chat-vote-prod.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: chat-vote-prod
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: chat-vote-prod.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "940718130539"
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:940718130539:web:474850f2c94fb365b7382e
+          NEXT_PUBLIC_USE_FIREBASE_EMULATORS: "false"
+          NEXT_PUBLIC_API_URL: https://chatvoteoan3waxf-backend-prod.functions.fnc.fr-par.scw.cloud
+          NEXT_PUBLIC_APP_URL: https://chatvote.fr
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
