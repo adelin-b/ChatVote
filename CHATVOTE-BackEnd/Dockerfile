@@ -40,8 +40,24 @@ WORKDIR /app
 # Configure poetry to not create virtual env (use system python)
 RUN poetry config virtualenvs.create false
 
-# Install CPU-only PyTorch first (saves ~1.5GB vs CUDA version)
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Install PyTorch: use CUDA if available, otherwise CPU-only (~200MB vs ~2GB)
+# Override with: docker build --build-arg TORCH_VARIANT=gpu .
+ARG TORCH_VARIANT=auto
+RUN if [ "$TORCH_VARIANT" = "auto" ]; then \
+      if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then \
+        echo "CUDA detected — installing GPU-enabled PyTorch"; \
+        pip install torch; \
+      else \
+        echo "WARNING: No CUDA/GPU detected — installing CPU-only PyTorch (smaller image)"; \
+        pip install torch --index-url https://download.pytorch.org/whl/cpu; \
+      fi; \
+    elif [ "$TORCH_VARIANT" = "cpu" ]; then \
+      echo "Installing CPU-only PyTorch (TORCH_VARIANT=cpu)"; \
+      pip install torch --index-url https://download.pytorch.org/whl/cpu; \
+    else \
+      echo "Installing GPU-enabled PyTorch (TORCH_VARIANT=$TORCH_VARIANT)"; \
+      pip install torch; \
+    fi
 
 # Install dependencies (production only)
 RUN poetry install --no-root --only main

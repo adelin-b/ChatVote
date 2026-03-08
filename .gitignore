@@ -19,3 +19,5 @@
 
 # Visual QA screenshots
 *.png
+.vercel
+.env*.local
