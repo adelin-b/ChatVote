@@ -27,7 +27,11 @@ type ThemeStat = {
   by_party: Record<string, number>;
   by_source: Record<string, number>;
   by_fiabilite: Record<string, number>;
-  sub_themes: string[];
+  sub_themes: Array<{
+    name: string;
+    count: number;
+    by_party: Record<string, number>;
+  }>;
 };
 
 type TopicStatsResponse = {
@@ -205,7 +209,7 @@ function TaxonomyView({
   return (
     <div className="flex flex-col gap-6">
       {/* Summary stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="flex gap-3 flex-wrap sm:flex-nowrap">
         <StatCard label="Total Chunks" value={data.total_chunks} />
         <StatCard
           label="Classified"
@@ -221,9 +225,9 @@ function TaxonomyView({
         {Object.entries(data.collections).map(([name, stats]) => (
           <div
             key={name}
-            className="bg-muted/40 flex items-center gap-2 rounded-md border px-3 py-2 text-xs"
+            className="bg-surface border border-border-subtle flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
           >
-            <span className="font-mono font-medium">{name}</span>
+            <span className="font-medium">{name}</span>
             <span className="text-muted-foreground">
               {stats.classified}/{stats.total} classified
             </span>
@@ -242,10 +246,10 @@ function TaxonomyView({
               <span className="w-40 shrink-0 truncate text-right text-sm">
                 {t.theme}
               </span>
-              <div className="relative h-7 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+              <div className="relative h-6 flex-1 overflow-hidden rounded bg-border-subtle/40">
                 <div
-                  className="absolute inset-y-0 left-0 rounded bg-blue-500/80 transition-all dark:bg-blue-400/70"
-                  style={{ width: `${(t.count / maxCount) * 100}%` }}
+                  className="absolute inset-y-0 left-0 rounded transition-all"
+                  style={{ width: `${(t.count / maxCount) * 100}%`, background: 'linear-gradient(90deg, #381AF3, #8B5CF6)' }}
                 />
                 <span className="relative z-10 flex h-full items-center px-2 text-xs font-medium">
                   {t.count} ({t.percentage}%)
@@ -272,7 +276,7 @@ function TaxonomyView({
       {data.unclassified_chunks > 0 && (
         <>
           <Separator />
-          <div className="bg-muted/30 rounded-lg border border-dashed p-4">
+          <div className="bg-surface border border-border-subtle rounded-xl p-4">
             <h3 className="font-semibold">Unclassified Chunks</h3>
             <p className="text-muted-foreground text-sm">
               {data.unclassified_chunks} chunks (
@@ -360,7 +364,7 @@ function BERTopicView({
   return (
     <div className="flex flex-col gap-6">
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="flex gap-3 flex-wrap sm:flex-nowrap">
         <StatCard label="User Messages" value={data.total_messages} />
         <StatCard label="Topics Discovered" value={data.num_topics} />
         <StatCard
@@ -389,14 +393,10 @@ function BERTopicView({
               <span className="w-48 shrink-0 truncate text-right text-sm">
                 {t.label}
               </span>
-              <div className="relative h-7 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+              <div className="relative h-6 flex-1 overflow-hidden rounded bg-border-subtle/40">
                 <div
-                  className={`absolute inset-y-0 left-0 rounded transition-all ${
-                    t.topic_id === -1
-                      ? "bg-neutral-400/50 dark:bg-neutral-600/50"
-                      : "bg-emerald-500/80 dark:bg-emerald-400/70"
-                  }`}
-                  style={{ width: `${(t.count / maxCount) * 100}%` }}
+                  className="absolute inset-y-0 left-0 rounded transition-all"
+                  style={{ width: `${(t.count / maxCount) * 100}%`, background: t.topic_id === -1 ? '#94A3B8' : '#7C3AED' }}
                 />
                 <span className="relative z-10 flex h-full items-center px-2 text-xs font-medium">
                   {t.count} ({t.percentage}%)
@@ -546,16 +546,21 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="bg-muted/30 rounded-lg border p-3">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="text-2xl font-bold tabular-nums">
-        {value.toLocaleString()}
-        {sub && (
-          <span className="text-muted-foreground ml-1 text-sm font-normal">
-            {sub}
-          </span>
-        )}
-      </p>
+    <div className="bg-surface border border-border-subtle rounded-xl flex-1 min-w-0 overflow-hidden">
+      <div className="h-[3px] w-full bg-primary" />
+      <div className="p-4 pt-3">
+        <p className="text-2xl font-extrabold text-foreground leading-none tabular-nums">
+          {value.toLocaleString()}
+          {sub && (
+            <span className="text-muted-foreground ml-1 text-sm font-normal">
+              {sub}
+            </span>
+          )}
+        </p>
+        <p className="mt-1 text-xs uppercase text-muted-foreground tracking-wider">
+          {label}
+        </p>
+      </div>
     </div>
   );
 }
@@ -603,11 +608,12 @@ function ThemeCard({ theme }: { theme: ThemeStat }) {
                     <span className="w-28 shrink-0 truncate text-right">
                       {party}
                     </span>
-                    <div className="relative h-4 flex-1 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                    <div className="relative h-4 flex-1 overflow-hidden rounded bg-border-subtle/40">
                       <div
-                        className="absolute inset-y-0 left-0 rounded bg-violet-400/70 dark:bg-violet-500/60"
+                        className="absolute inset-y-0 left-0 rounded"
                         style={{
                           width: `${(count / maxPartyCount) * 100}%`,
+                          background: 'linear-gradient(90deg, #381AF3, #8B5CF6)',
                         }}
                       />
                       <span className="relative z-10 flex h-full items-center px-1.5 text-[10px]">
@@ -668,12 +674,41 @@ function ThemeCard({ theme }: { theme: ThemeStat }) {
               <p className="text-muted-foreground mb-1.5 text-[10px] font-semibold uppercase tracking-wider">
                 Sub-themes
               </p>
-              <div className="flex flex-wrap gap-1">
-                {theme.sub_themes.map((st) => (
-                  <Badge key={st} variant="outline" className="text-[10px]">
-                    {st}
-                  </Badge>
-                ))}
+              <div className="flex flex-col gap-1.5">
+                {theme.sub_themes.map((st) => {
+                  const maxSt = theme.sub_themes[0]?.count ?? 1;
+                  const partyPairs = Object.entries(st.by_party).sort(([, a], [, b]) => b - a);
+                  return (
+                    <div key={st.name} className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-36 shrink-0 truncate text-right text-xs">
+                          {st.name}
+                        </span>
+                        <div className="relative h-4 flex-1 overflow-hidden rounded bg-border-subtle/40">
+                          <div
+                            className="absolute inset-y-0 left-0 rounded"
+                            style={{ width: `${(st.count / maxSt) * 100}%`, background: '#381AF3' }}
+                          />
+                          <span className="relative z-10 flex h-full items-center px-1.5 text-[10px] font-medium">
+                            {st.count}
+                          </span>
+                        </div>
+                      </div>
+                      {partyPairs.length > 0 && (
+                        <div className="ml-[9.5rem] flex flex-wrap gap-1">
+                          {partyPairs.map(([party, count]) => (
+                            <span
+                              key={party}
+                              className="inline-flex items-center gap-0.5 rounded border px-1 py-0 text-[9px] text-muted-foreground"
+                            >
+                              {party} <span className="font-semibold">{count}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
