@@ -6,6 +6,16 @@ import {
   SCROLL_CONTAINER_ID,
 } from "./scroll-constants";
 
+export function isNearBottom(threshold = 100): boolean {
+  if (typeof document === "undefined") return true;
+  const container = document.getElementById(SCROLL_CONTAINER_ID);
+  if (!container) return true;
+  return (
+    container.scrollHeight - container.scrollTop - container.clientHeight <
+    threshold
+  );
+}
+
 export async function chatViewScrollToBottom({
   behavior = "smooth",
 }: {
