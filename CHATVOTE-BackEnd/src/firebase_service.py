@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
+import json
 import os
+import tempfile
 import time
 from typing import Any, List, Optional
 import firebase_admin
@@ -27,9 +29,15 @@ else:
         else "chat-vote-dev-firebase-adminsdk-fbsvc-5357066618.json"
     )
 
-    # If the credentials file does not exist, use the application default credentials
+    cred = None
     if Path(credentials_path).exists():
         cred = credentials.Certificate(credentials_path)
+    elif os.getenv("FIREBASE_CREDENTIALS_JSON"):
+        # Support credentials via env var (for CI/CD containerized deploys)
+        cred_data = json.loads(os.environ["FIREBASE_CREDENTIALS_JSON"])
+        cred = credentials.Certificate(cred_data)
+
+    if cred:
         firebase_admin.initialize_app(cred)
     else:
         firebase_admin.initialize_app()

@@ -79,14 +79,17 @@ jobs:
             echo "Updating existing production container..."
             scw container container update $EXISTING \
               registry-image=${{ env.SCW_REGISTRY }}/backend:${{ github.sha }} \
-              memory-limit=2048 \
-              cpu-limit=1120 \
+              memory-limit=4096 \
+              cpu-limit=2240 \
+              sandbox=v1 \
               environment-variables.API_NAME=chatvote-api \
               environment-variables.ENV=prod \
               environment-variables.EMBEDDING_PROVIDER=google \
               environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
               secret-environment-variables.0.key=GOOGLE_API_KEY \
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
+              secret-environment-variables.1.key=FIREBASE_CREDENTIALS_JSON \
+              secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_JSON }} \
               region=$SCW_REGION
             scw container container deploy $EXISTING region=$SCW_REGION
             ID=$EXISTING
@@ -99,8 +102,9 @@ jobs:
               port=8080 \
               min-scale=1 \
               max-scale=3 \
-              memory-limit=2048 \
-              cpu-limit=1120 \
+              memory-limit=4096 \
+              cpu-limit=2240 \
+              sandbox=v1 \
               privacy=public \
               deploy=true \
               region=$SCW_REGION \
@@ -110,6 +114,8 @@ jobs:
               environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
               secret-environment-variables.0.key=GOOGLE_API_KEY \
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
+              secret-environment-variables.1.key=FIREBASE_CREDENTIALS_JSON \
+              secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_JSON }} \
               -o json)
             ID=$(echo "$RESULT" | jq -r '.id')
           fi
