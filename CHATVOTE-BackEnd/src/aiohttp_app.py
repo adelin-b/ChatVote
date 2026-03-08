@@ -873,6 +873,25 @@ async def experiment_bertopic_analysis(request):
     return web.json_response(result, status=500 if result.get("status") == "error" else 200)
 
 
+# Keyword mapping for citizen message classification (commune dashboard)
+_CITIZEN_THEME_KEYWORDS: dict[str, list[str]] = {
+    "economie": ["économie", "economie", "impôt", "impot", "fiscal", "budget", "dette", "emploi", "chômage", "chomage", "salaire", "pouvoir d'achat", "inflation", "entreprise", "commerce", "travail"],
+    "education": ["école", "ecole", "éducation", "education", "enseignant", "professeur", "université", "universite", "lycée", "lycee", "collège", "college", "scolaire", "formation", "étudiant", "etudiant"],
+    "environnement": ["environnement", "écologie", "ecologie", "climat", "pollution", "déchet", "recyclage", "énergie", "energie", "renouvelable", "carbone", "vert", "biodiversité", "biodiversite"],
+    "sante": ["santé", "sante", "hôpital", "hopital", "médecin", "medecin", "soins", "maladie", "vaccination", "pharmacie", "urgence", "infirmier"],
+    "securite": ["sécurité", "securite", "police", "délinquance", "delinquance", "criminalité", "criminalite", "violence", "cambriolage", "vol", "agression", "gendarmerie"],
+    "immigration": ["immigration", "immigré", "immigre", "migrant", "frontière", "frontiere", "étranger", "etranger", "asile", "régularisation", "regularisation", "intégration", "integration"],
+    "culture": ["culture", "musée", "musee", "théâtre", "theatre", "cinéma", "cinema", "bibliothèque", "bibliotheque", "art", "patrimoine", "festival", "spectacle"],
+    "logement": ["logement", "loyer", "immobilier", "HLM", "habitation", "propriétaire", "proprietaire", "locataire", "construction", "rénovation", "renovation", "appartement", "maison"],
+    "transport": ["transport", "métro", "metro", "bus", "tramway", "vélo", "velo", "voiture", "route", "autoroute", "train", "mobilité", "mobilite", "circulation", "stationnement", "parking"],
+    "numerique": ["numérique", "numerique", "internet", "digital", "fibre", "technologie", "données", "donnees", "cybersécurité", "cybersecurite", "IA", "intelligence artificielle"],
+    "agriculture": ["agriculture", "agriculteur", "ferme", "paysan", "bio", "pesticide", "alimentaire", "PAC", "élevage", "elevage", "récolte", "recolte"],
+    "justice": ["justice", "tribunal", "juge", "loi", "droit", "prison", "peine", "avocat", "procès", "proces", "juridique", "magistrat"],
+    "international": ["international", "Europe", "UE", "OTAN", "diplomatie", "guerre", "paix", "défense", "defense", "armée", "armee", "géopolitique", "geopolitique"],
+    "institutions": ["institution", "démocratie", "democratie", "élection", "election", "vote", "référendum", "referendum", "parlement", "sénat", "senat", "assemblée", "assemblee", "constitution", "maire", "conseil municipal"],
+}
+
+
 @routes.get(f"{route_prefix}/commune/{{commune_code}}/dashboard")
 async def commune_dashboard(request):
     """Return aggregated dashboard data for a single commune."""
@@ -932,6 +951,24 @@ async def commune_dashboard(request):
         user_messages, session_ids = await _collect_user_messages(municipality_code=commune_code)
     except Exception as e:
         logger.warning(f"Could not fetch chat sessions for {commune_code}: {e}")
+
+    # ── 3b. Keyword-classify citizen messages by theme ────────────────────────
+    citizen_theme_counts: dict[str, int] = defaultdict(int)
+    for msg in user_messages:
+        text_lower = msg["text"].lower()
+        for theme, keywords in _CITIZEN_THEME_KEYWORDS.items():
+            if any(kw in text_lower for kw in keywords):
+                citizen_theme_counts[theme] += 1
+
+    citizen_total = sum(citizen_theme_counts.values()) or 1
+    citizen_themes = [
+        {
+            "theme": theme,
+            "count": citizen_theme_counts.get(theme, 0),
+            "percentage": round(citizen_theme_counts.get(theme, 0) / citizen_total * 100, 1),
+        }
+        for theme in sorted(citizen_theme_counts.keys(), key=lambda t: -citizen_theme_counts.get(t, 0))
+    ]
 
     # ── 4. Qdrant taxonomy (scroll filtered by municipality_code) ────────────
     qdrant_filter = Filter(
@@ -1011,6 +1048,11 @@ async def commune_dashboard(request):
         },
         "taxonomy": {
             "themes": taxonomy_themes,
+        },
+        "citizen": {
+            "total_messages": len(user_messages),
+            "classified_messages": sum(citizen_theme_counts.values()),
+            "themes": citizen_themes,
         },
         "bertopic": bertopic_result,
     })

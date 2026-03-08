@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-import { MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 
 import {
   PolarAngleAxis,
@@ -79,6 +79,11 @@ type DashboardData = {
     num_topics: number;
     topics: BertopicTopic[];
   };
+  citizen: {
+    total_messages: number;
+    classified_messages: number;
+    themes: Array<{ theme: string; count: number; percentage: number }>;
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -112,7 +117,6 @@ function normalize(values: number[]): number[] {
 
 type RadarEntry = {
   theme: string;
-  citizen: number;
   program: number;
 };
 
@@ -120,15 +124,12 @@ function buildRadarData(
   themes: TaxonomyTheme[],
   listLabel: string,
 ): RadarEntry[] {
-  const citizenRaw = themes.map((t) => t.total_count);
   const programRaw = themes.map((t) => t.by_list[listLabel] ?? 0);
-  const citizenNorm = normalize(citizenRaw);
   const programNorm = normalize(programRaw);
 
   return themes.map((t, i) => ({
     theme:
-      t.theme.length > 14 ? t.theme.slice(0, 13) + "…" : t.theme,
-    citizen: citizenNorm[i],
+      t.theme,
     program: programNorm[i],
   }));
 }
@@ -139,7 +140,7 @@ function buildCombinedRadarData(
 ): Array<Record<string, string | number>> {
   return themes.map((t) => {
     const entry: Record<string, string | number> = {
-      theme: t.theme.length > 14 ? t.theme.slice(0, 13) + "…" : t.theme,
+      theme: t.theme,
     };
     // Normalize each list's values relative to the max across all lists for this theme
     const values = lists.map((l) => t.by_list[l.list_label] ?? 0);
@@ -153,39 +154,107 @@ function buildCombinedRadarData(
   });
 }
 
-function alignmentScore(data: RadarEntry[]): number {
-  if (data.length === 0) return 0;
-  const scores = data.map(({ citizen, program }) => {
-    const mx = Math.max(citizen, program, 1);
-    const mn = Math.min(citizen, program);
-    return mn / mx;
-  });
-  return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100);
-}
-
-function blindSpots(data: RadarEntry[], topN = 5): string[] {
-  const sorted = [...data].sort((a, b) => b.citizen - a.citizen);
-  const top = sorted.slice(0, topN);
-  return top
-    .filter(({ program }) => program < 30)
-    .map(({ theme }) => theme);
-}
-
-function scoreColor(score: number): string {
-  if (score >= 70) return "text-green-500";
-  if (score >= 55) return "text-amber-500";
-  return "text-red-500";
-}
-
-function scoreBg(score: number): string {
-  if (score >= 70) return "bg-green-500/10 border-green-500/30";
-  if (score >= 55) return "bg-amber-500/10 border-amber-500/30";
-  return "bg-red-500/10 border-red-500/30";
-}
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+function CommuneSidebar({ currentCode }: { currentCode: string }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Array<{ code: string; nom: string; codesPostaux?: string[] }>>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (query.length < 2) {
+      setResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/municipalities`);
+        if (res.ok) {
+          const data = await res.json() as Array<{ code: string; nom: string; codesPostaux?: string[] }>;
+          const q = query.toLowerCase();
+          const filtered = (Array.isArray(data) ? data : []).filter(
+            (m) =>
+              m.nom?.toLowerCase().includes(q) ||
+              m.codesPostaux?.some((cp) => cp.startsWith(q))
+          ).slice(0, 20);
+          setResults(filtered);
+        }
+      } catch { /* ignore */ }
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  return (
+    <>
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-surface border border-border-subtle rounded-r-lg p-2 hover:bg-border-subtle/40 transition-colors"
+      >
+        {open ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+      </button>
+
+      {/* Sidebar panel */}
+      {open && (
+        <div className="fixed left-0 top-0 bottom-0 z-20 w-72 bg-surface border-r border-border-subtle flex flex-col shadow-xl">
+          <div className="p-4 border-b border-border-subtle">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+              Communes
+            </p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher une commune…"
+                className="w-full bg-border-subtle/40 border border-border-subtle rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            {searching && (
+              <p className="text-xs text-muted-foreground text-center py-4">Recherche…</p>
+            )}
+            {!searching && query.length >= 2 && results.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Aucun résultat</p>
+            )}
+            {results.map((r) => (
+              <Link
+                key={r.code}
+                href={`/commune/${r.code}`}
+                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                  r.code === currentCode
+                    ? "bg-primary/20 text-primary"
+                    : "text-foreground hover:bg-border-subtle/40"
+                }`}
+              >
+                <span className="font-medium">{r.nom}</span>
+                {r.codesPostaux?.[0] && (
+                  <span className="text-muted-foreground ml-1 text-xs">
+                    ({r.codesPostaux[0]})
+                  </span>
+                )}
+              </Link>
+            ))}
+            {query.length < 2 && (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                Tapez au moins 2 caractères
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 function StatCard({
   value,
@@ -227,12 +296,14 @@ function ThermometerBar({
   label,
   count,
   percentage,
+  barWidth,
   isTop3,
 }: {
   rank: number;
   label: string;
   count: number;
   percentage: number;
+  barWidth: number;
   isTop3: boolean;
 }) {
   const barRef = useRef<HTMLDivElement>(null);
@@ -243,11 +314,11 @@ function ThermometerBar({
     el.style.width = "0%";
     const raf = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        el.style.width = `${percentage}%`;
+        el.style.width = `${barWidth}%`;
       });
     });
     return () => cancelAnimationFrame(raf);
-  }, [percentage]);
+  }, [barWidth]);
 
   return (
     <div className="flex items-center gap-3 py-1.5">
@@ -282,22 +353,6 @@ function ThermometerBar({
 function LegendBar({ lists }: { lists: ListInfo[] }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-2">
-      <div className="flex items-center gap-2">
-        <svg width="28" height="10">
-          <line
-            x1="0"
-            y1="5"
-            x2="28"
-            y2="5"
-            stroke="#a1a1aa"
-            strokeWidth="2"
-            strokeDasharray="4 3"
-          />
-        </svg>
-        <span className="text-xs text-muted-foreground">
-          Préoccupations citoyennes
-        </span>
-      </div>
       {lists.map((list, i) => (
         <div key={list.panel_number} className="flex items-center gap-2">
           <span
@@ -325,8 +380,6 @@ function RadarCard({
   const color = listColor(listIndex);
   const headName = `${list.head_first_name} ${list.head_last_name}`;
   const radarData = buildRadarData(themes, list.list_label);
-  const score = alignmentScore(radarData);
-  const blind = blindSpots(radarData);
 
   return (
     <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden flex flex-col">
@@ -343,25 +396,17 @@ function RadarCard({
 
         <div className="w-full aspect-square">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+            <RadarChart data={radarData} margin={{ top: 20, right: 35, bottom: 20, left: 35 }}>
               <PolarGrid stroke="#2E275A" />
               <PolarAngleAxis
                 dataKey="theme"
-                tick={{ fill: "#a1a1aa", fontSize: 9 }}
+                tick={{ fill: "#a1a1aa", fontSize: 8 }}
               />
               <PolarRadiusAxis
                 angle={30}
                 domain={[0, 100]}
                 tick={false}
                 axisLine={false}
-              />
-              <Radar
-                name="Citoyens"
-                dataKey="citizen"
-                stroke="#a1a1aa"
-                fill="transparent"
-                strokeDasharray="4 3"
-                strokeWidth={1.5}
               />
               <Radar
                 name="Programme"
@@ -374,35 +419,76 @@ function RadarCard({
             </RadarChart>
           </ResponsiveContainer>
         </div>
-
-        <div
-          className={`border rounded-lg px-3 py-2 flex items-center justify-between ${scoreBg(score)}`}
-        >
-          <span className="text-xs text-muted-foreground">Alignement</span>
-          <span className={`text-xl font-extrabold ${scoreColor(score)}`}>
-            {score}%
-          </span>
-        </div>
-
-        {blind.length > 0 && (
-          <div>
-            <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1.5">
-              Angles morts
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {blind.map((theme) => (
-                <span
-                  key={theme}
-                  className="inline-block text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 rounded px-1.5 py-0.5"
-                >
-                  {theme}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+function CitizenRadarSection({
+  citizenThemes,
+  taxonomyThemes,
+}: {
+  citizenThemes: Array<{ theme: string; count: number; percentage: number }>;
+  taxonomyThemes: TaxonomyTheme[];
+}) {
+  if (citizenThemes.length === 0) return null;
+
+  const allThemes = taxonomyThemes.map((t) => t.theme);
+  const citizenMap = Object.fromEntries(citizenThemes.map((c) => [c.theme, c.count]));
+  const programMap = Object.fromEntries(taxonomyThemes.map((t) => [t.theme, t.total_count]));
+
+  const citizenValues = allThemes.map((t) => citizenMap[t] ?? 0);
+  const programValues = allThemes.map((t) => programMap[t] ?? 0);
+  const citizenNorm = normalize(citizenValues);
+  const programNorm = normalize(programValues);
+
+  const data = allThemes.map((theme, i) => ({
+    theme,
+    citizen: citizenNorm[i],
+    program: programNorm[i],
+  }));
+
+  return (
+    <section>
+      <SectionLabel>Radar citoyen — Préoccupations vs programmes</SectionLabel>
+      <div className="bg-surface border border-border-subtle rounded-xl p-6">
+        <div className="flex items-center gap-6 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-8 h-0.5 bg-primary" />
+            <span className="text-xs text-muted-foreground">Questions citoyennes</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#a1a1aa" strokeWidth="2" strokeDasharray="4 3" /></svg>
+            <span className="text-xs text-muted-foreground">Couverture des programmes</span>
+          </div>
+        </div>
+        <div className="max-w-xl mx-auto aspect-square">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={data} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+              <PolarGrid stroke="#2E275A" />
+              <PolarAngleAxis dataKey="theme" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
+              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+              <Radar
+                name="Programmes"
+                dataKey="program"
+                stroke="#a1a1aa"
+                fill="transparent"
+                strokeDasharray="4 3"
+                strokeWidth={1.5}
+              />
+              <Radar
+                name="Citoyens"
+                dataKey="citizen"
+                stroke="#381AF3"
+                fill="#381AF3"
+                fillOpacity={0.15}
+                strokeWidth={2}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -521,10 +607,11 @@ export default function CommuneDashboardPage() {
     );
   }
 
-  const { commune, stats, taxonomy } = data;
+  const { commune, stats, taxonomy, citizen } = data;
 
   return (
     <div className="overflow-y-auto h-screen bg-background text-foreground">
+      <CommuneSidebar currentCode={communeCode} />
       {/* ------------------------------------------------------------------ */}
       {/* Commune header                                                       */}
       {/* ------------------------------------------------------------------ */}
@@ -618,16 +705,20 @@ export default function CommuneDashboardPage() {
                 </div>
               </div>
               <div className="px-5 py-4 space-y-1">
-                {taxonomy.themes.map((theme, i) => (
-                  <ThermometerBar
-                    key={theme.theme}
-                    rank={i + 1}
-                    label={theme.theme}
-                    count={theme.total_count}
-                    percentage={theme.percentage}
-                    isTop3={i < 3}
-                  />
-                ))}
+                {(() => {
+                  const maxPct = taxonomy.themes[0]?.percentage ?? 1;
+                  return taxonomy.themes.map((theme, i) => (
+                    <ThermometerBar
+                      key={theme.theme}
+                      rank={i + 1}
+                      label={theme.theme}
+                      count={theme.total_count}
+                      percentage={theme.percentage}
+                      barWidth={(theme.percentage / maxPct) * 100}
+                      isTop3={i < 3}
+                    />
+                  ));
+                })()}
               </div>
             </div>
           )}
@@ -643,6 +734,13 @@ export default function CommuneDashboardPage() {
         )}
 
         {/* ---------------------------------------------------------------- */}
+        {/* Citizen radar                                                     */}
+        {/* ---------------------------------------------------------------- */}
+        {citizen && citizen.themes.length > 0 && taxonomy.themes.length > 0 && (
+          <CitizenRadarSection citizenThemes={citizen.themes} taxonomyThemes={taxonomy.themes} />
+        )}
+
+        {/* ---------------------------------------------------------------- */}
         {/* Combined radar                                                    */}
         {/* ---------------------------------------------------------------- */}
         {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
@@ -655,7 +753,7 @@ export default function CommuneDashboardPage() {
         {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
           <section>
             <SectionLabel>
-              Alignement programme ↔ préoccupations
+              Couverture thématique par liste
             </SectionLabel>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {commune.lists.map((list, i) => (
