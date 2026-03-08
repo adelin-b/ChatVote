@@ -606,6 +606,227 @@ async def experiment_metadata_schema(request):
     })
 
 
+@routes.get(f"{route_prefix}/experiment/topic-stats")
+async def experiment_topic_stats(request):
+    """Aggregate theme distribution across all indexed chunks."""
+    from src.models.chunk_metadata import THEME_TAXONOMY, Fiabilite
+    from collections import defaultdict
+
+    theme_data: dict[str, dict] = {}
+    collection_stats = {}
+    total_chunks = 0
+    classified_chunks = 0
+
+    for col_name in [PARTY_INDEX_NAME, CANDIDATES_INDEX_NAME]:
+        col_total = 0
+        col_classified = 0
+        try:
+            offset = None
+            while True:
+                points, next_offset = qdrant_client.scroll(
+                    collection_name=col_name,
+                    limit=256,
+                    offset=offset,
+                    with_payload=[
+                        "metadata.theme", "metadata.sub_theme",
+                        "metadata.source_document", "metadata.party_name",
+                        "metadata.fiabilite", "metadata.namespace",
+                    ],
+                    with_vectors=False,
+                )
+                for p in points:
+                    meta = (p.payload or {}).get("metadata", {})
+                    col_total += 1
+                    theme = meta.get("theme")
+                    if not theme:
+                        continue
+                    col_classified += 1
+
+                    if theme not in theme_data:
+                        theme_data[theme] = {
+                            "theme": theme,
+                            "count": 0,
+                            "by_party": defaultdict(int),
+                            "by_source": defaultdict(int),
+                            "by_fiabilite": defaultdict(int),
+                            "sub_themes": set(),
+                        }
+                    td = theme_data[theme]
+                    td["count"] += 1
+                    party = meta.get("party_name") or meta.get("namespace")
+                    if party:
+                        td["by_party"][party] += 1
+                    src = meta.get("source_document")
+                    if src:
+                        td["by_source"][src] += 1
+                    fiab = meta.get("fiabilite")
+                    if fiab is not None:
+                        td["by_fiabilite"][str(int(fiab))] += 1
+                    sub = meta.get("sub_theme")
+                    if sub:
+                        td["sub_themes"].add(sub)
+
+                if next_offset is None:
+                    break
+                offset = next_offset
+        except Exception as e:
+            logger.error(f"Error scrolling {col_name}: {e}", exc_info=True)
+
+        total_chunks += col_total
+        classified_chunks += col_classified
+        collection_stats[col_name] = {"total": col_total, "classified": col_classified}
+
+    themes_list = []
+    for td in sorted(theme_data.values(), key=lambda x: x["count"], reverse=True):
+        themes_list.append({
+            "theme": td["theme"],
+            "count": td["count"],
+            "percentage": round(td["count"] / total_chunks * 100, 1) if total_chunks else 0,
+            "by_party": dict(td["by_party"]),
+            "by_source": dict(td["by_source"]),
+            "by_fiabilite": dict(td["by_fiabilite"]),
+            "sub_themes": sorted(td["sub_themes"]),
+        })
+
+    return web.json_response({
+        "total_chunks": total_chunks,
+        "classified_chunks": classified_chunks,
+        "unclassified_chunks": total_chunks - classified_chunks,
+        "themes": themes_list,
+        "collections": collection_stats,
+    })
+
+
+@routes.get(f"{route_prefix}/experiment/bertopic-analysis")
+async def experiment_bertopic_analysis(request):
+    """Run BERTopic clustering on user chat messages from Firestore."""
+    import asyncio
+
+    try:
+        from bertopic import BERTopic
+    except ImportError:
+        return web.json_response(
+            {"status": "error", "message": "bertopic not installed"}, status=500
+        )
+
+    try:
+        # 1. Fetch all chat sessions and their user messages from Firestore
+        sessions_ref = async_db.collection("chat_sessions")
+        sessions = sessions_ref.stream()
+
+        user_messages: list[dict] = []
+        async for session in sessions:
+            session_data = session.to_dict() or {}
+            session_id = session.id
+            party_ids = session_data.get("party_ids", [])
+            title = session_data.get("title", "")
+
+            messages_ref = (
+                async_db.collection("chat_sessions")
+                .document(session_id)
+                .collection("messages")
+                .order_by("created_at")
+            )
+            msgs = messages_ref.stream()
+            async for msg_doc in msgs:
+                msg_data = msg_doc.to_dict() or {}
+                if msg_data.get("role") != "user":
+                    continue
+                for item in msg_data.get("messages", []):
+                    content = item.get("content", "").strip()
+                    if content and len(content) > 10:
+                        user_messages.append({
+                            "text": content,
+                            "session_id": session_id,
+                            "party_ids": party_ids,
+                            "chat_title": title,
+                        })
+
+        if len(user_messages) < 5:
+            return web.json_response({
+                "status": "insufficient_data",
+                "message": f"Only {len(user_messages)} user messages found. Need at least 5.",
+                "total_messages": len(user_messages),
+                "topics": [],
+            })
+
+        # 2. Run BERTopic (CPU, in thread pool to avoid blocking)
+        texts = [m["text"] for m in user_messages]
+
+        def run_bertopic():
+            from sklearn.feature_extraction.text import CountVectorizer
+
+            # Use lightweight settings suitable for small corpora
+            topic_model = BERTopic(
+                language="french",
+                min_topic_size=max(2, len(texts) // 20),
+                nr_topics="auto",
+                vectorizer_model=CountVectorizer(
+                    stop_words="english", ngram_range=(1, 2)
+                ),
+                calculate_probabilities=False,
+            )
+            topics, probs = topic_model.fit_transform(texts)
+            return topic_model, topics
+
+        loop = asyncio.get_event_loop()
+        topic_model, topics = await loop.run_in_executor(None, run_bertopic)
+
+        # 3. Build response
+        topic_info = topic_model.get_topic_info()
+        topics_list = []
+        for _, row in topic_info.iterrows():
+            topic_id = int(row["Topic"])
+            if topic_id == -1:
+                label = "Outliers"
+            else:
+                label = row.get("Name", f"Topic {topic_id}")
+
+            # Get representative words
+            topic_words = topic_model.get_topic(topic_id)
+            words = [{"word": w, "weight": round(s, 4)} for w, s in (topic_words or [])]
+
+            # Get representative docs for this topic
+            doc_indices = [i for i, t in enumerate(topics) if t == topic_id]
+            representative_msgs = [
+                {
+                    "text": user_messages[i]["text"],
+                    "session_id": user_messages[i]["session_id"],
+                    "chat_title": user_messages[i]["chat_title"],
+                }
+                for i in doc_indices[:5]
+            ]
+
+            # Party distribution for this topic
+            party_counts: dict[str, int] = {}
+            for i in doc_indices:
+                for pid in user_messages[i].get("party_ids", []):
+                    party_counts[pid] = party_counts.get(pid, 0) + 1
+
+            topics_list.append({
+                "topic_id": topic_id,
+                "label": label,
+                "count": int(row["Count"]),
+                "percentage": round(int(row["Count"]) / len(texts) * 100, 1),
+                "words": words[:10],
+                "representative_messages": representative_msgs,
+                "by_party": party_counts,
+            })
+
+        return web.json_response({
+            "status": "success",
+            "total_messages": len(texts),
+            "num_topics": len(topics_list),
+            "topics": sorted(topics_list, key=lambda x: x["count"], reverse=True),
+        })
+
+    except Exception as e:
+        logger.error(f"BERTopic analysis failed: {e}", exc_info=True)
+        return web.json_response(
+            {"status": "error", "message": str(e)}, status=500
+        )
+
+
 @routes.post(f"{route_prefix}/get-parliamentary-question")
 @inject_params
 async def get_parliamentary_question(body: ParliamentaryQuestionRequestDto):

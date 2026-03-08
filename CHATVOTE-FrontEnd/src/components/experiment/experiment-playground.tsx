@@ -19,7 +19,9 @@ import {
   FlaskConicalIcon,
   ExternalLinkIcon,
   FileTextIcon,
+  BarChart3Icon,
 } from "lucide-react";
+import Link from "next/link";
 
 import {
   FiabiliteBadge,
@@ -107,14 +109,23 @@ export default function ExperimentPlayground() {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <FlaskConicalIcon className="text-muted-foreground size-6" />
-        <div>
-          <h1 className="text-2xl font-bold">Chunk Metadata Explorer</h1>
-          <p className="text-muted-foreground text-sm">
-            Search the vector store with metadata filters. Compare filtered vs unfiltered retrieval.
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FlaskConicalIcon className="text-muted-foreground size-6" />
+          <div>
+            <h1 className="text-2xl font-bold">Chunk Metadata Explorer</h1>
+            <p className="text-muted-foreground text-sm">
+              Search the vector store with metadata filters. Compare filtered vs unfiltered retrieval.
+            </p>
+          </div>
         </div>
+        <Link
+          href="/experiment/topics"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
+        >
+          <BarChart3Icon className="size-4" />
+          Topic Insights
+        </Link>
       </div>
 
       <Separator />
