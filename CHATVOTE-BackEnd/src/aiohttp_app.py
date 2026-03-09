@@ -1144,13 +1144,13 @@ for route in list(app.router.routes()):
 sio.attach(app)
 
 
-# Start Firestore listeners for automatic indexation
-async def on_startup(app):
-    """Called when the application starts."""
-    logger.info("=== on_startup BEGIN ===")
+# Background initialization (non-blocking) so the HTTP server starts immediately
+async def _deferred_init():
+    """Run slow initialization tasks in the background after server starts."""
+    logger.info("=== _deferred_init BEGIN ===")
 
     # Reset rate limit flag on startup (with timeout to prevent hanging)
-    logger.info("Resetting LLM rate limit flags on startup...")
+    logger.info("Resetting LLM rate limit flags...")
     try:
         await asyncio.wait_for(reset_all_rate_limits(), timeout=10)
         logger.info("LLM rate limit flags reset successfully")
@@ -1164,7 +1164,6 @@ async def on_startup(app):
 
     # Skip Firestore indexation listeners in local dev — seeding triggers them
     # and causes heavy scraping/embedding (Gemini API calls) on every restart.
-    # Vectors are already seeded by `make seed --with-vectors`.
     env = os.environ.get("ENV", "local")
     if env == "local":
         logger.info(
@@ -1175,7 +1174,9 @@ async def on_startup(app):
         # Start Firestore listener for parties (manifesto indexation)
         logger.info("Starting Firestore parties listener...")
         try:
-            start_parties_listener(event_loop=event_loop)
+            await asyncio.get_event_loop().run_in_executor(
+                None, lambda: start_parties_listener(event_loop=event_loop)
+            )
             logger.info("Firestore parties listener started successfully")
         except Exception as e:
             logger.error(f"Failed to start Firestore parties listener: {e}")
@@ -1183,7 +1184,9 @@ async def on_startup(app):
         # Start Firestore listener for candidates (website indexation)
         logger.info("Starting Firestore candidates listener...")
         try:
-            start_candidates_listener(event_loop=event_loop)
+            await asyncio.get_event_loop().run_in_executor(
+                None, lambda: start_candidates_listener(event_loop=event_loop)
+            )
             logger.info("Firestore candidates listener started successfully")
         except Exception as e:
             logger.error(f"Failed to start Firestore candidates listener: {e}")
@@ -1197,7 +1200,13 @@ async def on_startup(app):
     except Exception as e:
         logger.error(f"Failed to start scheduler: {e}")
 
-    logger.info("=== on_startup END ===")
+    logger.info("=== _deferred_init END ===")
+
+
+async def on_startup(app):
+    """Called when the application starts. Schedules init in background so server starts fast."""
+    logger.info("=== on_startup: scheduling deferred init in background ===")
+    asyncio.create_task(_deferred_init())
 
 
 app.on_startup.append(on_startup)
