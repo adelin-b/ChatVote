@@ -1425,10 +1425,18 @@ async def generate_streaming_global_combined_response(
         if selected_electoral_lists:
             if locale == "en":
                 local_candidates_info += f"\n## Electoral lists selected by the user in {municipality_name}\n"
-                local_candidates_info += "The user is specifically interested in the following electoral lists. Prioritize information about these lists and their candidates:\n"
+                local_candidates_info += (
+                    "The user has explicitly selected the following electoral lists in the interface. "
+                    "You KNOW what the user selected. If the user asks what they selected, or asks about 'those' / 'these' / 'my selection', "
+                    "refer to the lists below. Prioritize information about these lists and their candidates:\n"
+                )
             else:
                 local_candidates_info += f"\n## Listes électorales sélectionnées par l'utilisateur à {municipality_name}\n"
-                local_candidates_info += "L'utilisateur s'intéresse spécifiquement aux listes électorales suivantes. Priorise les informations sur ces listes et leurs candidats :\n"
+                local_candidates_info += (
+                    "L'utilisateur a explicitement sélectionné les listes électorales suivantes dans l'interface. "
+                    "Tu SAIS ce que l'utilisateur a sélectionné. S'il demande ce qu'il a sélectionné, ou parle de 'celles-ci' / 'ces listes' / 'ma sélection', "
+                    "réfère-toi aux listes ci-dessous. Priorise les informations sur ces listes et leurs candidats :\n"
+                )
             for el_list in selected_electoral_lists:
                 head_name = f"{el_list.get('head_first_name', '')} {el_list.get('head_last_name', '')}".strip()
                 local_candidates_info += f"- **{el_list.get('list_label', '')}** ({el_list.get('list_short_label', '')}) — Tête de liste : {head_name}\n"

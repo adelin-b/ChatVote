@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import { ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
+
+import IconSidebar from "@components/layout/icon-sidebar";
 
 import {
   PolarAngleAxis,
@@ -16,6 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { toTitleCase } from "@lib/utils";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Separator } from "@components/ui/separator";
@@ -117,6 +120,7 @@ function normalize(values: number[]): number[] {
 
 type RadarEntry = {
   theme: string;
+  citizen: number;
   program: number;
 };
 
@@ -124,12 +128,15 @@ function buildRadarData(
   themes: TaxonomyTheme[],
   listLabel: string,
 ): RadarEntry[] {
+  const citizenRaw = themes.map((t) => t.total_count);
   const programRaw = themes.map((t) => t.by_list[listLabel] ?? 0);
+  const citizenNorm = normalize(citizenRaw);
   const programNorm = normalize(programRaw);
 
   return themes.map((t, i) => ({
     theme:
       t.theme,
+    citizen: citizenNorm[i],
     program: programNorm[i],
   }));
 }
@@ -146,7 +153,7 @@ function buildCombinedRadarData(
     const values = lists.map((l) => t.by_list[l.list_label] ?? 0);
     const max = Math.max(...values, 1);
     lists.forEach((l) => {
-      entry[l.list_short_label || l.list_label] = Math.round(
+      entry[toTitleCase(l.list_label)] = Math.round(
         ((t.by_list[l.list_label] ?? 0) / max) * 100,
       );
     });
@@ -154,107 +161,39 @@ function buildCombinedRadarData(
   });
 }
 
+function alignmentScore(data: RadarEntry[]): number {
+  if (data.length === 0) return 0;
+  const scores = data.map(({ citizen, program }) => {
+    const mx = Math.max(citizen, program, 1);
+    const mn = Math.min(citizen, program);
+    return mn / mx;
+  });
+  return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100);
+}
+
+function blindSpots(data: RadarEntry[], topN = 5): string[] {
+  const sorted = [...data].sort((a, b) => b.citizen - a.citizen);
+  const top = sorted.slice(0, topN);
+  return top
+    .filter(({ program }) => program < 30)
+    .map(({ theme }) => theme);
+}
+
+function scoreColor(score: number): string {
+  if (score >= 70) return "text-green-500";
+  if (score >= 55) return "text-amber-500";
+  return "text-red-500";
+}
+
+function scoreBg(score: number): string {
+  if (score >= 70) return "bg-green-500/10 border-green-500/30";
+  if (score >= 55) return "bg-amber-500/10 border-amber-500/30";
+  return "bg-red-500/10 border-red-500/30";
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function CommuneSidebar({ currentCode }: { currentCode: string }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ code: string; nom: string; codesPostaux?: string[] }>>([]);
-  const [searching, setSearching] = useState(false);
-
-  useEffect(() => {
-    if (query.length < 2) {
-      setResults([]);
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await fetch(`/api/municipalities`);
-        if (res.ok) {
-          const data = await res.json() as Array<{ code: string; nom: string; codesPostaux?: string[] }>;
-          const q = query.toLowerCase();
-          const filtered = (Array.isArray(data) ? data : []).filter(
-            (m) =>
-              m.nom?.toLowerCase().includes(q) ||
-              m.codesPostaux?.some((cp) => cp.startsWith(q))
-          ).slice(0, 20);
-          setResults(filtered);
-        }
-      } catch { /* ignore */ }
-      setSearching(false);
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [query]);
-
-  return (
-    <>
-      {/* Toggle button */}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-surface border border-border-subtle rounded-r-lg p-2 hover:bg-border-subtle/40 transition-colors"
-      >
-        {open ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
-      </button>
-
-      {/* Sidebar panel */}
-      {open && (
-        <div className="fixed left-0 top-0 bottom-0 z-20 w-72 bg-surface border-r border-border-subtle flex flex-col shadow-xl">
-          <div className="p-4 border-b border-border-subtle">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-              Communes
-            </p>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher une commune…"
-                className="w-full bg-border-subtle/40 border border-border-subtle rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-            {searching && (
-              <p className="text-xs text-muted-foreground text-center py-4">Recherche…</p>
-            )}
-            {!searching && query.length >= 2 && results.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">Aucun résultat</p>
-            )}
-            {results.map((r) => (
-              <Link
-                key={r.code}
-                href={`/commune/${r.code}`}
-                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                  r.code === currentCode
-                    ? "bg-primary/20 text-primary"
-                    : "text-foreground hover:bg-border-subtle/40"
-                }`}
-              >
-                <span className="font-medium">{r.nom}</span>
-                {r.codesPostaux?.[0] && (
-                  <span className="text-muted-foreground ml-1 text-xs">
-                    ({r.codesPostaux[0]})
-                  </span>
-                )}
-              </Link>
-            ))}
-            {query.length < 2 && (
-              <p className="text-xs text-muted-foreground text-center py-4">
-                Tapez au moins 2 caractères
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 function StatCard({
   value,
@@ -360,7 +299,7 @@ function LegendBar({ lists }: { lists: ListInfo[] }) {
             style={{ backgroundColor: listColor(i) }}
           />
           <span className="text-xs text-muted-foreground">
-            {list.list_short_label || list.list_label}
+            {toTitleCase(list.list_label || list.list_short_label)}
           </span>
         </div>
       ))}
@@ -380,6 +319,8 @@ function RadarCard({
   const color = listColor(listIndex);
   const headName = `${list.head_first_name} ${list.head_last_name}`;
   const radarData = buildRadarData(themes, list.list_label);
+  const score = alignmentScore(radarData);
+  const blind = blindSpots(radarData);
 
   return (
     <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden flex flex-col">
@@ -389,8 +330,8 @@ function RadarCard({
           <p className="font-bold text-foreground text-sm leading-tight">
             {headName}
           </p>
-          <p className="text-xs uppercase text-muted-foreground tracking-wider mt-0.5 truncate">
-            {list.list_short_label || list.list_label}
+          <p className="text-xs text-muted-foreground tracking-wider mt-0.5 truncate">
+            {toTitleCase(list.list_label)}
           </p>
         </div>
 
@@ -409,6 +350,14 @@ function RadarCard({
                 axisLine={false}
               />
               <Radar
+                name="Citoyens"
+                dataKey="citizen"
+                stroke="#a1a1aa"
+                fill="transparent"
+                strokeDasharray="4 3"
+                strokeWidth={1.5}
+              />
+              <Radar
                 name="Programme"
                 dataKey="program"
                 stroke={color}
@@ -419,6 +368,33 @@ function RadarCard({
             </RadarChart>
           </ResponsiveContainer>
         </div>
+
+        <div
+          className={`border rounded-lg px-3 py-2 flex items-center justify-between ${scoreBg(score)}`}
+        >
+          <span className="text-xs text-muted-foreground">Alignement</span>
+          <span className={`text-xl font-extrabold ${scoreColor(score)}`}>
+            {score}%
+          </span>
+        </div>
+
+        {blind.length > 0 && (
+          <div>
+            <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1.5">
+              Angles morts
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {blind.map((theme) => (
+                <span
+                  key={theme}
+                  className="inline-block text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 rounded px-1.5 py-0.5"
+                >
+                  {theme}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -492,6 +468,115 @@ function CitizenRadarSection({
   );
 }
 
+function BlindSpotsSection({
+  citizenThemes,
+  taxonomyThemes,
+}: {
+  citizenThemes: Array<{ theme: string; count: number; percentage: number }>;
+  taxonomyThemes: TaxonomyTheme[];
+}) {
+  if (citizenThemes.length === 0 || taxonomyThemes.length === 0) return null;
+
+  const citizenMap = Object.fromEntries(citizenThemes.map((c) => [c.theme, c.percentage]));
+  const programMap = Object.fromEntries(taxonomyThemes.map((t) => [t.theme, t.percentage]));
+
+  // Compute gap = citizen% - program% for each theme
+  const allThemes = taxonomyThemes.map((t) => t.theme);
+  const gaps = allThemes
+    .map((theme) => ({
+      theme,
+      citizenPct: citizenMap[theme] ?? 0,
+      programPct: programMap[theme] ?? 0,
+      gap: (citizenMap[theme] ?? 0) - (programMap[theme] ?? 0),
+    }))
+    .filter((g) => g.gap > 2) // only meaningful gaps
+    .sort((a, b) => b.gap - a.gap);
+
+  if (gaps.length === 0) return null;
+
+  const maxGap = gaps[0].gap;
+
+  return (
+    <section>
+      <SectionLabel>Angles morts — Préoccupations citoyennes sous-couvertes</SectionLabel>
+      <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden">
+        <div className="px-5 pt-4 pb-2 border-b border-border-subtle">
+          <p className="font-semibold text-foreground text-sm">
+            Écart entre questions citoyennes et couverture des programmes
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Thèmes où les citoyens posent proportionnellement plus de questions que ce que les programmes couvrent
+          </p>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          {gaps.map((g) => (
+            <div key={g.theme} className="flex items-center gap-3">
+              <span className="w-40 text-sm text-foreground truncate shrink-0 font-medium">
+                {g.theme}
+              </span>
+              <div className="flex-1 flex flex-col gap-1">
+                {/* Citizen bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-3 bg-border-subtle/40 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${(g.citizenPct / Math.max(g.citizenPct, g.programPct, 1)) * 100}%`,
+                        background: "#381AF3",
+                      }}
+                    />
+                  </div>
+                  <span className="w-14 text-right text-xs text-muted-foreground shrink-0">
+                    {g.citizenPct.toFixed(1)}%
+                  </span>
+                </div>
+                {/* Program bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-3 bg-border-subtle/40 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${(g.programPct / Math.max(g.citizenPct, g.programPct, 1)) * 100}%`,
+                        background: "#a1a1aa",
+                      }}
+                    />
+                  </div>
+                  <span className="w-14 text-right text-xs text-muted-foreground shrink-0">
+                    {g.programPct.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              {/* Gap badge */}
+              <div
+                className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold text-white"
+                style={{
+                  background: `rgba(239, 68, 68, ${0.4 + (g.gap / maxGap) * 0.6})`,
+                }}
+              >
+                +{g.gap.toFixed(1)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-5 pb-4 flex items-center gap-6 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-5 h-2 rounded-full" style={{ background: "#381AF3" }} />
+            Questions citoyennes
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-5 h-2 rounded-full" style={{ background: "#a1a1aa" }} />
+            Couverture programmes
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-5 h-3 rounded bg-red-500/60 px-1 text-[10px] font-bold text-white leading-none flex items-center">+</span>
+            Écart (points de %)
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CombinedRadarSection({
   themes,
   lists,
@@ -522,8 +607,8 @@ function CombinedRadarSection({
               {lists.map((list, i) => (
                 <Radar
                   key={list.panel_number}
-                  name={list.list_short_label || list.list_label}
-                  dataKey={list.list_short_label || list.list_label}
+                  name={toTitleCase(list.list_label)}
+                  dataKey={toTitleCase(list.list_label)}
                   stroke={listColor(i)}
                   fill={listColor(i)}
                   fillOpacity={0.05}
@@ -545,6 +630,15 @@ function CombinedRadarSection({
 export default function CommuneDashboardPage() {
   const params = useParams<{ communeCode: string }>();
   const communeCode = params.communeCode;
+  const router = useRouter();
+
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/chat");
+    }
+  };
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -578,10 +672,13 @@ export default function CommuneDashboardPage() {
   // ---- Loading state -------------------------------------------------------
   if (loading) {
     return (
-      <div className="overflow-y-auto h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-muted-foreground">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">Chargement du tableau de bord…</p>
+      <div className="flex h-screen bg-background">
+        <IconSidebar />
+        <div className="flex-1 overflow-y-auto flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 text-muted-foreground">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm">Chargement du tableau de bord…</p>
+          </div>
         </div>
       </div>
     );
@@ -590,18 +687,21 @@ export default function CommuneDashboardPage() {
   // ---- Error state ---------------------------------------------------------
   if (error || !data) {
     return (
-      <div className="overflow-y-auto h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-          <p className="text-destructive font-semibold">
-            {error ?? "Données introuvables"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Impossible de charger le tableau de bord pour la commune{" "}
-            <span className="font-mono">{communeCode}</span>.
-          </p>
-          <Button variant="outline" onClick={fetchData}>
-            Réessayer
-          </Button>
+      <div className="flex h-screen bg-background">
+        <IconSidebar />
+        <div className="flex-1 overflow-y-auto flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <p className="text-destructive font-semibold">
+              {error ?? "Données introuvables"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Impossible de charger le tableau de bord pour la commune{" "}
+              <span className="font-mono">{communeCode}</span>.
+            </p>
+            <Button variant="outline" onClick={fetchData}>
+              Réessayer
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -610,40 +710,49 @@ export default function CommuneDashboardPage() {
   const { commune, stats, taxonomy, citizen } = data;
 
   return (
-    <div className="overflow-y-auto h-screen bg-background text-foreground">
-      <CommuneSidebar currentCode={communeCode} />
-      {/* ------------------------------------------------------------------ */}
-      {/* Commune header                                                       */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="bg-surface border-b border-border-subtle">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Badge className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">
+    <div className="flex h-screen bg-background text-foreground">
+      <IconSidebar />
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
+        {/* Back arrow */}
+        <button
+          type="button"
+          onClick={handleClose}
+          className="shrink-0 rounded-lg bg-border-subtle/40 p-2 text-muted-foreground hover:text-foreground hover:bg-border-subtle transition-colors mb-4"
+          title="Retour"
+        >
+          <ArrowLeft className="size-5" />
+        </button>
+
+        {/* Commune name & info */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <Badge className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 mb-1">
               Commune
             </Badge>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {commune.name}
             </h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            {commune.postal_code && (
-              <span>CP {commune.postal_code}</span>
-            )}
-            <span>INSEE {commune.code}</span>
-            {commune.epci_nom && (
-              <>
-                <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
-                <span className="truncate max-w-[18rem]">{commune.epci_nom}</span>
-              </>
-            )}
-            <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
-            <span>
-              {commune.list_count} liste{commune.list_count !== 1 ? "s" : ""}
-            </span>
-            <span>·</span>
-            <span>
-              {stats.total_questions} question{stats.total_questions !== 1 ? "s" : ""}
-            </span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+              {commune.postal_code && (
+                <span>CP {commune.postal_code}</span>
+              )}
+              <span>INSEE {commune.code}</span>
+              {commune.epci_nom && (
+                <>
+                  <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
+                  <span className="truncate max-w-[18rem]">{commune.epci_nom}</span>
+                </>
+              )}
+              <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
+              <span>
+                {commune.list_count} liste{commune.list_count !== 1 ? "s" : ""}
+              </span>
+              <span>·</span>
+              <span>
+                {stats.total_questions} question{stats.total_questions !== 1 ? "s" : ""}
+              </span>
+            </div>
           </div>
           <Link
             href={`/chat?municipality_code=${commune.code}`}
@@ -741,6 +850,13 @@ export default function CommuneDashboardPage() {
         )}
 
         {/* ---------------------------------------------------------------- */}
+        {/* Blind spots                                                       */}
+        {/* ---------------------------------------------------------------- */}
+        {citizen && citizen.themes.length > 0 && taxonomy.themes.length > 0 && (
+          <BlindSpotsSection citizenThemes={citizen.themes} taxonomyThemes={taxonomy.themes} />
+        )}
+
+        {/* ---------------------------------------------------------------- */}
         {/* Combined radar                                                    */}
         {/* ---------------------------------------------------------------- */}
         {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
@@ -767,6 +883,7 @@ export default function CommuneDashboardPage() {
             </div>
           </section>
         )}
+      </div>
       </div>
     </div>
   );

@@ -15,6 +15,13 @@ import { BugIcon, XIcon, ChevronDownIcon, ChevronRightIcon } from "lucide-react"
 import { cn } from "@lib/utils";
 
 export default function DevMetadataSidebar() {
+  // Must check before any hooks to avoid conditional hook calls
+  if (process.env.NODE_ENV !== "development") return null;
+
+  return <DevMetadataSidebarInner />;
+}
+
+function DevMetadataSidebarInner() {
   const [open, setOpen] = useState(false);
 
   const currentStreaming = useChatStore((s) => s.currentStreamingMessages);
@@ -41,8 +48,6 @@ export default function DevMetadataSidebar() {
       }
     }
   }
-
-  if (process.env.NODE_ENV !== "development") return null;
 
   return (
     <>

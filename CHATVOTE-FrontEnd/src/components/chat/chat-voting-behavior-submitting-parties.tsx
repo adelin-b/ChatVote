@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import Image from "next/image";
 
 import { type Vote } from "@lib/socket.types";
-import { buildPartyImageUrl } from "@lib/utils";
+import { buildPartyImageUrl, toTitleCase } from "@lib/utils";
 import { useTranslations } from "next-intl";
 
 import { useParties } from "../providers/parties-provider";
@@ -52,7 +52,7 @@ function ChatVotingBehaviorSubmittingParties({ vote }: Props) {
                 className="rounded-full object-contain"
               />
             </div>
-            {party.name}
+            {toTitleCase(party.name)}
           </div>
         ))}
       </div>

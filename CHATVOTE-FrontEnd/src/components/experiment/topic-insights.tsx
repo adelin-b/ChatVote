@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
+import { CommuneSidebar } from "@components/commune/commune-sidebar";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Separator } from "@components/ui/separator";
@@ -11,6 +12,7 @@ import {
   BrainCircuitIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  DatabaseIcon,
   FlaskConicalIcon,
   Loader2Icon,
   MessageSquareIcon,
@@ -111,6 +113,7 @@ export default function TopicInsights() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
+      <CommuneSidebar />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -122,13 +125,22 @@ export default function TopicInsights() {
             </p>
           </div>
         </div>
-        <Link
-          href="/experiment"
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
-        >
-          <FlaskConicalIcon className="size-4" />
-          Chunk Explorer
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/experiment"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
+          >
+            <FlaskConicalIcon className="size-4" />
+            Chunk Explorer
+          </Link>
+          <Link
+            href="/experiment/coverage"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
+          >
+            <DatabaseIcon className="size-4" />
+            Coverage Report
+          </Link>
+        </div>
       </div>
 
       {/* Tab bar */}

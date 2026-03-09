@@ -1,9 +1,6 @@
 "use client";
 
-import Image from "next/image";
-
 import { useAnonymousAuth } from "@components/anonymous-auth";
-import ChatPostcodePrompt from "@components/chat/chat-postcode-prompt";
 import { useChatStore } from "@components/providers/chat-store-provider";
 import { type ProposedQuestion } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
@@ -47,41 +44,24 @@ const ChatEmptyView = ({
   const party = parties?.[0];
 
   return (
-    <div className="flex grow flex-col items-center justify-center gap-4 px-8">
-      <div className="relative flex size-28 items-center justify-center rounded-md border-2 border-border-strong bg-white md:size-36">
-        {party ? (
-          <Image
-            alt={party.name}
-            src={party.logo_url}
-            fill
-            sizes="(max-width: 768px) 40vw, 20vw"
-            className="object-contain p-4"
-          />
-        ) : (
-          <Image
-            src="/images/logos/chatvote.svg"
-            alt="chatvote"
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="logo-theme size-full p-4"
-          />
-        )}
-      </div>
-      <ChatPostcodePrompt />
-      {!!municipalityCode ? (
-        <div>
-          {party ? (
-            <p className="text-center">
-              {t("partyDescription", { party: party.name })}
-            </p>
-          ) : (
-            <p className="text-center">{t("genericDescription")}</p>
-          )}
-        </div>
-      ) : null}
+    <div className="flex grow flex-col gap-6 px-2 md:px-8">
+      {/* Description as another assistant bubble */}
       {!!municipalityCode && (
-        <div className="flex max-w-xl flex-wrap justify-center gap-2">
+        <div className="flex max-w-2xl items-start gap-3">
+          <div className="size-10 shrink-0" /> {/* spacer to align with icon above */}
+          <div className="text-foreground text-sm">
+            {party ? (
+              <p>{t("partyDescription", { party: party.name })}</p>
+            ) : (
+              <p>{t("genericDescription")}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Proposed questions as suggestion chips */}
+      {!!municipalityCode && (
+        <div className="flex max-w-2xl flex-wrap gap-2 pl-[52px]">
           {proposedQuestions?.map((question) => (
             <InitialSuggestionBubble
               key={question.id}

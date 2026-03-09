@@ -8,7 +8,7 @@ import { cn } from "@lib/utils";
 import ChatContextSidebar from "./chat-context-sidebar";
 import ChatSidebar from "./sidebar/chat-sidebar";
 import ChatSidebarDesktop from "./sidebar/chat-sidebar-desktop";
-import DevMetadataSidebar from "./dev-metadata-sidebar";
+import DevMetadataSidebarWrapper from "./dev-metadata-sidebar-wrapper";
 import ChatDynamicChatInput from "./chat-dynamic-chat-input";
 import ChatHeader from "./chat-header";
 import ChatMainContent from "./chat-main-content";
@@ -28,8 +28,10 @@ async function ChatView({
   initialQuestion,
   municipalityCode,
 }: Props) {
-  const systemStatus = await getSystemStatus();
-  const auth = await getAuth();
+  const [systemStatus, auth] = await Promise.all([
+    getSystemStatus(),
+    getAuth(),
+  ]);
 
   return (
     <div className="relative flex size-full h-full items-stretch overflow-hidden">
@@ -37,7 +39,7 @@ async function ChatView({
       <ChatSidebar />
       <ChatSidebarDesktop auth={auth} />
       <ChatContextSidebar />
-      <DevMetadataSidebar />
+      <DevMetadataSidebarWrapper />
       <div className="relative flex w-full flex-col overflow-hidden">
         <ChatHeader />
         {/* Main content - adds padding when sidebar is expanded */}

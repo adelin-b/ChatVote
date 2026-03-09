@@ -8,6 +8,8 @@ import { useAnonymousAuth } from "@components/anonymous-auth";
 import { useChatStore } from "@components/providers/chat-store-provider";
 import { type ProposedQuestion } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
+import { toTitleCase } from "@lib/utils";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import ChatPostcodePrompt from "./chat-postcode-prompt";
@@ -22,6 +24,15 @@ const GroupChatEmptyView = ({ parties, proposedQuestions }: Props) => {
   const t = useTranslations("chat.emptyView");
   const { user } = useAnonymousAuth();
   const addUserMessage = useChatStore((state) => state.addUserMessage);
+  const selectedElectoralLists = useChatStore(
+    (state) => state.selectedElectoralLists,
+  );
+  const electoralListsData = useChatStore(
+    (state) => state.electoralListsData,
+  );
+  const selectedLists = electoralListsData.filter((l) =>
+    selectedElectoralLists.includes(l.panel_number),
+  );
 
   function handleSuggestionClick(suggestion: string) {
     if (!user?.uid) {
@@ -63,11 +74,27 @@ const GroupChatEmptyView = ({ parties, proposedQuestions }: Props) => {
           <br />
           {parties?.map((party, index) => (
             <span key={party.party_id} className="font-semibold">
-              {party.name}
+              {toTitleCase(party.name)}
               {parties.length > 1 && index < parties.length - 1 && ", "}
             </span>
           ))}
         </p>
+        {selectedLists.length > 0 && (
+          <div className="flex max-w-xl flex-wrap items-center justify-center gap-2">
+            <span className="text-muted-foreground text-xs">
+              {t("selectedLists")}
+            </span>
+            {selectedLists.map((list) => (
+              <span
+                key={list.panel_number}
+                className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+              >
+                <CheckCircle2 className="size-3" />
+                {list.list_short_label || list.list_label}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex max-w-xl flex-wrap justify-center gap-2">
           {proposedQuestions?.map((question) => (
             <InitialSuggestionBubble

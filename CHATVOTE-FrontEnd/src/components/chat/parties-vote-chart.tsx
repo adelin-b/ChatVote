@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { type Vote } from "@lib/socket.types";
+import { toTitleCase } from "@lib/utils";
 import { useTranslations } from "next-intl";
 
 import { useChatVotingDetails } from "../providers/chat-voting-details-provider";
@@ -69,7 +70,7 @@ function PartiesVoteChart({ vote }: Props) {
               {partyNamesAndKeys.map((party) => {
                 return (
                   <SelectItem key={party.key} value={party.key}>
-                    {party.name}
+                    {toTitleCase(party.name)}
                   </SelectItem>
                 );
               })}

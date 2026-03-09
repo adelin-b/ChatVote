@@ -56,21 +56,24 @@ async function ChatViewSsr({
   initialQuestion,
   municipalityCode,
 }: Props) {
-  const chatSession = chatId
-    ? await getChatSessionServer(chatId, partyIds)
-    : undefined;
-
-  const messages = chatId ? await getChatSessionMessages(chatId) : undefined;
+  // Fetch chat-specific data and independent data in parallel
+  const [chatSession, messages] = chatId
+    ? await Promise.all([
+        getChatSessionServer(chatId, partyIds),
+        getChatSessionMessages(chatId),
+      ])
+    : [undefined, undefined];
 
   const normalizedPartyIds = chatSession?.party_ids ?? partyIds;
 
-  const parties = normalizedPartyIds
-    ? await getPartiesById(normalizedPartyIds)
-    : undefined;
-
-  const allParties = await getParties();
-
-  const proposedQuestions = await getProposedQuestions(normalizedPartyIds);
+  // Fetch parties and proposed questions in parallel (all independent)
+  const [parties, allParties, proposedQuestions] = await Promise.all([
+    normalizedPartyIds
+      ? getPartiesById(normalizedPartyIds)
+      : Promise.resolve(undefined),
+    getParties(),
+    getProposedQuestions(normalizedPartyIds),
+  ]);
 
   return (
     <ChatMessagesView

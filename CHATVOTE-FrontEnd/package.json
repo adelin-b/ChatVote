@@ -5,7 +5,7 @@
   "scripts": {
     "generate:types": "node scripts/generate-types.mjs",
     "predev": "npm run generate:types",
-    "dev": "react-grab-claude-code && node scripts/watch-backend-types.mjs & next dev --turbopack",
+    "dev": "node scripts/watch-backend-types.mjs & next dev --turbopack",
     "dev:next": "next dev --turbopack",
     "prebuild": "npm run generate:types",
     "build": "next build --turbopack",

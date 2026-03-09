@@ -69,7 +69,7 @@ const ChatSidebarDesktop = ({ auth }: Props) => {
         <DonationDialog>
           <Button
             data-sidebar="donation"
-            variant="secondary"
+            variant="donation"
             size="icon"
             className={cn("size-10")}
           >

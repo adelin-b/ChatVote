@@ -3,6 +3,13 @@ import { type NextConfig } from "next";
 
 import createNextIntlPlugin from "next-intl/plugin";
 
+if (process.env.NODE_ENV === "development") {
+  // Clear CLAUDECODE env so react-grab can spawn Claude Code without nested-session error
+  delete process.env.CLAUDECODE;
+  const { startServer } = require("@react-grab/claude-code/server");
+  startServer();
+}
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,

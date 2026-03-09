@@ -22,6 +22,10 @@ import { mergeStreamingChunkPayloadForMessage } from "./actions/merge-streaming-
 import { newChat } from "./actions/new-chat";
 import { resetStreamingMessage } from "./actions/reset-streaming-message";
 import { selectRespondingParties } from "./actions/select-responding-parties";
+import {
+  loadUserDemographics,
+  setUserDemographic,
+} from "./actions/user-demographics";
 import { setChatId } from "./actions/set-chat-id";
 import { setChatSessionIsPublic } from "./actions/set-chat-session-is-public";
 import { setInput } from "./actions/set-input";
@@ -70,6 +74,8 @@ const defaultState: ChatStoreState = {
   selectedElectoralLists: [],
   electoralListsData: [],
   locale: "fr",
+  userDemographics: null,
+  demographicsLoaded: false,
 };
 
 export function createChatStore(initialState?: Partial<ChatStore>) {
@@ -137,6 +143,8 @@ export function createChatStore(initialState?: Partial<ChatStore>) {
           }),
         getLLMSize: () => get().tenant?.llm_size ?? DEFAULT_LLM_SIZE,
         resetStreamingMessage: resetStreamingMessage(get, set),
+        setUserDemographic: setUserDemographic(get, set),
+        loadUserDemographics: loadUserDemographics(get, set),
       })),
     ),
   );

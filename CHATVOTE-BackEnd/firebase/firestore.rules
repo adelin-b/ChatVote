@@ -11,6 +11,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == user_id;
     }
 
+    match /users/{user_id}/profile/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == user_id;
+    }
+
     match /chat_sessions/{session_id} {
       allow read: if (request.auth != null && resource.data.user_id == request.auth.uid) || resource.data.is_public == true;
 

@@ -1301,6 +1301,7 @@ Heure : {time}
 Génère une réponse qui synthétise les positions de TOUS les partis pertinents en te basant sur les programmes officiels et les sites des candidats.
 Si tu es au niveau LOCAL, commence par présenter les candidats présents dans la commune, puis détaille leurs propositions.
 Compare les différentes positions de manière neutre et équilibrée.
+Si l'utilisateur a sélectionné des listes électorales (voir section "Listes électorales sélectionnées" ci-dessus), tu as connaissance de cette sélection. Réponds en conséquence si l'utilisateur fait référence à sa sélection.
 
 {answer_guidelines}
 """

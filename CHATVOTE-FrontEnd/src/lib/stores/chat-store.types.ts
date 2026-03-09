@@ -1,6 +1,7 @@
 import type ChatSocket from "@lib/chat-socket";
 import { type ElectoralList } from "@lib/election/election.types";
 import { type ChatSession, type Tenant } from "@lib/firebase/firebase.types";
+import { type UserDemographics } from "@lib/firebase/user-profile";
 import { type PartyDetails } from "@lib/party-details";
 import {
   type ChatScope,
@@ -121,6 +122,8 @@ export type ChatStoreState = {
   selectedElectoralLists: number[];
   electoralListsData: ElectoralList[];
   locale: string;
+  userDemographics: UserDemographics | null;
+  demographicsLoaded: boolean;
 };
 
 export type ChatStoreActions = {
@@ -231,6 +234,8 @@ export type ChatStoreActions = {
     partyId: string,
     reason: string,
   ) => void;
+  setUserDemographic: (field: keyof UserDemographics, value: unknown) => void;
+  loadUserDemographics: (userId: string) => Promise<void>;
 };
 
 export type ChatStore = ChatStoreState & ChatStoreActions;

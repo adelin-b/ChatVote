@@ -120,7 +120,8 @@
     "emptyView": {
       "partyDescription": "Posez vos questions au programme du parti {party} et comparez leurs réponses avec celles des autres partis.",
       "genericDescription": "Posez des questions sur tous les sujets liés aux élections ou interrogez directement les partis sur leurs positions dans leur programme.",
-      "groupDescription": "Démarrez votre chat comparatif avec les partis suivants :"
+      "groupDescription": "Démarrez votre chat comparatif avec les partis suivants :",
+      "selectedLists": "Listes sélectionnées :"
     },
     "thinking": {
       "searchingSources": "Recherche des sources pertinentes...",

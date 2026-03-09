@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+
+import { initAnalytics } from "@lib/firebase/analytics";
 
 import { type Auth, AuthProvider } from "@components/anonymous-auth";
 import AuthServiceWorkerProvider from "@components/providers/auth-service-worker-provider";
@@ -39,6 +41,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({
   device,
   parties,
 }) => {
+  useEffect(() => {
+    void initAnalytics();
+  }, []);
+
   return (
     <AppContext.Provider value={{ device, locale }}>
       <AuthServiceWorkerProvider />

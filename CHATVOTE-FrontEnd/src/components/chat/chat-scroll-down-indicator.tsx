@@ -91,7 +91,7 @@ function ChatScrollDownIndicator() {
       <Button
         variant="default"
         className={cn(
-          "bg-background border-border dark:hover:bg-muted size-8 rounded-full border shadow-xl hover:bg-zinc-100 dark:bg-zinc-900",
+          "bg-surface border-border hover:bg-muted size-8 rounded-full border shadow-xl",
           "z-40 transition-all duration-200 ease-in-out",
           "md:hover:-translate-y-1 md:hover:scale-110",
           isVisible

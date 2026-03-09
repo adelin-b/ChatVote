@@ -20,6 +20,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   BarChart3Icon,
+  DatabaseIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -119,13 +120,22 @@ export default function ExperimentPlayground() {
             </p>
           </div>
         </div>
-        <Link
-          href="/experiment/topics"
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
-        >
-          <BarChart3Icon className="size-4" />
-          Topic Insights
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/experiment/topics"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
+          >
+            <BarChart3Icon className="size-4" />
+            Topic Insights
+          </Link>
+          <Link
+            href="/experiment/coverage"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
+          >
+            <DatabaseIcon className="size-4" />
+            Coverage Report
+          </Link>
+        </div>
       </div>
 
       <Separator />

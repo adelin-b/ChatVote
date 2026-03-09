@@ -161,6 +161,54 @@ export function buildPartyImageUrl(partyId: string) {
 }
 
 /**
+ * Converts an ALL-CAPS or mixed-case string to Title Case.
+ * Preserves small French words (de, du, des, le, la, les, l', d', et, en)
+ * in lowercase unless they are the first word.
+ */
+export function toTitleCase(text: string): string {
+  const smallWords = new Set([
+    "de",
+    "du",
+    "des",
+    "le",
+    "la",
+    "les",
+    "et",
+    "en",
+    "au",
+    "aux",
+  ]);
+
+  return text
+    .toLowerCase()
+    .split(" ")
+    .map((word, index) => {
+      if (word.length === 0) return word;
+
+      // Handle l' and d' prefixes (e.g. "L'AVENIR" → "l'Avenir")
+      if (/^[ld]'/.test(word) && word.length > 2) {
+        if (index === 0) {
+          return (
+            word.charAt(0).toUpperCase() +
+            "'" +
+            word.charAt(2).toUpperCase() +
+            word.slice(3)
+          );
+        }
+        return word.slice(0, 2) + word.charAt(2).toUpperCase() + word.slice(3);
+      }
+
+      // Keep small words lowercase unless first word
+      if (index > 0 && smallWords.has(word)) {
+        return word;
+      }
+
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+/**
  * Converts literal escape sequences in a string to their actual characters.
  * Handles common escape sequences: \n, \t, \r, \\
  */

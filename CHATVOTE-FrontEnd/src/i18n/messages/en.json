@@ -120,7 +120,8 @@
     "emptyView": {
       "partyDescription": "Ask questions about the {party} party program and compare their answers with those of other parties.",
       "genericDescription": "Ask questions about all election-related topics or directly ask parties about their positions in their program.",
-      "groupDescription": "Start your comparative chat with the following parties:"
+      "groupDescription": "Start your comparative chat with the following parties:",
+      "selectedLists": "Selected lists:"
     },
     "thinking": {
       "searchingSources": "Searching for relevant sources...",

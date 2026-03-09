@@ -28,7 +28,7 @@ function ChatHeader() {
         {displayBanner === true && (
           <div
             className={
-              "flex w-full flex-col items-center justify-between gap-4 bg-purple-600 px-4 py-3 md:flex-row"
+              "flex w-full flex-col items-center justify-between gap-4 bg-primary px-4 py-3 text-primary-foreground md:flex-row"
             }
           >
             <div className={"flex justify-between gap-3 md:gap-0"}>
@@ -51,7 +51,7 @@ function ChatHeader() {
                 <div>En savoir plus</div>
               </Button>
               <DonationDialog>
-                <Button size="sm" data-sidebar="donation" variant="secondary">
+                <Button size="sm" data-sidebar="donation" variant="donation">
                   <Heart />
                   <div>Aidez-nous à aider la démocratie !</div>
                 </Button>

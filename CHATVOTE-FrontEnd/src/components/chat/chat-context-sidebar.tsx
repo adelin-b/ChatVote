@@ -6,7 +6,8 @@ import {
   type ElectoralList,
   type ElectoralListsByCommune,
 } from "@lib/election/election.types";
-import { cn } from "@lib/utils";
+import { cn, toTitleCase } from "@lib/utils";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useChatStore } from "../providers/chat-store-provider";
@@ -26,25 +27,28 @@ function ElectoralListCard({
     <button
       type="button"
       className={cn(
-        "flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-center transition-all duration-200",
-        "hover:border-primary/50 hover:bg-purple-100 dark:hover:bg-purple-900/30",
+        "relative flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-center transition-all duration-200",
+        "hover:border-primary/50 hover:bg-accent",
         isSelected
-          ? "border-primary bg-purple-50 dark:bg-purple-900/40"
+          ? "border-primary/40 bg-accent"
           : "border-border-subtle bg-surface",
       )}
       onClick={() => onSelect(list)}
     >
+      {isSelected && (
+        <CheckCircle2 className="absolute top-1.5 right-1.5 size-4 text-primary" />
+      )}
       <span className="text-xs text-muted-foreground">
         {list.head_first_name}
       </span>
-      <span className="text-sm font-bold uppercase">
+      <span className="text-sm font-bold">
         {list.head_last_name}
       </span>
       {list.nuance_code && (
         <div className="mt-0.5 h-px w-8 bg-primary/40" />
       )}
-      <span className="line-clamp-2 text-xs text-muted-foreground">
-        {list.list_short_label}
+      <span className="text-xs text-muted-foreground">
+        {toTitleCase(list.list_label)}
       </span>
     </button>
   );

@@ -7,7 +7,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { MunicipalitySearch } from "@components/election-flow";
 import { type Municipality } from "@lib/election/election.types";
 
-const ChatPostcodePrompt = () => {
+type Props = {
+  onMunicipalityChange?: (municipality: Municipality) => void;
+};
+
+const ChatPostcodePrompt = ({ onMunicipalityChange }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,6 +26,7 @@ const ChatPostcodePrompt = () => {
   const handleSelectMunicipality = useCallback(
     (municipality: Municipality) => {
       setSelectedMunicipality(municipality);
+      onMunicipalityChange?.(municipality);
 
       // If already set to this value, don't touch the router.
       const currentCode = searchParams.get("municipality_code");
@@ -35,7 +40,7 @@ const ChatPostcodePrompt = () => {
       // Keep user on the same page, just update querystring.
       router.replace(`${pathname}?${next.toString()}`, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, onMunicipalityChange],
   );
 
   // Watch URL changes: if municipality_code disappears but we still have a selected
