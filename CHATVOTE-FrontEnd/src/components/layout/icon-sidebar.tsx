@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MessageCircle, MessageSquareWarning, User } from "lucide-react";
+import { BarChart3, Heart, MessageCircle, MessageSquareWarning, User } from "lucide-react";
 import { Button } from "@components/ui/button";
 
 export default function IconSidebar() {
@@ -30,6 +30,11 @@ export default function IconSidebar() {
         <Button variant="secondary" size="icon" className="size-10">
           <Heart className="size-5" />
         </Button>
+        <Link href="/topics">
+          <Button variant="ghost" size="icon" className="size-10">
+            <BarChart3 className="size-5" />
+          </Button>
+        </Link>
         <Button variant="ghost" size="icon" className="size-10">
           <MessageSquareWarning className="size-5" />
         </Button>
