@@ -64,7 +64,7 @@ type TopicStatsResponse = {
 
 async function fetchTopicStats(): Promise<TopicStatsResponse | null> {
   const backendUrl =
-    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080";
+    process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080";
   try {
     const res = await fetch(`${backendUrl}/api/v1/experiment/topic-stats`, {
       cache: "no-store",
