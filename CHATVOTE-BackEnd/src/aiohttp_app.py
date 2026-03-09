@@ -1147,11 +1147,15 @@ sio.attach(app)
 # Start Firestore listeners for automatic indexation
 async def on_startup(app):
     """Called when the application starts."""
-    # Reset rate limit flag on startup
+    logger.info("=== on_startup BEGIN ===")
+
+    # Reset rate limit flag on startup (with timeout to prevent hanging)
     logger.info("Resetting LLM rate limit flags on startup...")
     try:
-        await reset_all_rate_limits()
+        await asyncio.wait_for(reset_all_rate_limits(), timeout=10)
         logger.info("LLM rate limit flags reset successfully")
+    except asyncio.TimeoutError:
+        logger.error("Timed out resetting rate limit flags (10s) — skipping")
     except Exception as e:
         logger.error(f"Failed to reset rate limit flags: {e}")
 
@@ -1193,6 +1197,8 @@ async def on_startup(app):
     except Exception as e:
         logger.error(f"Failed to start scheduler: {e}")
 
+    logger.info("=== on_startup END ===")
+
 
 app.on_startup.append(on_startup)
 
@@ -1207,6 +1213,7 @@ parser.add_argument("--debug", action="store_true", default=False)
 
 # Start the server
 if __name__ == "__main__":
+    logger.info("=== __main__ starting ===")
     args = parser.parse_args()
     host = args.host[0]
     port = args.port[0]

@@ -14,9 +14,15 @@ from src.models.chat import CachedResponse
 from src.models.party import Party
 from src.utils import load_env
 
+import logging as _logging
+
+_fb_logger = _logging.getLogger(__name__)
+
 load_env()
 
 env = os.getenv("ENV", "dev")
+
+_fb_logger.info(f"firebase_service: initializing (ENV={env})")
 
 if env == "local":
     os.environ.setdefault("FIRESTORE_EMULATOR_HOST", "localhost:8081")
@@ -31,20 +37,26 @@ else:
 
     cred = None
     if Path(credentials_path).exists():
+        _fb_logger.info(f"firebase_service: using credentials file {credentials_path}")
         cred = credentials.Certificate(credentials_path)
     elif os.getenv("FIREBASE_CREDENTIALS_BASE64"):
-        # Support credentials via base64-encoded env var (for CI/CD containerized deploys)
+        _fb_logger.info("firebase_service: using FIREBASE_CREDENTIALS_BASE64 env var")
         cred_data = json.loads(base64.b64decode(os.environ["FIREBASE_CREDENTIALS_BASE64"]))
         cred = credentials.Certificate(cred_data)
+    else:
+        _fb_logger.warning("firebase_service: no credentials found, using default init")
 
     if cred:
         firebase_admin.initialize_app(cred)
     else:
         firebase_admin.initialize_app()
 
+_fb_logger.info("firebase_service: creating Firestore clients...")
 db = firestore.client()
+_fb_logger.info("firebase_service: sync client OK")
 
 async_db = firestore_async.client()
+_fb_logger.info("firebase_service: async client OK")
 
 # ---------------------------------------------------------------------------
 # In-memory TTL cache for static Firestore data (parties rarely change)
