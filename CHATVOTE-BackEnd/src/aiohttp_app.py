@@ -960,8 +960,17 @@ async def commune_dashboard(request):
         return info, el_lists
 
     loop = asyncio.get_event_loop()
-    fs_info, lists = await loop.run_in_executor(None, _sync_firestore_lookups)
-    commune_info.update(fs_info)
+    try:
+        fs_info, lists = await asyncio.wait_for(
+            loop.run_in_executor(None, _sync_firestore_lookups), timeout=30
+        )
+        commune_info.update(fs_info)
+    except asyncio.TimeoutError:
+        logger.error(f"Firestore lookup timed out for commune {commune_code}")
+        return web.json_response(
+            {"error": "Firestore lookup timed out", "commune_code": commune_code},
+            status=504,
+        )
 
     commune_info["list_count"] = len(lists)
     commune_info["lists"] = lists
