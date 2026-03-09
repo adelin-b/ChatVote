@@ -13,7 +13,7 @@ import { Button } from "@components/ui/button";
 import { SidebarTrigger, useSidebar } from "@components/ui/sidebar";
 import { type Auth } from "@lib/types/auth";
 import { cn } from "@lib/utils";
-import { Heart, MessageSquareWarning, User, UserCheck } from "lucide-react";
+import { BarChart3, Heart, MessageSquareWarning, User, UserCheck } from "lucide-react";
 
 type Props = {
   auth: Auth;
@@ -76,6 +76,16 @@ const ChatSidebarDesktop = ({ auth }: Props) => {
             <Heart />
           </Button>
         </DonationDialog>
+        <Link href="/topics">
+          <Button
+            data-sidebar="topics"
+            variant="ghost"
+            size="icon"
+            className={cn("size-10")}
+          >
+            <BarChart3 />
+          </Button>
+        </Link>
         <FeedbackDialog>
           <Button
             data-sidebar="feedback"

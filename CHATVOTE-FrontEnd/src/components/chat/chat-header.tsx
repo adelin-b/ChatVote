@@ -34,8 +34,8 @@ function ChatHeader() {
             <div className={"flex justify-between gap-3 md:gap-0"}>
               <div className={"text-sm"}>
                 ChatVote est une initiative associative open source et
-                souveraine - la fiabilité de l'information fournie sont notre
-                priorité. Version. 1.0.
+                souveraine - la fiabilité de l'information fournie est notre
+                priorité. Version 1.0.
               </div>
               <Button
                 variant="ghost"
