@@ -180,23 +180,27 @@ export async function getChatSession(sessionId: string) {
 export async function getUsersChatSessions(
   uid: string,
 ): Promise<ChatSession[]> {
-  const snapshot = await db
-    .collection("chat_sessions")
-    .where("user_id", "==", uid)
-    .orderBy("updated_at", "desc")
-    .orderBy("created_at", "desc")
-    .limit(15)
-    .get();
+  try {
+    const snapshot = await db
+      .collection("chat_sessions")
+      .where("user_id", "==", uid)
+      .orderBy("updated_at", "desc")
+      .orderBy("created_at", "desc")
+      .limit(15)
+      .get();
 
-  return snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      updated_at: firestoreTimestampToDate(data.updated_at),
-      created_at: firestoreTimestampToDate(data.created_at),
-    } as ChatSession;
-  });
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        updated_at: firestoreTimestampToDate(data.updated_at),
+        created_at: firestoreTimestampToDate(data.created_at),
+      } as ChatSession;
+    });
+  } catch {
+    return [];
+  }
 }
 
 export async function getChatSessionMessages(sessionId: string) {
