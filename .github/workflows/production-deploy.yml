@@ -172,6 +172,25 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
+      - name: Sync runtime env vars to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SYNC_FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          SYNC_FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          SYNC_NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          SYNC_NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+        run: |
+          # Ensure server-side env vars are set for Vercel runtime (not just build time)
+          sync_var() {
+            local name="$1" value="$2"
+            vercel env rm "$name" production --yes --token="$VERCEL_TOKEN" 2>/dev/null || true
+            printf '%s' "$value" | vercel env add "$name" production --token="$VERCEL_TOKEN"
+          }
+          sync_var FIREBASE_CLIENT_EMAIL "$SYNC_FIREBASE_CLIENT_EMAIL"
+          sync_var FIREBASE_PRIVATE_KEY "$SYNC_FIREBASE_PRIVATE_KEY"
+          sync_var NEXT_PUBLIC_API_URL "$SYNC_NEXT_PUBLIC_API_URL"
+          sync_var NEXT_PUBLIC_APP_URL "$SYNC_NEXT_PUBLIC_APP_URL"
+
       - name: Build
         env:
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
