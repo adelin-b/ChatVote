@@ -15,7 +15,7 @@ from aiohttp_pydantic.decorator import inject_params
 from src.chatbot_async import (
     get_improved_rag_query_voting_behavior,
 )
-from src.firebase_service import aget_party_by_id, async_db
+from src.firebase_service import aget_party_by_id, async_db, db
 from src.llms import reset_all_rate_limits, NON_DETERMINISTIC_LLMS
 from src.models.assistant import CHATVOTE_ASSISTANT
 from src.services.manifesto_indexer import index_all_parties, index_party_by_id
@@ -713,39 +713,43 @@ async def _collect_user_messages(
     Returns (messages, session_ids) where each message has text, session_id,
     party_ids, chat_title.
     """
-    query = async_db.collection("chat_sessions")
-    if municipality_code:
-        query = query.where("municipality_code", "==", municipality_code)
+    def _sync_collect():
+        query = db.collection("chat_sessions")
+        if municipality_code:
+            query = query.where("municipality_code", "==", municipality_code)
 
-    session_ids: set[str] = set()
-    user_messages: list[dict] = []
-    async for session in query.stream():
-        session_data = session.to_dict() or {}
-        session_id = session.id
-        session_ids.add(session_id)
-        party_ids = session_data.get("party_ids", [])
-        title = session_data.get("title", "")
+        session_ids: set[str] = set()
+        user_messages: list[dict] = []
+        for session in query.stream():
+            session_data = session.to_dict() or {}
+            session_id = session.id
+            session_ids.add(session_id)
+            party_ids = session_data.get("party_ids", [])
+            title = session_data.get("title", "")
 
-        messages_ref = (
-            async_db.collection("chat_sessions")
-            .document(session_id)
-            .collection("messages")
-            .order_by("created_at")
-        )
-        async for msg_doc in messages_ref.stream():
-            msg_data = msg_doc.to_dict() or {}
-            if msg_data.get("role") != "user":
-                continue
-            for item in msg_data.get("messages", []):
-                content = item.get("content", "").strip()
-                if content and len(content) > 10:
-                    user_messages.append({
-                        "text": content,
-                        "session_id": session_id,
-                        "party_ids": party_ids,
-                        "chat_title": title,
-                    })
-    return user_messages, session_ids
+            messages_ref = (
+                db.collection("chat_sessions")
+                .document(session_id)
+                .collection("messages")
+                .order_by("created_at")
+            )
+            for msg_doc in messages_ref.stream():
+                msg_data = msg_doc.to_dict() or {}
+                if msg_data.get("role") != "user":
+                    continue
+                for item in msg_data.get("messages", []):
+                    content = item.get("content", "").strip()
+                    if content and len(content) > 10:
+                        user_messages.append({
+                            "text": content,
+                            "session_id": session_id,
+                            "party_ids": party_ids,
+                            "chat_title": title,
+                        })
+        return user_messages, session_ids
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _sync_collect)
 
 
 async def _run_bertopic_analysis(
@@ -776,9 +780,12 @@ async def _run_bertopic_analysis(
 
     # ── Check cache ──
     sorted_ids = sorted(session_ids)
+    loop = asyncio.get_event_loop()
     try:
-        cache_ref = async_db.collection("bertopic_cache").document(cache_key)
-        cache_doc = await cache_ref.get()
+        def _read_cache():
+            return db.collection("bertopic_cache").document(cache_key).get()
+
+        cache_doc = await loop.run_in_executor(None, _read_cache)
         if cache_doc.exists:
             cached = cache_doc.to_dict() or {}
             if cached.get("session_ids") == sorted_ids:
@@ -854,7 +861,12 @@ async def _run_bertopic_analysis(
 
         # ── Store in cache ──
         try:
-            await cache_ref.set({"session_ids": sorted_ids, "result": result})
+            def _write_cache():
+                db.collection("bertopic_cache").document(cache_key).set(
+                    {"session_ids": sorted_ids, "result": result}
+                )
+
+            await loop.run_in_executor(None, _write_cache)
             logger.info(f"BERTopic result cached for '{cache_key}' ({len(sorted_ids)} sessions)")
         except Exception as e:
             logger.warning(f"BERTopic cache write failed: {e}")
@@ -902,45 +914,54 @@ async def commune_dashboard(request):
 
     commune_code = request.match_info["commune_code"]
 
-    # ── 1. Commune info from Firestore ──────────────────────────────────────
+    # ── 1 & 2. Commune info + electoral lists from Firestore (sync in executor)
     commune_info: dict = {"code": commune_code}
-    try:
-        muni_query = async_db.collection("municipalities").where(
-            "code", "==", commune_code
-        )
-        muni_docs = muni_query.stream()
-        async for doc in muni_docs:
-            data = doc.to_dict() or {}
-            commune_info["name"] = data.get("nom", data.get("name", ""))
-            postal_codes = data.get("codesPostaux", [])
-            commune_info["postal_code"] = postal_codes[0] if postal_codes else data.get("postal_code", "")
-            epci = data.get("epci", {})
-            commune_info["epci_nom"] = epci.get("nom", "") if isinstance(epci, dict) else data.get("epci_nom", "")
-            break
-    except Exception as e:
-        logger.warning(f"Could not fetch municipality {commune_code}: {e}")
-
-    # ── 2. Electoral lists ───────────────────────────────────────────────────
     lists: list[dict] = []
-    try:
-        el_doc = await async_db.collection("electoral_lists").document(commune_code).get()
-        if el_doc.exists:
-            el_data = el_doc.to_dict() or {}
-            raw_lists = el_data.get("lists", [])
-            lists = [
-                {
-                    "panel_number": item.get("panel_number"),
-                    "list_label": item.get("list_label", ""),
-                    "list_short_label": item.get("list_short_label", ""),
-                    "head_first_name": item.get("head_first_name", ""),
-                    "head_last_name": item.get("head_last_name", ""),
-                    "nuance_code": item.get("nuance_code", ""),
-                    "nuance_label": item.get("nuance_label", ""),
-                }
-                for item in raw_lists
-            ]
-    except Exception as e:
-        logger.warning(f"Could not fetch electoral_lists for {commune_code}: {e}")
+
+    def _sync_firestore_lookups():
+        info: dict = {}
+        el_lists: list[dict] = []
+
+        try:
+            muni_query = db.collection("municipalities").where(
+                "code", "==", commune_code
+            )
+            for doc in muni_query.stream():
+                data = doc.to_dict() or {}
+                info["name"] = data.get("nom", data.get("name", ""))
+                postal_codes = data.get("codesPostaux", [])
+                info["postal_code"] = postal_codes[0] if postal_codes else data.get("postal_code", "")
+                epci = data.get("epci", {})
+                info["epci_nom"] = epci.get("nom", "") if isinstance(epci, dict) else data.get("epci_nom", "")
+                break
+        except Exception as e:
+            logger.warning(f"Could not fetch municipality {commune_code}: {e}")
+
+        try:
+            el_doc = db.collection("electoral_lists").document(commune_code).get()
+            if el_doc.exists:
+                el_data = el_doc.to_dict() or {}
+                raw_lists = el_data.get("lists", [])
+                el_lists = [
+                    {
+                        "panel_number": item.get("panel_number"),
+                        "list_label": item.get("list_label", ""),
+                        "list_short_label": item.get("list_short_label", ""),
+                        "head_first_name": item.get("head_first_name", ""),
+                        "head_last_name": item.get("head_last_name", ""),
+                        "nuance_code": item.get("nuance_code", ""),
+                        "nuance_label": item.get("nuance_label", ""),
+                    }
+                    for item in raw_lists
+                ]
+        except Exception as e:
+            logger.warning(f"Could not fetch electoral_lists for {commune_code}: {e}")
+
+        return info, el_lists
+
+    loop = asyncio.get_event_loop()
+    fs_info, lists = await loop.run_in_executor(None, _sync_firestore_lookups)
+    commune_info.update(fs_info)
 
     commune_info["list_count"] = len(lists)
     commune_info["lists"] = lists
