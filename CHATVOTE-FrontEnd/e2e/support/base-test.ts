@@ -48,6 +48,10 @@ const TEST_ENV_ERROR_PATTERNS = [
   // Firestore emulator connectivity (flaky in CI/test environment)
   /Could not reach Cloud Firestore backend/,
   /Failed to get document because the client is offline/,
+  // Firebase Analytics/Installations errors from fake API key in test env
+  /API key not valid/,
+  /config-fetch-failed/,
+  /installations\/request-failed/,
   // Note: FirebaseError auth errors and "Chat session not found" are NOT
   // globally ignored — they are added per-test via expectedErrors fixture.
 ];
