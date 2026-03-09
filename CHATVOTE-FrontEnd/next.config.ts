@@ -43,3 +43,4 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 const withNextIntl = createNextIntlPlugin();
 export default withBundleAnalyzer(withNextIntl(nextConfig));
+
