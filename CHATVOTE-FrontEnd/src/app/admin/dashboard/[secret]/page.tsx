@@ -88,7 +88,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-auto" style={{ height: "100vh" }}>
       {/* Header */}
       <div className="border-b bg-white px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>

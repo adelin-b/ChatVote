@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
-
 import Image from "next/image";
 import Link from "next/link";
 
 import LoginButton from "@components/auth/login-button";
+import AdminCoverageLink from "@components/chat/sidebar/admin-coverage-link";
 import ChatSidebarGroupSelect from "@components/chat/sidebar/chat-sidebar-group-select";
 import DonationDialog from "@components/donation-dialog";
 import FeedbackDialog from "@components/feedback-dialog";
@@ -96,6 +95,7 @@ const ChatSidebarDesktop = ({ auth }: Props) => {
             <MessageSquareWarning />
           </Button>
         </FeedbackDialog>
+        <AdminCoverageLink />
       </div>
     </div>
   );
