@@ -569,27 +569,106 @@ class CrawlScraperNode(DataSourceNode):
                     len(processed_ids),
                 )
 
-            # --- 5. Poll only for candidates that still need processing -----
+            # --- 5. Status update before unified loop -----
             if not need_polling:
-                logger.info("[crawl_scraper] all candidates already PROCESSED, skipping poll")
-            else:
+                logger.info("[crawl_scraper] all candidates already PROCESSED, downloading from Drive")
+            await update_status(
+                cfg.node_id, NodeStatus.RUNNING,
+                counts={
+                    "candidates_total": len(unscraped),
+                    "submitted": len(to_submit),
+                    "processed": len(processed_ids),
+                    "downloaded": 0,
+                    "download_total": len(tracked_ids),
+                    "phase": "downloading" if not need_polling else "polling",
+                },
+            )
+
+            # --- 5b. Unified poll + download loop --------------------------
+            # Instead of polling all → waiting for Drive → downloading all,
+            # we download each candidate's content as soon as its Drive folder
+            # is detected.  This gives near-instant progress feedback.
+
+            # Build URL map for Drive folder matching
+            poll_url_map: dict[str, str] = {}
+            for c in unscraped:
+                if c.candidate_id in tracked_ids:
+                    poll_url_map[c.candidate_id] = c.website_url or ""
+
+            # Also build candidate lookup by id for fast access
+            cand_by_id: dict[str, Any] = {
+                c.candidate_id: c for c in unscraped if c.candidate_id in tracked_ids
+            }
+
+            drive_matched_ids: set[str] = set()
+            downloaded_ids: set[str] = set()
+            scraped_map: dict[str, ScrapedWebsite] = {}
+            download_pages_total = 0
+            download_chars_total = 0
+            subfolders: list[dict[str, Any]] = []
+            drive_ok = True
+
+            async def _download_candidate(
+                cid: str, folder: dict[str, Any],
+            ) -> None:
+                """Download a single candidate's content from Drive immediately."""
+                nonlocal download_pages_total, download_chars_total
+                candidate = cand_by_id[cid]
+                url = poll_url_map.get(cid, candidate.website_url or "")
+                sw = ScrapedWebsite(
+                    candidate_id=cid,
+                    website_url=url,
+                    backend="crawl_service",
+                )
+                try:
+                    tk = self._ensure_token(creds)
+                    raw_pages = await self._download_crawl_content(
+                        session, folder["id"], folder["name"], tk,
+                    )
+                    cleaned = _clean_scraped_pages(raw_pages)
+                    sw.pages = cleaned
+                    dropped = len(raw_pages) - len(cleaned)
+                    download_pages_total += len(cleaned)
+                    download_chars_total += sw.total_content_length
+                    logger.info(
+                        "[crawl_scraper] %s → %s — %d pages (%d dropped), %d chars",
+                        candidate.full_name, folder["name"],
+                        len(cleaned), dropped, sw.total_content_length,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "[crawl_scraper] download failed for %s: %s",
+                        candidate.full_name, exc,
+                    )
+                    sw.error = str(exc)
+                scraped_map[cid] = sw
+                downloaded_ids.add(cid)
+                # Update status after each download for live progress
                 await update_status(
                     cfg.node_id, NodeStatus.RUNNING,
                     counts={
                         "candidates_total": len(unscraped),
                         "submitted": len(to_submit),
                         "processed": len(processed_ids),
-                        "already_processed": len(processed_ids),
-                        "phase": "polling",
+                        "downloaded": len(downloaded_ids),
+                        "download_total": len(tracked_ids),
+                        "pages": download_pages_total,
+                        "total_chars": download_chars_total,
+                        "current": candidate.full_name,
+                        "phase": "downloading",
                     },
                 )
 
-            if need_polling:
-                deadline = _time.monotonic() + poll_timeout
+            # --- 5b. Unified download + poll loop ----------------------------
+            # Always check Drive first and download what's available.
+            # If some candidates still need polling, keep looping.
+            deadline = _time.monotonic() + poll_timeout
 
-                while _time.monotonic() < deadline:
-                    token = self._ensure_token(creds)
+            while _time.monotonic() < deadline:
+                token = self._ensure_token(creds)
 
+                # Check 1: Sheet PROCESSED status (only if some still need polling)
+                if need_polling - processed_ids:
                     try:
                         rows = await self._fetch_sheet_rows(session, sheet_id, token)
                         for row in rows[1:]:
@@ -600,32 +679,67 @@ class CrawlScraperNode(DataSourceNode):
                     except Exception as exc:
                         logger.warning("[crawl_scraper] poll error: %s", exc)
 
-                    logger.info(
-                        "[crawl_scraper] poll: %d / %d processed",
-                        len(processed_ids), len(tracked_ids),
-                    )
-                    await update_status(
-                        cfg.node_id, NodeStatus.RUNNING,
-                        counts={
-                            "candidates_total": len(unscraped),
-                            "submitted": len(to_submit),
-                            "processed": len(processed_ids),
-                            "phase": "polling",
-                        },
+                # Check 2: Drive folders — download immediately on match
+                try:
+                    token = self._ensure_token(creds)
+                    subfolders = await self._drive_list(
+                        session, drive_folder_id, token,
+                        mime_filter="application/vnd.google-apps.folder",
+                        order_by="createdTime desc",
                     )
 
-                    if processed_ids >= tracked_ids:
-                        logger.info("[crawl_scraper] all candidates processed")
-                        break
+                    for cid in list(tracked_ids - downloaded_ids):
+                        url = poll_url_map.get(cid, "")
+                        if not url:
+                            continue
+                        folder = self._match_url_to_folder(url, subfolders)
+                        if folder:
+                            if cid not in processed_ids:
+                                drive_matched_ids.add(cid)
+                            processed_ids.add(cid)
+                            await _download_candidate(cid, folder)
+                except Exception as exc:
+                    logger.debug("[crawl_scraper] Drive check: %s", exc)
 
-                    await asyncio.sleep(poll_interval)
-                else:
-                    logger.warning(
-                        "[crawl_scraper] poll timeout — %d / %d done",
-                        len(processed_ids), len(tracked_ids),
-                    )
+                still_waiting = tracked_ids - downloaded_ids
+                phase = "downloading" if downloaded_ids else "polling"
+                logger.info(
+                    "[crawl_scraper] %d / %d downloaded, %d waiting (%d via Drive)",
+                    len(downloaded_ids), len(tracked_ids),
+                    len(still_waiting), len(drive_matched_ids),
+                )
+                await update_status(
+                    cfg.node_id, NodeStatus.RUNNING,
+                    counts={
+                        "candidates_total": len(unscraped),
+                        "submitted": len(to_submit),
+                        "processed": len(processed_ids),
+                        "downloaded": len(downloaded_ids),
+                        "download_total": len(tracked_ids),
+                        "drive_matched": len(drive_matched_ids),
+                        "pages": download_pages_total,
+                        "total_chars": download_chars_total,
+                        "current": next(
+                            (cand_by_id[c].full_name for c in list(downloaded_ids)[-1:]
+                             if c in cand_by_id),
+                            "",
+                        ) if downloaded_ids else "",
+                        "phase": phase,
+                    },
+                )
 
-            if not processed_ids:
+                if downloaded_ids >= tracked_ids:
+                    logger.info("[crawl_scraper] all %d candidates downloaded", len(downloaded_ids))
+                    break
+
+                await asyncio.sleep(poll_interval)
+            else:
+                logger.warning(
+                    "[crawl_scraper] timeout — %d / %d downloaded",
+                    len(downloaded_ids), len(tracked_ids),
+                )
+
+            if not processed_ids and not downloaded_ids:
                 logger.warning("[crawl_scraper] nothing processed, crawl service may be down")
                 cfg.counts = {
                     "candidates_total": len(unscraped),
@@ -634,183 +748,6 @@ class CrawlScraperNode(DataSourceNode):
                 }
                 put_context(CONTEXT_KEY, {})
                 return cfg
-
-            # --- 6. List Drive subfolders and match to candidates ----------
-            # The crawl service marks rows PROCESSED when the crawl *job is enqueued*,
-            # NOT when content is ready in Drive.  We wait for Drive folders to appear
-            # for the candidates we care about (retry up to drive_wait_s).
-            drive_wait_s = int(settings.get("drive_wait_s", 300))  # 5 min default
-
-            # Build candidate_id → website_url map from sheet
-            cand_url_map: dict[str, str] = {}
-            try:
-                token = self._ensure_token(creds)
-                rows = await self._fetch_sheet_rows(session, sheet_id, token)
-                for row in rows[1:]:
-                    cid = _row_get(row, COL_CANDIDATE_ID)
-                    url = _row_get(row, COL_WEBSITE_URL)
-                    if cid and url:
-                        cand_url_map[cid] = url
-            except Exception:
-                pass
-
-            # Collect the URLs we need to find in Drive
-            needed_urls = {
-                cid: cand_url_map.get(cid, next((c.website_url for c in unscraped if c.candidate_id == cid), ""))
-                for cid in processed_ids
-            }
-
-            subfolders: list[dict[str, Any]] = []
-            drive_ok = True
-            matched_count = 0
-            prev_matched = -1
-            stale_polls = 0
-            max_stale_polls = 3  # proceed after 3 polls with no new matches
-            drive_deadline = _time.monotonic() + drive_wait_s
-
-            while _time.monotonic() < drive_deadline:
-                token = self._ensure_token(creds)
-                try:
-                    subfolders = await self._drive_list(
-                        session, drive_folder_id, token,
-                        mime_filter="application/vnd.google-apps.folder",
-                        order_by="createdTime desc",
-                    )
-                except Exception as exc:
-                    logger.error("[crawl_scraper] Drive access failed: %s", exc)
-                    drive_ok = False
-                    break
-
-                # Count how many processed candidates have a matching Drive folder
-                matched_count = sum(
-                    1 for url in needed_urls.values()
-                    if url and self._match_url_to_folder(url, subfolders)
-                )
-
-                await update_status(
-                    cfg.node_id, NodeStatus.RUNNING,
-                    counts={
-                        "candidates_total": len(unscraped),
-                        "submitted": len(to_submit),
-                        "processed": len(processed_ids),
-                        "drive_matched": matched_count,
-                        "drive_needed": len(needed_urls),
-                        "phase": "waiting_for_drive",
-                    },
-                )
-
-                if matched_count >= len(needed_urls):
-                    logger.info("[crawl_scraper] all %d candidates have Drive folders", matched_count)
-                    break
-
-                # If match count stopped growing, some candidates may have junk URLs
-                # that were PROCESSED but never actually crawled. Proceed with what we have.
-                if matched_count == prev_matched and matched_count > 0:
-                    stale_polls += 1
-                    if stale_polls >= max_stale_polls:
-                        logger.info(
-                            "[crawl_scraper] Drive match count stable at %d / %d for %d polls, proceeding",
-                            matched_count, len(needed_urls), max_stale_polls,
-                        )
-                        break
-                else:
-                    stale_polls = 0
-                prev_matched = matched_count
-
-                logger.info(
-                    "[crawl_scraper] Drive: %d / %d folders ready, waiting...",
-                    matched_count, len(needed_urls),
-                )
-                await asyncio.sleep(poll_interval)
-            else:
-                logger.warning(
-                    "[crawl_scraper] Drive wait timeout — %d / %d folders found after %ds",
-                    matched_count, len(needed_urls), drive_wait_s,
-                )
-
-            logger.info("[crawl_scraper] %d subfolders in Drive, %d matched", len(subfolders), matched_count)
-
-            await update_status(
-                cfg.node_id, NodeStatus.RUNNING,
-                counts={
-                    "candidates_total": len(unscraped),
-                    "submitted": len(to_submit),
-                    "processed": len(processed_ids),
-                    "phase": "downloading",
-                },
-            )
-
-            # --- 7. Download content and build ScrapedWebsite objects ------
-            scraped_map: dict[str, ScrapedWebsite] = {}
-            download_total = sum(1 for c in unscraped if c.candidate_id in processed_ids)
-            download_done = 0
-            download_pages_total = 0
-            download_chars_total = 0
-
-            for candidate in unscraped:
-                if candidate.candidate_id not in processed_ids:
-                    continue
-
-                url = cand_url_map.get(
-                    candidate.candidate_id, candidate.website_url or ""
-                )
-                sw = ScrapedWebsite(
-                    candidate_id=candidate.candidate_id,
-                    website_url=url,
-                    backend="crawl_service",
-                )
-
-                if drive_ok and subfolders:
-                    folder = self._match_url_to_folder(url, subfolders)
-                    if folder:
-                        try:
-                            token = self._ensure_token(creds)
-                            raw_pages = await self._download_crawl_content(
-                                session, folder["id"], folder["name"], token,
-                            )
-                            cleaned = _clean_scraped_pages(raw_pages)
-                            sw.pages = cleaned
-                            dropped = len(raw_pages) - len(cleaned)
-                            download_pages_total += len(cleaned)
-                            download_chars_total += sw.total_content_length
-                            logger.info(
-                                "[crawl_scraper] %s → %s — %d pages (%d dropped), %d chars",
-                                candidate.full_name, folder["name"],
-                                len(cleaned), dropped, sw.total_content_length,
-                            )
-                        except Exception as exc:
-                            logger.warning(
-                                "[crawl_scraper] download failed for %s: %s",
-                                candidate.full_name, exc,
-                            )
-                            sw.error = str(exc)
-                    else:
-                        logger.warning(
-                            "[crawl_scraper] no Drive folder matched for %s (%s)",
-                            candidate.full_name, url,
-                        )
-                        sw.error = "No matching Drive folder"
-                elif not drive_ok:
-                    sw.error = "Drive folder not accessible"
-
-                scraped_map[candidate.candidate_id] = sw
-                download_done += 1
-
-                # Update progress after each candidate download
-                await update_status(
-                    cfg.node_id, NodeStatus.RUNNING,
-                    counts={
-                        "candidates_total": len(unscraped),
-                        "submitted": len(to_submit),
-                        "processed": len(processed_ids),
-                        "downloaded": download_done,
-                        "download_total": download_total,
-                        "pages": download_pages_total,
-                        "total_chars": download_chars_total,
-                        "current": candidate.full_name,
-                        "phase": "downloading",
-                    },
-                )
 
             # --- 8. Update Firestore candidate docs ------------------------
             for candidate in unscraped:

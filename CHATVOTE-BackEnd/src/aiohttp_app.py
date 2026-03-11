@@ -1449,9 +1449,16 @@ async def ds_run_all(request):
                 continue
             try:
                 logger.info("[data-sources] run-all: executing %s", node_id)
-                await node.execute(force=force)
+                # Register each node as its own task so it can be stopped individually
+                node_task = asyncio.create_task(node.execute(force=force))
+                _pipeline_tasks[node_id] = node_task
+                await node_task
+            except asyncio.CancelledError:
+                logger.info("[data-sources] run-all: node %s stopped by admin", node_id)
             except Exception as exc:
                 logger.error("[data-sources] run-all: %s failed: %s", node_id, exc, exc_info=True)
+            finally:
+                _pipeline_tasks.pop(node_id, None)
         _pipeline_tasks.pop("_run_all", None)
 
     task = asyncio.create_task(_run_all())
@@ -1473,8 +1480,19 @@ async def ds_stop_node(request):
     if task and not task.done():
         task.cancel()
         _pipeline_tasks.pop(node_id, None)
-        await update_status(node_id, NodeStatus.ERROR, last_error="Cancelled by admin")
+        await update_status(node_id, NodeStatus.ERROR, last_error="Stopped by admin")
         return web.json_response({"status": "stopped", "node_id": node_id})
+
+    # Also clear stale "running" state from Firestore (e.g. after server restart)
+    from src.services.data_pipeline.base import load_config, _config_ref
+    from src.services.data_pipeline import PIPELINE_NODES
+    node = PIPELINE_NODES.get(node_id)
+    if node:
+        cfg = await load_config(node_id, node.default_config())
+        if cfg.status == NodeStatus.RUNNING:
+            await update_status(node_id, NodeStatus.ERROR, last_error="Stopped by admin")
+            return web.json_response({"status": "stopped", "node_id": node_id, "note": "cleared stale state"})
+
     return web.json_response({"status": "not_running", "node_id": node_id})
 
 
