@@ -134,9 +134,14 @@ const SourceItem = ({ source }: { source: SourceWithIndex }) => {
   const tCommon = useTranslations("common");
 
   const onSourceClick = (source: Source) => {
-    const url = buildPdfUrl(source);
-    if (!url) return;
-    return window.open(url.toString(), "_blank");
+    if (!source.url) return;
+    const isPdfLink = source.url.includes(".pdf");
+    if (isPdfLink) {
+      const url = buildPdfUrl(source);
+      if (!url) return;
+      return window.open(url.toString(), "_blank");
+    }
+    return window.open(source.url, "_blank");
   };
 
   return (
