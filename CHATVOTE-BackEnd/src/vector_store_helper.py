@@ -108,14 +108,21 @@ def _build_fiabilite_filter(max_fiabilite: int = 3) -> Filter:
 
 
 def _combine_filters(*filters: "Filter | None") -> "Filter | None":
-    """Merge multiple Filters into one by combining all must conditions."""
+    """Merge multiple Filters into one by combining all must/must_not conditions."""
     all_must = []
+    all_must_not = []
     for f in filters:
-        if f is not None and f.must:
-            all_must.extend(f.must)
-    if not all_must:
+        if f is not None:
+            if f.must:
+                all_must.extend(f.must)
+            if f.must_not:
+                all_must_not.extend(f.must_not)
+    if not all_must and not all_must_not:
         return None
-    return Filter(must=all_must)
+    return Filter(
+        must=all_must or None,
+        must_not=all_must_not or None,
+    )
 
 
 def _get_embeddings() -> tuple[Embeddings, int]:
@@ -906,7 +913,7 @@ async def _search_candidate_docs_by_party(
             score_threshold=score_threshold,
         )
     except Exception as e:
-        logger.warning(f"Error searching candidates collection: {e}")
+        logger.warning(f"Error searching candidates collection: {type(e).__name__}: {e!r}")
         return []
 
     documents = []
@@ -961,7 +968,7 @@ async def _search_candidate_docs_by_party_and_municipality(
             score_threshold=score_threshold,
         )
     except Exception as e:
-        logger.warning(f"Error searching candidates collection: {e}")
+        logger.warning(f"Error searching candidates collection: {type(e).__name__}: {e!r}")
         return []
 
     documents = []
