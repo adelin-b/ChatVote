@@ -1008,8 +1008,10 @@ async def handle_combined_answer_request(
             "content_preview": content_preview,
             "url": source_doc.metadata.get("url"),
             "source_type": "candidate",
+            "candidate_id": source_doc.metadata.get("namespace"),
             "candidate_name": source_doc.metadata.get("candidate_name"),
             "municipality_name": source_doc.metadata.get("municipality_name"),
+            "municipality_code": source_doc.metadata.get("municipality_code"),
             # Unified metadata
             "fiabilite": source_doc.metadata.get("fiabilite"),
             "theme": source_doc.metadata.get("theme"),
