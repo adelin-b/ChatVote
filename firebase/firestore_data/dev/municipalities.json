@@ -1,0 +1,25 @@
+{
+  "75056": {
+    "code": "75056",
+    "nom": "Paris",
+    "population": 2103778,
+    "codeDepartement": "75",
+    "departement": {
+      "code": "75",
+      "nom": ""
+    },
+    "codeRegion": "11",
+    "region": {
+      "code": "11",
+      "nom": ""
+    },
+    "codesPostaux": [
+      "75001"
+    ],
+    "codeEpci": "200054781",
+    "epci": {
+      "code": "200054781",
+      "nom": ""
+    }
+  }
+}

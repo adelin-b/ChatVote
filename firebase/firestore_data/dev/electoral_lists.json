@@ -1,0 +1,90 @@
+{
+  "75056": {
+    "commune_code": "75056",
+    "commune_name": "Paris",
+    "list_count": 9,
+    "lists": [
+      {
+        "panel_number": 1,
+        "list_label": "Lutte ouvrière - le camp des travailleurs",
+        "list_short_label": "LO",
+        "nuance_code": "LEXG",
+        "nuance_label": "Liste d'extrême-gauche",
+        "head_first_name": "Marielle",
+        "head_last_name": "SAULNIER"
+      },
+      {
+        "panel_number": 2,
+        "list_label": "RETROUVONS PARIS",
+        "list_short_label": "RP",
+        "nuance_code": "LUXD",
+        "nuance_label": "Liste d'union à l'extrême-droite",
+        "head_first_name": "Thierry",
+        "head_last_name": "MARIANI"
+      },
+      {
+        "panel_number": 3,
+        "list_label": "Paris est à vous! avec Emmanuel Grégoire L'union de la gauche et des écologistes",
+        "list_short_label": "EG",
+        "nuance_code": "LUG",
+        "nuance_label": "Liste d'union à gauche",
+        "head_first_name": "Emmanuel",
+        "head_last_name": "GRÉGOIRE"
+      },
+      {
+        "panel_number": 4,
+        "list_label": "NPA Révolutionnaires - PARIS, ouvrière et révolutionnaire",
+        "list_short_label": "CP NPA",
+        "nuance_code": "LEXG",
+        "nuance_label": "Liste d'extrême-gauche",
+        "head_first_name": "Blandine",
+        "head_last_name": "CHAUVEL"
+      },
+      {
+        "panel_number": 5,
+        "list_label": "SARAH KNAFO POUR PARIS - UNE VILLE HEUREUSE",
+        "list_short_label": "SK UVH",
+        "nuance_code": "LEXD",
+        "nuance_label": "Liste d'extrême droite",
+        "head_first_name": "Sarah",
+        "head_last_name": "KNAFO"
+      },
+      {
+        "panel_number": 6,
+        "list_label": "PARIS APAISÉ AVEC PIERRE-YVES BOURNAZEL",
+        "list_short_label": "PAAPYB",
+        "nuance_code": "LUC",
+        "nuance_label": "Liste d'union au centre",
+        "head_first_name": "Pierre-Yves",
+        "head_last_name": "BOURNAZEL"
+      },
+      {
+        "panel_number": 7,
+        "list_label": "CHANGER PARIS AVEC RACHIDA DATI",
+        "list_short_label": "CPARD",
+        "nuance_code": "LUD",
+        "nuance_label": "Liste d'union à droite",
+        "head_first_name": "Rachida",
+        "head_last_name": "DATI"
+      },
+      {
+        "panel_number": 8,
+        "list_label": "LE NOUVEAU PARIS POPULAIRE",
+        "list_short_label": "LNPP",
+        "nuance_code": "LFI",
+        "nuance_label": "Liste de La France insoumise",
+        "head_first_name": "Sophia",
+        "head_last_name": "CHIKIROU"
+      },
+      {
+        "panel_number": 9,
+        "list_label": "Les coupes budgétaires à Paris ça suffit !",
+        "list_short_label": "LCBPCS",
+        "nuance_code": "LEXG",
+        "nuance_label": "Liste d'extrême-gauche",
+        "head_first_name": "Mahel",
+        "head_last_name": "PIEROT-GUIMBAUD"
+      }
+    ]
+  }
+}

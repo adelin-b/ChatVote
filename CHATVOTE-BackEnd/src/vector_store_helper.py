@@ -926,6 +926,7 @@ async def _search_candidate_docs_by_party(
             score_threshold=score_threshold,
         )
         search_result = _query_response.points
+        logger.info(f"Candidate Qdrant search returned {len(search_result)} results")
     except (ConnectionError, TimeoutError) as e:
         logger.warning(f"Qdrant unavailable for candidates search: {type(e).__name__}: {e!r}")
         return []
@@ -954,8 +955,13 @@ async def _search_candidate_docs_by_party_and_municipality(
     max_fiabilite: int = 3,
 ) -> list[Document]:
     """Search candidate docs filtered by party + municipality using Qdrant filters."""
+    logger.info(
+        f"Candidate search: municipality={municipality_code}, party_ids={party_ids}, "
+        f"collection={CANDIDATES_INDEX_NAME}, n_docs={n_docs}"
+    )
 
     if not _collection_exists(CANDIDATES_INDEX_NAME):
+        logger.warning(f"Candidate collection {CANDIDATES_INDEX_NAME} not found")
         return []
 
     query_vector = await embed.aembed_query(rag_query)
@@ -969,11 +975,11 @@ async def _search_candidate_docs_by_party_and_municipality(
         ]
     )
 
-    query_filter = _combine_filters(
-        _build_party_filter(party_ids),
-        municipality_filter,
-        _build_fiabilite_filter(max_fiabilite),
-    )
+    # Party filter is optional — candidate metadata may not have party_ids populated
+    filters = [municipality_filter, _build_fiabilite_filter(max_fiabilite)]
+    if party_ids:
+        filters.insert(0, _build_party_filter(party_ids))
+    query_filter = _combine_filters(*filters)
 
     try:
         _query_response = await async_qdrant_client.query_points(
@@ -986,6 +992,7 @@ async def _search_candidate_docs_by_party_and_municipality(
             score_threshold=score_threshold,
         )
         search_result = _query_response.points
+        logger.info(f"Candidate Qdrant search returned {len(search_result)} results")
     except (ConnectionError, TimeoutError) as e:
         logger.warning(f"Qdrant unavailable for candidates search: {type(e).__name__}: {e!r}")
         return []

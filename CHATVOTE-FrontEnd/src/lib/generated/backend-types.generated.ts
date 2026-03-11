@@ -36,6 +36,8 @@ export interface Candidate {
   photo_url: string | null;
   contact_email: string | null;
   website_url: string | null;
+  has_manifesto: boolean;
+  manifesto_pdf_url: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

@@ -138,6 +138,7 @@ class ScrapedWebsite:
     pages: List[ScrapedPage] = field(default_factory=list)
     error: Optional[str] = None
     stats: Dict[str, int] = field(default_factory=dict)
+    backend: Optional[str] = None
 
     @property
     def total_content_length(self) -> int:

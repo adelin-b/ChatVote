@@ -980,7 +980,9 @@ async def handle_combined_answer_request(
         for candidate in local_candidates:
             for pid in candidate.party_ids:
                 local_party_ids.add(pid)
-        party_ids_to_search = list(local_party_ids)
+        # Fall back to all parties if candidates have no party_ids
+        # (seed data may not include party affiliations)
+        party_ids_to_search = list(local_party_ids) if local_party_ids else [p.party_id for p in all_parties]
     else:
         # NATIONAL scope without specific party - search all parties
         party_ids_to_search = [p.party_id for p in all_parties]

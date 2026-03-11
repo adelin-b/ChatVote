@@ -724,6 +724,7 @@ Time: {time}
 Generate a response that synthesizes the positions of the parties listed above based on official programs and candidate websites.
 If you are at the LOCAL level, start by presenting the candidates present in the municipality, then detail their proposals.
 Compare the different positions neutrally and fairly.
+IMPORTANT — Professions de foi: Some candidates in the list above have a "Manifesto PDF" link (official PDF from the French Interior Ministry). Even if you do NOT have extracted content from these PDFs in the RAG sources, you MUST mention the existence of these manifestos and provide the clickable Markdown link when the user asks about programs, proposals, or manifestos. For example: "The manifesto for [Candidate] is available here: [Manifesto PDF](url)". Do NOT say there is no information if a manifesto link exists.
 
 {answer_guidelines}
 """

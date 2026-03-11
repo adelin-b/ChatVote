@@ -53,6 +53,12 @@ class Candidate(BaseModel):
     website_url: Optional[str] = Field(
         default=None, description="The campaign website URL of the candidate"
     )
+    has_manifesto: bool = Field(
+        default=False, description="True if a profession de foi PDF is available"
+    )
+    manifesto_pdf_url: Optional[str] = Field(
+        default=None, description="URL of the profession de foi PDF"
+    )
     created_at: Optional[datetime] = Field(
         default=None, description="When the candidate record was created"
     )

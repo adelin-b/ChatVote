@@ -171,7 +171,12 @@ export async function getChatSession(sessionId: string) {
 
   return {
     id: docSnap.id,
-    ...data,
+    user_id: data.user_id,
+    party_id: data.party_id,
+    is_public: data.is_public,
+    title: data.title,
+    party_ids: data.party_ids,
+    tenant_id: data.tenant_id,
     updated_at: firestoreTimestampToDate(data.updated_at),
     created_at: firestoreTimestampToDate(data.created_at),
   } as ChatSession;

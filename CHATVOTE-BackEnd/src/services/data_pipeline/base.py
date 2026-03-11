@@ -111,11 +111,11 @@ async def save_config(cfg: NodeConfig) -> None:
 async def update_status(node_id: str, status: NodeStatus, **extra: Any) -> None:
     data: dict[str, Any] = {"status": status.value}
     data.update(extra)
-    await _config_ref(node_id).update(data)
+    await _config_ref(node_id).set(data, merge=True)
 
 
 async def save_checkpoint(node_id: str, checkpoints: dict[str, Any]) -> None:
-    await _config_ref(node_id).update({"checkpoints": checkpoints})
+    await _config_ref(node_id).set({"checkpoints": checkpoints}, merge=True)
 
 
 # ---------------------------------------------------------------------------

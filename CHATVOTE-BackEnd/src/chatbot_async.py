@@ -1102,7 +1102,8 @@ async def generate_streaming_candidate_local_response(
                 party_names.append(party.name)
         party_str = ", ".join(party_names) if party_names else "Indépendant"
         has_website = "Oui" if c.website_url else "Non"
-        candidates_list += f"- {c.full_name} ({party_str}) - Site web: {has_website}\n"
+        manifesto = f" - [Profession de foi]({c.manifesto_pdf_url})" if c.has_manifesto and c.manifesto_pdf_url else ""
+        candidates_list += f"- {c.full_name} ({party_str}) - Site web: {has_website}{manifesto}\n"
 
     if not candidates_list:
         candidates_list = "Aucun candidat enregistré pour cette commune."
@@ -1422,6 +1423,11 @@ async def generate_streaming_global_combined_response(
                         else " - No website"
                     )
                     incumbent_info = " (incumbent)" if candidate.is_incumbent else ""
+                    manifesto_info = (
+                        f" - [Manifesto PDF]({candidate.manifesto_pdf_url})"
+                        if candidate.has_manifesto and candidate.manifesto_pdf_url
+                        else ""
+                    )
                 else:
                     website_info = (
                         f" - Site: {candidate.website_url}"
@@ -1429,7 +1435,12 @@ async def generate_streaming_global_combined_response(
                         else " - Pas de site web"
                     )
                     incumbent_info = " (sortant)" if candidate.is_incumbent else ""
-                local_candidates_info += f"- **{candidate.full_name}** ({party_str}) - {position}{incumbent_info}{website_info}\n"
+                    manifesto_info = (
+                        f" - [Profession de foi]({candidate.manifesto_pdf_url})"
+                        if candidate.has_manifesto and candidate.manifesto_pdf_url
+                        else ""
+                    )
+                local_candidates_info += f"- **{candidate.full_name}** ({party_str}) - {position}{incumbent_info}{website_info}{manifesto_info}\n"
         else:
             if locale == "en":
                 local_candidates_info = f"\n## Candidates present in {municipality_name}\nNo candidate registered for this municipality.\n"

@@ -1005,9 +1005,12 @@ async def _run_bertopic_analysis(
 @routes.get(f"{route_prefix}/experiment/bertopic-analysis")
 async def experiment_bertopic_analysis(request):
     """Run BERTopic clustering on user chat messages from Firestore."""
-    user_messages, session_ids = await _collect_user_messages()
-    result = await _run_bertopic_analysis(user_messages, session_ids, cache_key="global")
-    return web.json_response(result, status=500 if result.get("status") == "error" else 200)
+    # DISABLED: BERTopic triggers Numba JIT which causes SIGABRT crashes on
+    # macOS ARM64 when called from async thread executors. Re-enable when Adelin asks for it.
+    # user_messages, session_ids = await _collect_user_messages()
+    # result = await _run_bertopic_analysis(user_messages, session_ids, cache_key="global")
+    result = {"status": "disabled", "message": "BERTopic temporarily disabled", "topics": []}
+    return web.json_response(result, status=200)
 
 
 # Keyword mapping for citizen message classification (commune dashboard)
@@ -1204,9 +1207,13 @@ async def commune_dashboard(request):
     themes_detected = len(theme_data)
 
     # ── 5. BERTopic on commune messages (cached per commune) ────────────────
-    bertopic_result = await _run_bertopic_analysis(
-        user_messages, session_ids, cache_key=f"commune_{commune_code}"
-    )
+    # DISABLED: BERTopic triggers Numba JIT which causes SIGABRT crashes on
+    # macOS ARM64 when called from async thread executors (concurrent with
+    # Socket.IO events). Re-enable when Adelin asks for it.
+    # bertopic_result = await _run_bertopic_analysis(
+    #     user_messages, session_ids, cache_key=f"commune_{commune_code}"
+    # )
+    bertopic_result = {"status": "disabled", "message": "BERTopic temporarily disabled", "topics": []}
 
     return web.json_response({
         "commune": commune_info,
