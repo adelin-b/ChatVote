@@ -32,13 +32,13 @@ function StatCard({
   accentColor: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white flex-1 min-w-0">
+    <div className="overflow-hidden rounded-xl border border-border-subtle bg-card flex-1 min-w-0">
       <div className="h-[3px] w-full" style={{ backgroundColor: accentColor }} />
       <div className="p-4 pt-3">
-        <p className="text-2xl font-bold tabular-nums text-gray-900 leading-none">
+        <p className="text-2xl font-bold tabular-nums text-foreground leading-none">
           {typeof value === "number" ? value.toLocaleString() : value}
         </p>
-        <p className="mt-1 text-xs uppercase tracking-wider text-gray-500">
+        <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
       </div>
@@ -79,8 +79,8 @@ export default function CoverageTab({ secret, apiUrl }: CoverageTabProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-5 animate-spin text-gray-400" />
-        <span className="ml-2 text-sm text-gray-500">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">
           Loading coverage data...
         </span>
       </div>

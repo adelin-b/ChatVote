@@ -102,19 +102,19 @@ export default function ChatDetailPanel({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50">
+    <div className="border-t border-border-subtle bg-background">
       {/* Panel header */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-3">
+      <div className="flex items-center justify-between border-b border-border-subtle bg-card px-5 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-sm font-semibold text-foreground">
             Session Detail
           </h3>
-          <span className="font-mono text-xs text-gray-400">{sessionId}</span>
+          <span className="font-mono text-xs text-muted-foreground">{sessionId}</span>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          className="rounded p-1 text-muted-foreground hover:bg-surface-elevated hover:text-foreground transition-colors"
         >
           <X className="size-4" />
         </button>
@@ -124,8 +124,8 @@ export default function ChatDetailPanel({
       <div className="p-5">
         {loading && (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="size-5 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading...</span>
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
           </div>
         )}
 
@@ -138,10 +138,10 @@ export default function ChatDetailPanel({
         {detail && !loading && (
           <div className="space-y-5">
             {/* Metadata row */}
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
               {detail.municipality_name && (
                 <span>
-                  <span className="font-medium text-gray-700">Commune:</span>{" "}
+                  <span className="font-medium text-foreground">Commune:</span>{" "}
                   {detail.municipality_name}{" "}
                   {detail.municipality_code && (
                     <span className="font-mono">{detail.municipality_code}</span>
@@ -149,11 +149,11 @@ export default function ChatDetailPanel({
                 </span>
               )}
               <span>
-                <span className="font-medium text-gray-700">Created:</span>{" "}
+                <span className="font-medium text-foreground">Created:</span>{" "}
                 {formatTime(detail.created_at)}
               </span>
               <span>
-                <span className="font-medium text-gray-700">Updated:</span>{" "}
+                <span className="font-medium text-foreground">Updated:</span>{" "}
                 {formatTime(detail.updated_at)}
               </span>
             </div>
@@ -180,18 +180,18 @@ export default function ChatDetailPanel({
                   </span>
                 )}
                 {detail.debug.response_time_ms !== undefined && (
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {detail.debug.response_time_ms}ms
                   </span>
                 )}
                 {detail.debug.source_count !== undefined && (
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {detail.debug.source_count} sources
                   </span>
                 )}
                 {detail.debug.total_tokens !== undefined &&
                   detail.debug.total_tokens > 0 && (
-                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                    <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                       {detail.debug.total_tokens} tokens
                     </span>
                   )}
@@ -218,11 +218,11 @@ export default function ChatDetailPanel({
 
             {/* Messages */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Messages ({detail.messages.length})
               </p>
               {detail.messages.length === 0 && (
-                <p className="text-sm text-gray-400 italic">
+                <p className="text-sm text-muted-foreground italic">
                   No messages in this session.
                 </p>
               )}
@@ -232,7 +232,7 @@ export default function ChatDetailPanel({
                   className={`rounded-lg border p-3 ${
                     msg.role === "user"
                       ? "border-blue-200 bg-blue-50"
-                      : "border-gray-200 bg-white"
+                      : "border-border-subtle bg-card"
                   }`}
                 >
                   <div className="mb-1.5 flex items-center justify-between">
@@ -240,16 +240,16 @@ export default function ChatDetailPanel({
                       className={`text-[10px] font-bold uppercase tracking-wider ${
                         msg.role === "user"
                           ? "text-blue-600"
-                          : "text-gray-500"
+                          : "text-muted-foreground"
                       }`}
                     >
                       {msg.role}
                     </span>
-                    <span className="text-[10px] text-gray-400">
+                    <span className="text-[10px] text-muted-foreground">
                       {formatTime(msg.created_at)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                     {msg.content}
                   </p>
 
@@ -259,7 +259,7 @@ export default function ChatDetailPanel({
                       <button
                         type="button"
                         onClick={() => toggleSources(msg.id)}
-                        className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {expandedSources.has(msg.id) ? (
                           <ChevronDown className="size-3" />
@@ -274,20 +274,20 @@ export default function ChatDetailPanel({
                           {msg.sources.map((src, i) => (
                             <div
                               key={i}
-                              className="rounded border border-gray-100 bg-gray-50 px-2.5 py-1.5"
+                              className="rounded border border-border-subtle bg-background px-2.5 py-1.5"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-mono text-[10px] text-gray-500">
+                                <span className="font-mono text-[10px] text-muted-foreground">
                                   {src.id}
                                 </span>
                                 {src.score !== undefined && (
-                                  <span className="text-[10px] text-gray-400">
+                                  <span className="text-[10px] text-muted-foreground">
                                     score: {src.score.toFixed(3)}
                                   </span>
                                 )}
                               </div>
                               {src.text && (
-                                <p className="mt-1 text-[11px] text-gray-600 leading-relaxed line-clamp-3">
+                                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">
                                   {src.text}
                                 </p>
                               )}

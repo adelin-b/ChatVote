@@ -70,8 +70,8 @@ export default function OverviewTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-5 animate-spin text-gray-400" />
-        <span className="ml-2 text-sm text-gray-500">Loading warnings...</span>
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading warnings...</span>
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function OverviewTab({
               </span>
             )}
           {totalWarnings === 0 && (
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               No warnings — all systems healthy
             </span>
           )}
@@ -143,13 +143,13 @@ export default function OverviewTab({
       {/* Data Completeness */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Data Completeness
           </span>
-          <div className="flex-1 border-t border-gray-200" />
+          <div className="flex-1 border-t border-border-subtle" />
         </div>
         {warnings?.data.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">No issues detected.</p>
+          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
         ) : (
           <div className="space-y-2">
             {warnings?.data.map((w, i) => (
@@ -162,13 +162,13 @@ export default function OverviewTab({
       {/* Operational */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Operational
           </span>
-          <div className="flex-1 border-t border-gray-200" />
+          <div className="flex-1 border-t border-border-subtle" />
         </div>
         {warnings?.ops.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">No issues detected.</p>
+          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
         ) : (
           <div className="space-y-2">
             {warnings?.ops.map((w, i) => (
@@ -181,13 +181,13 @@ export default function OverviewTab({
       {/* Chat Quality */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Chat Quality
           </span>
-          <div className="flex-1 border-t border-gray-200" />
+          <div className="flex-1 border-t border-border-subtle" />
         </div>
         {warnings?.chat.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">No issues detected.</p>
+          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
         ) : (
           <div className="space-y-2">
             {warnings?.chat.map((w, i) => (

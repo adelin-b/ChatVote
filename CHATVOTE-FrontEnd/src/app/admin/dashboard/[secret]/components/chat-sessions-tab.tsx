@@ -181,7 +181,7 @@ export default function ChatSessionsTab({
         <div className="flex items-center gap-2">
           <label
             htmlFor="status-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-muted-foreground"
           >
             Status:
           </label>
@@ -189,7 +189,7 @@ export default function ChatSessionsTab({
             id="status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="rounded border border-border-subtle bg-card px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="all">All</option>
             <option value="success">Success</option>
@@ -200,9 +200,9 @@ export default function ChatSessionsTab({
 
         <div className="ml-auto flex items-center gap-2">
           {loading && (
-            <Loader2 className="size-4 animate-spin text-gray-400" />
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
           )}
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             {sessions.length} session{sessions.length !== 1 ? "s" : ""}
           </span>
           <Button
@@ -226,86 +226,86 @@ export default function ChatSessionsTab({
 
       {/* Table */}
       {!loading && sessions.length === 0 && !error && (
-        <div className="rounded-xl border border-gray-200 bg-white py-16 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-border-subtle bg-card py-16 text-center text-sm text-muted-foreground">
           No chat sessions found.
         </div>
       )}
 
       {sessions.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left bg-gray-50">
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 w-8" />
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <tr className="border-b border-border-subtle text-left bg-background">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-8" />
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Timestamp
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Session ID
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Commune
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
                     Sources
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
                     Resp. time
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Model
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border-subtle">
                 {sessions.map((session) => (
                   <Fragment key={session.session_id}>
                     <tr
-                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="cursor-pointer hover:bg-surface-elevated transition-colors"
                       onClick={() => toggleExpand(session.session_id)}
                     >
-                      <td className="px-4 py-3 text-gray-400">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {expandedSession === session.session_id ? (
                           <ChevronDown className="size-3.5" />
                         ) : (
                           <ChevronRight className="size-3.5" />
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                         {formatTime(session.updated_at ?? session.created_at)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-gray-600">
+                        <span className="font-mono text-xs text-muted-foreground">
                           {session.session_id.slice(0, 12)}…
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-600">
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
                         {session.municipality_name ?? "—"}
                         {session.municipality_code && (
-                          <span className="ml-1 font-mono text-[10px] text-gray-400">
+                          <span className="ml-1 font-mono text-[10px] text-muted-foreground">
                             {session.municipality_code}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs text-gray-500 tabular-nums">
+                      <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
                         {session.debug?.source_count ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1.5">
                           <StatusDot status={session.debug?.status} />
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {session.debug?.status ?? "—"}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right text-xs text-gray-500 tabular-nums whitespace-nowrap">
+                      <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums whitespace-nowrap">
                         {formatMs(session.debug?.response_time_ms)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-400 font-mono truncate max-w-[120px]">
+                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono truncate max-w-[120px]">
                         {session.debug?.model_used ?? "—"}
                       </td>
                     </tr>
@@ -330,7 +330,7 @@ export default function ChatSessionsTab({
 
           {/* Load more */}
           {hasMore && (
-            <div className="border-t border-gray-200 px-4 py-3 text-center">
+            <div className="border-t border-border-subtle px-4 py-3 text-center">
               <Button
                 size="sm"
                 variant="outline"

@@ -73,30 +73,30 @@ export default function AdminDashboard() {
 
   if (authorized === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-sm text-gray-500">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-sm text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   if (!authorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-sm text-red-500">Unauthorized</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-auto" style={{ height: "100vh" }}>
+    <div className="min-h-screen bg-background overflow-auto" style={{ height: "100vh" }}>
       {/* Header */}
-      <div className="border-b bg-white px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+      <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
         <div className="flex items-center gap-4">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
-            className="rounded border px-3 py-1.5 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="rounded border px-3 py-1.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value={1}>Last 1h</option>
             <option value={24}>Last 24h</option>
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tab bar */}
-      <div className="border-b bg-white px-6 flex gap-0">
+      <div className="border-b bg-card px-6 flex gap-0">
         {TABS.map((tab) => (
           <button
             key={tab}
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab
                 ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {TAB_LABELS[tab]}
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
       <div className="p-6">
         <Suspense
           fallback={
-            <div className="py-8 text-center text-sm text-gray-500">
+            <div className="py-8 text-center text-sm text-muted-foreground">
               Loading...
             </div>
           }

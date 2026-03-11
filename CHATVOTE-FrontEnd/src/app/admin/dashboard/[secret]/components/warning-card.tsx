@@ -52,7 +52,7 @@ export default function WarningCard({ warning, onView }: WarningCardProps) {
     >
       <Icon className={`mt-0.5 size-4 shrink-0 ${iconClass}`} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-800">{message}</p>
+        <p className="text-sm text-foreground">{message}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {count > 0 && (
@@ -66,7 +66,7 @@ export default function WarningCard({ warning, onView }: WarningCardProps) {
           <button
             type="button"
             onClick={() => onView(tab_link)}
-            className="text-xs font-medium text-gray-500 underline hover:text-gray-700"
+            className="text-xs font-medium text-muted-foreground underline hover:text-foreground"
           >
             View
           </button>

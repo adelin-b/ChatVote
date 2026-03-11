@@ -117,7 +117,7 @@ function statusDot(status: NodeConfig["status"]) {
     case "error":
       return <span className={`${base} bg-red-500`} />;
     default:
-      return <span className={`${base} bg-zinc-400`} />;
+      return <span className={`${base} bg-muted-foreground`} />;
   }
 }
 
@@ -161,12 +161,12 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked ? "bg-emerald-500" : "bg-zinc-600"
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+        checked ? "bg-emerald-500" : "bg-purple-500"
       }`}
     >
       <span
-        className={`pointer-events-none block size-3.5 rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ${
+        className={`pointer-events-none block size-3.5 rounded-full bg-card shadow-sm ring-0 transition-transform duration-200 ${
           checked ? "translate-x-[18px]" : "translate-x-[3px]"
         }`}
       />
@@ -231,7 +231,7 @@ function NodeCard({
 
   return (
     <div
-      className={`relative flex w-full flex-col rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-md ${
+      className={`relative flex w-full flex-col rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md ${
         isRunning
           ? "border-amber-300"
           : node.status === "error"
@@ -240,13 +240,13 @@ function NodeCard({
               : "border-red-300"
             : node.status === "success"
               ? "border-emerald-200"
-              : "border-zinc-200"
+              : "border-border-subtle"
       }`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-zinc-100 px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-3">
         {statusDot(node.status)}
-        <h3 className="flex-1 text-sm font-semibold text-zinc-800 tracking-tight">
+        <h3 className="flex-1 text-sm font-semibold text-foreground tracking-tight">
           {node.label}
         </h3>
         <Toggle
@@ -258,7 +258,7 @@ function NodeCard({
 
       {/* Description */}
       {NODE_DESCRIPTIONS[node.node_id] && (
-        <p className="px-4 pt-2 text-[11px] leading-relaxed text-zinc-400">
+        <p className="px-4 pt-2 text-[11px] leading-relaxed text-muted-foreground">
           {NODE_DESCRIPTIONS[node.node_id]}
         </p>
       )}
@@ -266,7 +266,7 @@ function NodeCard({
       {/* Body */}
       <div className="flex flex-col gap-3 px-4 py-3">
         {/* Timestamp + duration */}
-        <div className="flex items-center justify-between text-xs text-zinc-500">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{formatTimestamp(node.last_run_at)}</span>
           <span className="font-mono">
             {formatDuration(node.last_duration_s)}
@@ -366,13 +366,13 @@ function NodeCard({
 
                 {total > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-zinc-200">
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-elevated">
                       <div
                         className="h-full rounded-full bg-amber-400 transition-all duration-700 ease-out"
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
-                    <span className="min-w-[3ch] text-right text-xs font-bold text-zinc-700">
+                    <span className="min-w-[3ch] text-right text-xs font-bold text-foreground">
                       {pct}%
                     </span>
                   </div>
@@ -381,8 +381,8 @@ function NodeCard({
                 <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
                   {total > 0 && (
                     <>
-                      <span className="text-zinc-400">Progress</span>
-                      <span className="text-right font-mono font-medium text-zinc-700">
+                      <span className="text-muted-foreground">Progress</span>
+                      <span className="text-right font-mono font-medium text-foreground">
                         {done} / {total}
                       </span>
                     </>
@@ -390,10 +390,10 @@ function NodeCard({
 
                   {extraStats.map(([key, val]) => (
                     <React.Fragment key={key}>
-                      <span className="text-zinc-400">
+                      <span className="text-muted-foreground">
                         {key.replace(/_/g, " ")}
                       </span>
-                      <span className="text-right font-mono font-medium text-zinc-700">
+                      <span className="text-right font-mono font-medium text-foreground">
                         {key === "total_chars"
                           ? fmtChars(Number(val))
                           : String(val)}
@@ -403,8 +403,8 @@ function NodeCard({
 
                   {rate !== null && (
                     <>
-                      <span className="text-zinc-400">Speed</span>
-                      <span className="text-right font-mono font-medium text-zinc-700">
+                      <span className="text-muted-foreground">Speed</span>
+                      <span className="text-right font-mono font-medium text-foreground">
                         {rate}/s
                       </span>
                     </>
@@ -412,8 +412,8 @@ function NodeCard({
 
                   {elapsed > 0 && (
                     <>
-                      <span className="text-zinc-400">Elapsed</span>
-                      <span className="text-right font-mono font-medium text-zinc-700">
+                      <span className="text-muted-foreground">Elapsed</span>
+                      <span className="text-right font-mono font-medium text-foreground">
                         {fmtTime(elapsed)}
                       </span>
                     </>
@@ -421,7 +421,7 @@ function NodeCard({
 
                   {eta > 0 && (
                     <>
-                      <span className="text-zinc-400">ETA</span>
+                      <span className="text-muted-foreground">ETA</span>
                       <span className="text-right font-mono font-medium text-amber-600">
                         ~{fmtTime(eta)}
                       </span>
@@ -430,8 +430,8 @@ function NodeCard({
                 </div>
 
                 {lastResults.length > 0 && (
-                  <div className="flex flex-col gap-1 border-t border-zinc-100 pt-2">
-                    <span className="text-[10px] font-medium text-zinc-400">
+                  <div className="flex flex-col gap-1 border-t border-border-subtle pt-2">
+                    <span className="text-[10px] font-medium text-muted-foreground">
                       Recent
                     </span>
                     {lastResults.map((r, i) => (
@@ -444,11 +444,11 @@ function NodeCard({
                         ) : (
                           <XCircle className="size-3 shrink-0 text-red-400" />
                         )}
-                        <span className="truncate font-medium text-zinc-700">
+                        <span className="truncate font-medium text-foreground">
                           {r.name}
                         </span>
                         {r.ok ? (
-                          <span className="ml-auto shrink-0 font-mono text-zinc-500">
+                          <span className="ml-auto shrink-0 font-mono text-muted-foreground">
                             {r.pages}p &middot;{" "}
                             {r.chars !== undefined
                               ? r.chars >= 1_000
@@ -475,10 +475,10 @@ function NodeCard({
             {countsEntries.map(([key, val]) => (
               <span
                 key={key}
-                className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+                className="inline-flex items-center rounded-full bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
               >
                 {key.replace(/_/g, " ")}:&nbsp;
-                <span className="font-semibold text-zinc-800">
+                <span className="font-semibold text-foreground">
                   {String(val)}
                 </span>
               </span>
@@ -572,7 +572,7 @@ function NodeCard({
               size="sm"
               variant="ghost"
               onClick={onPreview}
-              className="h-7 gap-1 px-2 text-xs text-zinc-500"
+              className="h-7 gap-1 px-2 text-xs text-muted-foreground"
               title="Preview data"
             >
               <Eye className="size-3" />
@@ -582,7 +582,7 @@ function NodeCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className="h-7 gap-1 px-2 text-xs text-zinc-500"
+                className="h-7 gap-1 px-2 text-xs text-muted-foreground"
               >
                 <Settings className="size-3" />
                 {settingsOpen ? (
@@ -597,17 +597,17 @@ function NodeCard({
 
         {/* Settings panel */}
         {settingsOpen && settingsKeys.length > 0 && (
-          <div className="flex flex-col gap-2 rounded-md bg-zinc-50 p-3">
+          <div className="flex flex-col gap-2 rounded-md bg-background p-3">
             {settingsKeys.map((key) => (
               <label key={key} className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-zinc-500">
+                <span className="text-[11px] font-medium text-muted-foreground">
                   {key.replace(/_/g, " ")}
                 </span>
                 {SETTING_OPTIONS[key] ? (
                   <select
                     value={String(localSettings[key] ?? "")}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+                    className="rounded-md border border-border-subtle bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
                   >
                     {SETTING_OPTIONS[key].map((opt) => (
                       <option key={opt} value={opt}>
@@ -619,7 +619,7 @@ function NodeCard({
                   <select
                     value={String(localSettings[key])}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+                    className="rounded-md border border-border-subtle bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
@@ -629,7 +629,7 @@ function NodeCard({
                     type="text"
                     value={String(localSettings[key] ?? "")}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+                    className="rounded-md border border-border-subtle bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
                   />
                 )}
               </label>
@@ -820,6 +820,21 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
     [headers, fetchStatus, apiUrl],
   );
 
+  const triggerCrawl = useCallback(async () => {
+    try {
+      const res = await fetch(`${apiUrl}/api/v1/admin/data-sources/trigger-crawl`, {
+        method: "POST",
+        headers: headers(),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(`Trigger failed: ${data.error}`);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }, [headers, apiUrl]);
+
   const stopAll = useCallback(async () => {
     try {
       await fetch(`${apiUrl}/api/v1/admin/data-sources/stop-all`, {
@@ -932,7 +947,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
       return (
         <div
           data-node-id={nodeId}
-          className="flex h-32 items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 text-xs text-zinc-400"
+          className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-background text-xs text-muted-foreground"
         >
           {nodeId} (not configured)
         </div>
@@ -945,6 +960,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
           onRun={() => runNode(nodeId, false)}
           onForceRun={() => runNode(nodeId, true)}
           onStop={() => stopNode(nodeId)}
+          onTriggerCrawl={nodeId === "crawl_scraper" ? triggerCrawl : undefined}
           onToggleEnabled={(enabled) =>
             updateConfig(nodeId, enabled, node.settings)
           }
@@ -962,7 +978,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-6 animate-spin text-zinc-400" />
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -987,7 +1003,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
       )}
 
       {/* Toolbar */}
-      <div className="mb-4 flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-3">
+      <div className="mb-4 flex items-center gap-2 rounded-lg border border-border-subtle bg-card px-4 py-3">
         {anyRunning ? (
           <Button
             size="sm"
@@ -1023,7 +1039,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
         <div className="ml-4 flex items-center gap-1.5">
           <label
             htmlFor="top-communes"
-            className="text-xs font-medium text-zinc-500 whitespace-nowrap"
+            className="text-xs font-medium text-muted-foreground whitespace-nowrap"
           >
             Communes:
           </label>
@@ -1036,7 +1052,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
             onChange={(e) =>
               setTopCommunes(Math.max(1, parseInt(e.target.value) || 1))
             }
-            className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-300"
+            className="w-16 rounded-md border border-border-subtle bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
           />
         </div>
 
@@ -1216,7 +1232,7 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
       </div>
 
       {/* Footer summary */}
-      <div className="mt-8 flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 text-xs text-zinc-400">
+      <div className="mt-8 flex items-center justify-between rounded-lg border border-border-subtle bg-card px-4 py-3 text-xs text-muted-foreground">
         <span>
           {Object.values(nodes).filter((n) => n.enabled).length} /{" "}
           {Object.values(nodes).length} nodes enabled
@@ -1238,18 +1254,18 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
           onClick={() => setPreviewNode(null)}
         >
           <div
-            className="relative mx-4 flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border border-zinc-200 bg-white shadow-2xl"
+            className="relative mx-4 flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border border-border-subtle bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3">
-              <h2 className="text-sm font-semibold text-zinc-800">
-                <Eye className="mr-2 inline-block size-4 text-zinc-400" />
+            <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                <Eye className="mr-2 inline-block size-4 text-muted-foreground" />
                 {nodes[previewNode]?.label ?? previewNode} — Data Preview
               </h2>
               <button
                 type="button"
                 onClick={() => setPreviewNode(null)}
-                className="rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600"
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
               >
                 <X className="size-4" />
               </button>
@@ -1258,8 +1274,8 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
             <div className="flex-1 overflow-auto p-5">
               {previewLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="size-5 animate-spin text-zinc-400" />
-                  <span className="ml-2 text-sm text-zinc-500">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">
                     Loading preview...
                   </span>
                 </div>
@@ -1268,28 +1284,28 @@ export default function PipelineTab({ secret, apiUrl }: PipelineTabProps) {
                   {previewData.error}
                 </div>
               ) : previewData?.samples?.length === 0 ? (
-                <div className="py-12 text-center text-sm text-zinc-400">
+                <div className="py-12 text-center text-sm text-muted-foreground">
                   No data available. Run this node first.
                 </div>
               ) : previewData?.samples ? (
                 <div className="flex flex-col gap-3">
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-muted-foreground">
                     Showing {previewData.samples.length} sample
                     {previewData.samples.length !== 1 ? "s" : ""}
                   </p>
                   {previewData.samples.map((item: any, i: number) => (
                     <div
                       key={i}
-                      className="rounded-lg border border-zinc-100 bg-zinc-50 p-3"
+                      className="rounded-lg border border-border-subtle bg-background p-3"
                     >
-                      <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-zinc-700">
+                      <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-foreground">
                         {JSON.stringify(item, null, 2)}
                       </pre>
                     </div>
                   ))}
                 </div>
               ) : (
-                <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-zinc-50 p-4 text-[11px] leading-relaxed text-zinc-700">
+                <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-background p-4 text-[11px] leading-relaxed text-foreground">
                   {JSON.stringify(previewData, null, 2)}
                 </pre>
               )}
