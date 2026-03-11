@@ -32,7 +32,9 @@ from src.chatbot_async import (
     generate_streaming_global_combined_response,
 )
 from src.llms import StreamResetMarker
+from firebase_admin import firestore
 from src.firebase_service import (
+    async_db,
     aget_cached_answers_for_party,
     aget_parties,
     aget_party_by_id,
@@ -93,6 +95,38 @@ CHAT_RESPONSE_TIMEOUT = int(os.getenv("CHAT_RESPONSE_TIMEOUT_SECONDS", "40"))
 MAX_USER_MESSAGE_LENGTH = int(os.getenv("MAX_USER_MESSAGE_LENGTH", "2000"))
 
 logger = logging.getLogger(__name__)
+
+
+async def _persist_chat_debug_metadata(
+    session_id: str,
+    response_time_ms: int,
+    source_count: int,
+    model_used: str,
+    status: str,
+    error_messages: list | None = None,
+    total_tokens: int = 0,
+) -> None:
+    """Write debug metadata to Firestore chat session document."""
+    try:
+        doc_ref = async_db.collection("chat_sessions").document(session_id)
+        await doc_ref.set(
+            {
+                "debug": {
+                    "response_time_ms": response_time_ms,
+                    "source_count": source_count,
+                    "model_used": model_used,
+                    "status": status,
+                    "error_messages": error_messages or [],
+                    "total_tokens": total_tokens,
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }
+            },
+            merge=True,
+        )
+    except Exception as e:
+        logger.warning(
+            f"Failed to persist chat debug metadata for {session_id}: {e}"
+        )
 
 
 def _log_timing(stage: str, start: float, sid: str, extra: dict = None):
@@ -1206,6 +1240,19 @@ async def handle_combined_answer_request(
 
     _log_timing("total_combined", t0, sid)
 
+    _elapsed_ms_combined = int((time.perf_counter() - t0) * 1000)
+    from src.llms import NON_DETERMINISTIC_LLMS as _LLMS
+    _model_name_combined = _LLMS[0].name if _LLMS else "unknown"
+    asyncio.create_task(
+        _persist_chat_debug_metadata(
+            session_id=chat_session.session_id,
+            response_time_ms=_elapsed_ms_combined,
+            source_count=0,
+            model_used=_model_name_combined,
+            status="success",
+        )
+    )
+
     # Final complete event
     chat_response_complete_dto = ChatResponseCompleteDto(
         session_id=chat_session.session_id,
@@ -1617,6 +1664,19 @@ async def chat_answer_request(sid: str, body: dict):
     chat_session.last_quick_replies = chat_title_and_quick_replies.quick_replies
 
     _log_timing("total", t0, sid)
+
+    _elapsed_ms = int((time.perf_counter() - t0) * 1000)
+    from src.llms import NON_DETERMINISTIC_LLMS as _LLMS
+    _model_name = _LLMS[0].name if _LLMS else "unknown"
+    asyncio.create_task(
+        _persist_chat_debug_metadata(
+            session_id=chat_session.session_id,
+            response_time_ms=_elapsed_ms,
+            source_count=0,
+            model_used=_model_name,
+            status="success",
+        )
+    )
 
     chat_response_complete_dto = ChatResponseCompleteDto(
         session_id=chat_session.session_id,

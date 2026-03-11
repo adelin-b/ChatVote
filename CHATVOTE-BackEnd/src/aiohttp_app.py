@@ -1534,6 +1534,277 @@ async def ds_preview(request):
     return web.json_response(preview)
 
 
+@routes.get(f"{route_prefix}/admin/chat-sessions")
+async def admin_list_chat_sessions(request: web.Request) -> web.Response:
+    """List chat sessions with pagination and filters."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    limit = min(int(request.query.get("limit", "50")), 200)
+    offset = int(request.query.get("offset", "0"))
+    status_filter = request.query.get("status")
+    municipality = request.query.get("municipality_code")
+    since = request.query.get("since")
+    sort_by = request.query.get("sort_by", "updated_at")
+    order = request.query.get("order", "desc")
+
+    from google.cloud.firestore_v1 import Query as _FsQuery
+    query = db.collection("chat_sessions")
+
+    if municipality:
+        query = query.where("municipality_code", "==", municipality)
+    if status_filter:
+        query = query.where("debug.status", "==", status_filter)
+    if since:
+        from datetime import datetime, timezone
+        since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        query = query.where("updated_at", ">=", since_dt)
+
+    direction = _FsQuery.DESCENDING if order == "desc" else _FsQuery.ASCENDING
+    query = query.order_by(sort_by, direction=direction)
+
+    docs = query.offset(offset).limit(limit + 1).stream()
+    sessions = []
+    for doc in docs:
+        data = doc.to_dict()
+        data["session_id"] = doc.id
+        sessions.append(data)
+
+    has_more = len(sessions) > limit
+    sessions = sessions[:limit]
+
+    return web.json_response(
+        {
+            "sessions": sessions,
+            "total": len(sessions),
+            "has_more": has_more,
+            "offset": offset,
+            "limit": limit,
+        },
+        dumps=lambda obj: json.dumps(obj, default=str),
+    )
+
+
+@routes.get(f"{route_prefix}/admin/chat-sessions/{{session_id}}")
+async def admin_get_chat_session(request: web.Request) -> web.Response:
+    """Get full chat session detail including messages subcollection."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    session_id = request.match_info["session_id"]
+    doc = await async_db.collection("chat_sessions").document(session_id).get()
+    if not doc.exists:
+        return web.json_response({"error": "Not found"}, status=404)
+
+    session_data = doc.to_dict()
+    session_data["session_id"] = doc.id
+
+    messages = []
+    msgs_ref = (
+        async_db.collection("chat_sessions")
+        .document(session_id)
+        .collection("messages")
+        .order_by("created_at")
+    )
+    async for msg_doc in msgs_ref.stream():
+        msg_data = msg_doc.to_dict()
+        msg_data["id"] = msg_doc.id
+        messages.append(msg_data)
+
+    session_data["messages"] = messages
+    return web.Response(
+        content_type="application/json",
+        text=json.dumps(session_data, default=str),
+    )
+
+
+@routes.get(f"{route_prefix}/admin/dashboard/warnings")
+async def admin_dashboard_warnings(request: web.Request) -> web.Response:
+    """Aggregate warnings across data completeness, ops, and chat quality."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    from datetime import datetime, timedelta, timezone
+    from google.cloud.firestore_v1 import Query as _FsQuery
+
+    hours = int(request.query.get("hours", "24"))
+    since = datetime.now(timezone.utc) - timedelta(hours=hours) if hours > 0 else None
+
+    data_warnings: list = []
+    ops_warnings: list = []
+    chat_warnings: list = []
+
+    try:
+        # --- Data completeness ---
+        candidates = [
+            doc.to_dict() | {"id": doc.id}
+            async for doc in async_db.collection("candidates").stream()
+        ]
+        parties = [
+            doc.to_dict() | {"id": doc.id}
+            async for doc in async_db.collection("parties").stream()
+        ]
+
+        no_website = [c for c in candidates if not c.get("has_website")]
+        no_manifesto_parties = [p for p in parties if not p.get("manifesto_pdf_url")]
+
+        if no_website:
+            data_warnings.append(
+                {
+                    "severity": "warning",
+                    "category": "data",
+                    "message": f"{len(no_website)} candidates missing websites",
+                    "count": len(no_website),
+                    "tab_link": "coverage",
+                }
+            )
+        if no_manifesto_parties:
+            data_warnings.append(
+                {
+                    "severity": "warning",
+                    "category": "data",
+                    "message": f"{len(no_manifesto_parties)} parties missing manifestos",
+                    "count": len(no_manifesto_parties),
+                    "tab_link": "coverage",
+                }
+            )
+
+        # Qdrant collection checks
+        try:
+            for col_name in [PARTY_INDEX_NAME, CANDIDATES_INDEX_NAME]:
+                info = qdrant_client.get_collection(col_name)
+                if info.points_count == 0:
+                    data_warnings.append(
+                        {
+                            "severity": "critical",
+                            "category": "data",
+                            "message": f"Qdrant collection {col_name} is empty",
+                            "count": 0,
+                            "tab_link": "pipeline",
+                        }
+                    )
+        except Exception:
+            pass
+
+        # --- Ops warnings: pipeline node status ---
+        async for node_doc in async_db.collection("pipeline_nodes").stream():
+            node = node_doc.to_dict()
+            if node.get("status") == "error":
+                ops_warnings.append(
+                    {
+                        "severity": "critical",
+                        "category": "ops",
+                        "message": (
+                            f"Pipeline node '{node_doc.id}' in error state: "
+                            f"{node.get('last_error', 'unknown')}"
+                        ),
+                        "count": 1,
+                        "tab_link": "pipeline",
+                    }
+                )
+            last_run = node.get("last_run_at")
+            if last_run and hasattr(last_run, "timestamp"):
+                age_hours = (
+                    datetime.now(timezone.utc)
+                    - last_run.replace(tzinfo=timezone.utc)
+                ).total_seconds() / 3600
+                if age_hours > 48:
+                    ops_warnings.append(
+                        {
+                            "severity": "warning",
+                            "category": "ops",
+                            "message": (
+                                f"Pipeline node '{node_doc.id}' last ran "
+                                f"{int(age_hours)}h ago"
+                            ),
+                            "count": 1,
+                            "tab_link": "pipeline",
+                        }
+                    )
+
+        # --- Chat quality ---
+        error_count = 0
+        zero_source_count = 0
+        slow_count = 0
+        total_sessions = 0
+
+        chat_query = async_db.collection("chat_sessions")
+        if since is not None:
+            chat_query = (
+                chat_query.where("updated_at", ">=", since)
+                .order_by("updated_at", direction=_FsQuery.DESCENDING)
+            )
+        chat_query = chat_query.limit(500)
+
+        async for chat_doc in chat_query.stream():
+            total_sessions += 1
+            chat = chat_doc.to_dict()
+            debug = chat.get("debug", {})
+            if debug.get("status") == "error":
+                error_count += 1
+            if debug.get("source_count", -1) == 0:
+                zero_source_count += 1
+            if debug.get("response_time_ms", 0) > 30000:
+                slow_count += 1
+
+        if error_count > 0:
+            chat_warnings.append(
+                {
+                    "severity": (
+                        "critical"
+                        if total_sessions and error_count > total_sessions * 0.1
+                        else "warning"
+                    ),
+                    "category": "chat",
+                    "message": f"{error_count} chat errors in last {hours}h",
+                    "count": error_count,
+                    "tab_link": "chats",
+                }
+            )
+        if zero_source_count > 0:
+            chat_warnings.append(
+                {
+                    "severity": "warning",
+                    "category": "chat",
+                    "message": (
+                        f"{zero_source_count} questions returned zero sources "
+                        f"in last {hours}h"
+                    ),
+                    "count": zero_source_count,
+                    "tab_link": "chats",
+                }
+            )
+        if slow_count > 0:
+            chat_warnings.append(
+                {
+                    "severity": "info",
+                    "category": "chat",
+                    "message": f"{slow_count} slow responses (>30s) in last {hours}h",
+                    "count": slow_count,
+                    "tab_link": "chats",
+                }
+            )
+
+    except Exception as e:
+        logger.error(f"Error computing dashboard warnings: {e}", exc_info=True)
+
+    all_warnings = data_warnings + ops_warnings + chat_warnings
+    counts = {
+        "critical": sum(1 for w in all_warnings if w["severity"] == "critical"),
+        "warning": sum(1 for w in all_warnings if w["severity"] == "warning"),
+        "info": sum(1 for w in all_warnings if w["severity"] == "info"),
+    }
+
+    return web.json_response(
+        {
+            "data": data_warnings,
+            "ops": ops_warnings,
+            "chat": chat_warnings,
+            "counts": counts,
+        }
+    )
+
+
 app = web.Application(middlewares=[api_key_middleware])
 
 # Add routes to the app
