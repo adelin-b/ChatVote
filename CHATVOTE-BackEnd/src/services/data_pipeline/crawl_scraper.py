@@ -742,6 +742,10 @@ class CrawlScraperNode(DataSourceNode):
 
             # --- 7. Download content and build ScrapedWebsite objects ------
             scraped_map: dict[str, ScrapedWebsite] = {}
+            download_total = sum(1 for c in unscraped if c.candidate_id in processed_ids)
+            download_done = 0
+            download_pages_total = 0
+            download_chars_total = 0
 
             for candidate in unscraped:
                 if candidate.candidate_id not in processed_ids:
@@ -767,6 +771,8 @@ class CrawlScraperNode(DataSourceNode):
                             cleaned = _clean_scraped_pages(raw_pages)
                             sw.pages = cleaned
                             dropped = len(raw_pages) - len(cleaned)
+                            download_pages_total += len(cleaned)
+                            download_chars_total += sw.total_content_length
                             logger.info(
                                 "[crawl_scraper] %s → %s — %d pages (%d dropped), %d chars",
                                 candidate.full_name, folder["name"],
@@ -788,6 +794,23 @@ class CrawlScraperNode(DataSourceNode):
                     sw.error = "Drive folder not accessible"
 
                 scraped_map[candidate.candidate_id] = sw
+                download_done += 1
+
+                # Update progress after each candidate download
+                await update_status(
+                    cfg.node_id, NodeStatus.RUNNING,
+                    counts={
+                        "candidates_total": len(unscraped),
+                        "submitted": len(to_submit),
+                        "processed": len(processed_ids),
+                        "downloaded": download_done,
+                        "download_total": download_total,
+                        "pages": download_pages_total,
+                        "total_chars": download_chars_total,
+                        "current": candidate.full_name,
+                        "phase": "downloading",
+                    },
+                )
 
             # --- 8. Update Firestore candidate docs ------------------------
             for candidate in unscraped:

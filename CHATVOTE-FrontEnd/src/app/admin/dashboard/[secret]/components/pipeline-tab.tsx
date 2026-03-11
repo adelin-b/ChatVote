@@ -17,6 +17,7 @@ import {
   Square,
   Eye,
   X,
+  Zap,
 } from "lucide-react";
 
 import { Button } from "@components/ui/button";
@@ -187,6 +188,7 @@ function NodeCard({
   onRun,
   onForceRun,
   onStop,
+  onTriggerCrawl,
   onToggleEnabled,
   onUpdateSettings,
   onPreview,
@@ -195,6 +197,7 @@ function NodeCard({
   onRun: () => void;
   onForceRun: () => void;
   onStop: () => void;
+  onTriggerCrawl?: () => void;
   onToggleEnabled: (enabled: boolean) => void;
   onUpdateSettings: (settings: Record<string, any>) => void;
   onPreview: () => void;
@@ -232,7 +235,9 @@ function NodeCard({
         isRunning
           ? "border-amber-300"
           : node.status === "error"
-            ? "border-red-300"
+            ? (node.last_error?.includes("Stopped by admin") || node.last_error?.includes("Cancelled by admin"))
+              ? "border-amber-200"
+              : "border-red-300"
             : node.status === "success"
               ? "border-emerald-200"
               : "border-zinc-200"
@@ -274,13 +279,17 @@ function NodeCard({
           (() => {
             const c = node.counts;
 
-            const totalKey =
-              Object.keys(c).find((k) => k === "total") ??
-              Object.keys(c).find((k) => k.endsWith("_total"));
+            // For downloading phase, use downloaded/download_total for progress
+            const isDownloading = c.phase === "downloading" && c.download_total;
+            const totalKey = isDownloading
+              ? "download_total"
+              : (Object.keys(c).find((k) => k === "total") ??
+                Object.keys(c).find((k) => k.endsWith("_total")));
             const total = totalKey ? Number(c[totalKey]) || 0 : 0;
-            const doneKey =
-              Object.keys(c).find((k) => k === "scraped" || k === "done") ??
-              Object.keys(c).find((k) => k.endsWith("_done"));
+            const doneKey = isDownloading
+              ? "downloaded"
+              : (Object.keys(c).find((k) => k === "scraped" || k === "done") ??
+                Object.keys(c).find((k) => k.endsWith("_done")));
             const done = doneKey ? Number(c[doneKey]) || 0 : 0;
             const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -324,6 +333,8 @@ function NodeCard({
               "current",
               "current_urls",
               "last_results",
+              "downloaded",
+              "download_total",
             ]);
             const extraStats = Object.entries(c).filter(
               ([k, v]) => !metaKeys.has(k) && typeof v !== "object",
@@ -340,7 +351,7 @@ function NodeCard({
                 {current && (
                   <div className="rounded-md bg-amber-50 px-2.5 py-1.5">
                     <span className="text-[10px] font-medium text-amber-700">
-                      Scraping:
+                      {phase === "downloading" ? "Downloading:" : "Scraping:"}
                     </span>
                     <span className="ml-1 text-[11px] font-semibold text-amber-900">
                       {current}
@@ -476,43 +487,63 @@ function NodeCard({
         )}
 
         {/* Error */}
-        {node.status === "error" && node.last_error && (
-          <div className="rounded-md bg-red-50 p-2">
-            <button
-              type="button"
-              onClick={() => setErrorOpen(!errorOpen)}
-              className="flex w-full items-center gap-1 text-left text-xs font-medium text-red-700"
-            >
-              <AlertTriangle className="size-3.5 shrink-0" />
-              <span className="flex-1 truncate">
-                {node.last_error.split("\n")[0]}
-              </span>
-              {errorOpen ? (
-                <ChevronDown className="size-3.5 shrink-0" />
-              ) : (
-                <ChevronRight className="size-3.5 shrink-0" />
+        {node.status === "error" && node.last_error && (() => {
+          const isAdminStop = node.last_error.includes("Stopped by admin") || node.last_error.includes("Cancelled by admin");
+          return (
+            <div className={`rounded-md p-2 ${isAdminStop ? "bg-amber-50" : "bg-red-50"}`}>
+              <button
+                type="button"
+                onClick={() => setErrorOpen(!errorOpen)}
+                className={`flex w-full items-center gap-1 text-left text-xs font-medium ${isAdminStop ? "text-amber-700" : "text-red-700"}`}
+              >
+                {isAdminStop ? (
+                  <Square className="size-3.5 shrink-0" />
+                ) : (
+                  <AlertTriangle className="size-3.5 shrink-0" />
+                )}
+                <span className="flex-1 truncate">
+                  {node.last_error.split("\n")[0]}
+                </span>
+                {!isAdminStop && (errorOpen ? (
+                  <ChevronDown className="size-3.5 shrink-0" />
+                ) : (
+                  <ChevronRight className="size-3.5 shrink-0" />
+                ))}
+              </button>
+              {errorOpen && !isAdminStop && (
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-red-600">
+                  {node.last_error}
+                </pre>
               )}
-            </button>
-            {errorOpen && (
-              <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-red-600">
-                {node.last_error}
-              </pre>
-            )}
-          </div>
-        )}
+            </div>
+          );
+        })()}
 
         {/* Actions */}
         <div className="flex items-center gap-2">
           {isRunning ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onStop}
-              className="h-7 gap-1.5 px-2.5 text-xs border-red-300 text-red-600 hover:bg-red-50"
-            >
-              <Square className="size-3" />
-              Stop
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onStop}
+                className="h-7 gap-1.5 px-2.5 text-xs border-red-300 text-red-600 hover:bg-red-50"
+              >
+                <Square className="size-3" />
+                Stop
+              </Button>
+              {onTriggerCrawl && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onTriggerCrawl}
+                  className="h-7 gap-1.5 px-2.5 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  <Zap className="size-3" />
+                  Trigger Scrape
+                </Button>
+              )}
+            </>
           ) : (
             <>
               <Button

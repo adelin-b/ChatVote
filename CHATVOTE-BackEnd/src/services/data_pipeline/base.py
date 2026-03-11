@@ -8,6 +8,7 @@ Each node:
 """
 from __future__ import annotations
 
+import asyncio
 import enum
 import hashlib
 import logging
@@ -172,6 +173,15 @@ class DataSourceNode(ABC):
             cfg.last_error = None
             await save_config(cfg)
             logger.info(f"[{self.node_id}] done in {elapsed}s — counts={cfg.counts}")
+        except asyncio.CancelledError:
+            elapsed = round(time.monotonic() - t0, 2)
+            cfg.status = NodeStatus.ERROR
+            cfg.last_run_at = datetime.now(timezone.utc).isoformat()
+            cfg.last_duration_s = elapsed
+            cfg.last_error = "Stopped by admin"
+            await save_config(cfg)
+            logger.info(f"[{self.node_id}] stopped by admin after {elapsed}s")
+            raise
         except Exception as exc:
             elapsed = round(time.monotonic() - t0, 2)
             cfg.status = NodeStatus.ERROR

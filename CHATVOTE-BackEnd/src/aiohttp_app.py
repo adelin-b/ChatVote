@@ -1341,6 +1341,8 @@ async def ds_run_node(request):
     async def _run():
         try:
             await node.execute(force=force)
+        except asyncio.CancelledError:
+            logger.info("[data-sources] node %s stopped by admin", node_id)
         except Exception as exc:
             logger.error("[data-sources] node %s failed: %s", node_id, exc, exc_info=True)
         finally:
@@ -1493,6 +1495,75 @@ async def ds_stop_all(request):
             stopped.append(key)
     _pipeline_tasks.clear()
     return web.json_response({"status": "ok", "stopped": stopped})
+
+
+@routes.post(f"{route_prefix}/admin/data-sources/trigger-crawl")
+async def ds_trigger_crawl(request):
+    """Send pending candidates to the external crawl service for immediate processing."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    crawl_url = os.getenv("CRAWL_SERVICE_URL", "").rstrip("/")
+    crawl_secret = os.getenv("CRAWL_API_SECRET", "")
+    if not crawl_url:
+        return web.json_response({"error": "CRAWL_SERVICE_URL not configured"}, status=400)
+
+    from src.services.data_pipeline.crawl_scraper import (
+        CrawlScraperNode,
+        _get_crawl_credentials,
+        SHEET_RANGE,
+        COL_CANDIDATE_ID,
+        COL_WEBSITE_URL,
+        COL_STATUS,
+        _row_get,
+    )
+
+    # Read pending URLs from the Google Sheet
+    try:
+        creds = _get_crawl_credentials()
+        node = CrawlScraperNode()
+        settings = node.default_settings
+        sheet_id = settings["sheet_id"]
+
+        async with aiohttp.ClientSession() as session:
+            rows = await node._fetch_sheet_rows(session, sheet_id, creds.token)
+            pending = []
+            for row in rows[1:]:
+                cid = _row_get(row, COL_CANDIDATE_ID)
+                url = _row_get(row, COL_WEBSITE_URL)
+                status = _row_get(row, COL_STATUS)
+                if cid and url and status.upper() != "PROCESSED":
+                    pending.append({"candidate_id": cid, "url": url})
+
+            if not pending:
+                return web.json_response({"status": "no_pending", "message": "All candidates already processed"})
+
+            # Call external crawl service
+            trigger_headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {crawl_secret}",
+            }
+            payload = {"urls": [p["url"] for p in pending]}
+            trigger_url = f"{crawl_url}/api/crawl"
+
+            async with session.post(trigger_url, headers=trigger_headers, json=payload, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                resp_text = await resp.text()
+                if resp.ok:
+                    return web.json_response({
+                        "status": "triggered",
+                        "candidates": len(pending),
+                        "crawl_response": resp_text[:500],
+                    })
+                else:
+                    return web.json_response({
+                        "status": "crawl_error",
+                        "http_status": resp.status,
+                        "response": resp_text[:500],
+                    }, status=502)
+
+    except Exception as exc:
+        logger.error("[trigger-crawl] failed: %s", exc, exc_info=True)
+        return web.json_response({"error": str(exc)}, status=500)
 
 
 @routes.get(f"{route_prefix}/admin/data-sources/preview/{{node_id}}")
