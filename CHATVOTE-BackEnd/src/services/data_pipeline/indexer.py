@@ -29,7 +29,6 @@ class IndexerNode(DataSourceNode):
     node_id = "indexer"
     label = "Qdrant Indexer"
     default_settings: dict[str, Any] = {
-        "enabled": False,
         "index_manifestos": True,
         "index_candidates": True,
     }
@@ -51,22 +50,23 @@ class IndexerNode(DataSourceNode):
 
         # --- Manifesto indexing -------------------------------------------
         if settings.get("index_manifestos", True):
-            logger.info("[indexer] indexing party manifestos...")
+            logger.info("[indexer] starting manifesto indexing phase...")
             await update_status(
                 cfg.node_id, NodeStatus.RUNNING,
-                counts={"phase": "manifestos", "parties_indexed": 0, "candidates_indexed": 0},
+                counts={"phase": "manifestos", "parties_indexed": 0, "candidates_indexed": 0, "current": "loading parties..."},
             )
             try:
                 from src.services.manifesto_indexer import index_all_parties
 
+                logger.info("[indexer] calling index_all_parties()...")
                 results = await index_all_parties()
                 parties_indexed = sum(results.values())
                 logger.info(
-                    "[indexer] manifesto indexing complete: %d chunks across %d parties",
-                    parties_indexed, len(results),
+                    "[indexer] manifesto indexing complete: %d chunks across %d parties — details: %s",
+                    parties_indexed, len(results), results,
                 )
             except Exception as exc:
-                msg = f"manifesto indexing failed: {exc}"
+                msg = f"manifesto indexing failed: {type(exc).__name__}: {exc}"
                 logger.exception("[indexer] %s", msg)
                 errors.append(msg)
         else:
@@ -93,8 +93,12 @@ class IndexerNode(DataSourceNode):
                 )
                 # Use pre-scraped data from pipeline context if available
                 scraped = get_context("scraped_websites")
+                logger.info("[indexer] fetching candidates with websites from Firestore...")
                 candidates = await aget_candidates_with_website()
+                logger.info("[indexer] found %d candidates with websites", len(candidates))
+                logger.info("[indexer] checking existing indexed counts (force=%s)...", force)
                 existing = _get_indexed_candidate_counts() if not force else {}
+                logger.info("[indexer] %d candidates already indexed in Qdrant", len(existing))
 
                 if scraped:
                     # Always re-index pre-scraped candidates (crawl service
@@ -142,40 +146,47 @@ class IndexerNode(DataSourceNode):
                         try:
                             t_start = _time.monotonic()
                             scraped_website = scraped.get(candidate.candidate_id) if scraped else None
+                            logger.info(
+                                "[indexer] starting %s (id=%s, scraped=%s)...",
+                                candidate.full_name, candidate.candidate_id,
+                                bool(scraped_website),
+                            )
                             count = await index_candidate_website(candidate, scraped_website)
                             candidates_indexed += count
                             indexed_count += 1
+                            dur = _time.monotonic() - t_start
                             logger.info(
                                 "[indexer] %d/%d indexed %s (%d chunks, %.1fs)",
                                 indexed_count, len(to_index),
-                                candidate.full_name, count,
-                                _time.monotonic() - t_start,
+                                candidate.full_name, count, dur,
                             )
 
-                            # Update progress periodically
-                            if indexed_count % 3 == 0 or indexed_count == len(to_index):
-                                elapsed = _time.monotonic() - t0
-                                rate = indexed_count / elapsed if elapsed > 0 else 0
-                                remaining = (len(to_index) - indexed_count) / rate if rate > 0 else 0
-                                await update_status(
-                                    cfg.node_id, NodeStatus.RUNNING,
-                                    counts={
-                                        "phase": "candidates",
-                                        "parties_indexed": parties_indexed,
-                                        "candidates_indexed": candidates_indexed,
-                                        "candidates_done": indexed_count,
-                                        "candidates_total": len(to_index),
-                                        "rate_per_sec": round(rate, 2),
-                                        "elapsed_s": round(elapsed, 1),
-                                        "eta_s": round(remaining, 0),
-                                    },
-                                )
+                            # Update progress after every candidate
+                            elapsed = _time.monotonic() - t0
+                            rate = indexed_count / elapsed if elapsed > 0 else 0
+                            remaining = (len(to_index) - indexed_count) / rate if rate > 0 else 0
+                            await update_status(
+                                cfg.node_id, NodeStatus.RUNNING,
+                                counts={
+                                    "phase": "candidates",
+                                    "parties_indexed": parties_indexed,
+                                    "candidates_indexed": candidates_indexed,
+                                    "candidates_done": indexed_count,
+                                    "candidates_total": len(to_index),
+                                    "current": candidate.full_name,
+                                    "rate_per_sec": round(rate, 2),
+                                    "elapsed_s": round(elapsed, 1),
+                                    "eta_s": round(remaining, 0),
+                                },
+                            )
                             return count
                         except Exception as e:
                             index_errors += 1
                             indexed_count += 1
                             logger.error(
-                                "[indexer] error indexing %s: %s", candidate.candidate_id, e
+                                "[indexer] error indexing %s: %s: %s",
+                                candidate.candidate_id, type(e).__name__, e,
+                                exc_info=True,
                             )
                             return 0
 
