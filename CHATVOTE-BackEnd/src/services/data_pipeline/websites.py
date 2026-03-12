@@ -56,8 +56,12 @@ def _get_sheets_credentials():
     from google.auth.transport.requests import Request
     from google.oauth2.service_account import Credentials
 
+    import base64
+    b64 = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_BASE64", "")
     raw = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "")
-    if not raw:
+    if b64:
+        raw = base64.b64decode(b64).decode()
+    elif not raw:
         raise RuntimeError("GOOGLE_SHEETS_CREDENTIALS_JSON env var is not set")
     raw = raw.strip().strip("'\"")
     info = json.loads(raw)

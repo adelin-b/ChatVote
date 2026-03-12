@@ -94,8 +94,8 @@ jobs:
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
               secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
-              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_JSON \
-              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
               region=$SCW_REGION
             scw container container deploy $EXISTING region=$SCW_REGION
             ID=$EXISTING
@@ -126,8 +126,8 @@ jobs:
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
               secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
-              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_JSON \
-              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
               -o json)
             ID=$(echo "$RESULT" | jq -r '.id')
           fi
