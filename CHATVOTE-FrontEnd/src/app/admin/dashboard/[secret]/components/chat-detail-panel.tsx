@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, X, ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Loader2, X, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 
 interface ChatDetailPanelProps {
   sessionId: string;
@@ -10,12 +10,37 @@ interface ChatDetailPanelProps {
   onClose: () => void;
 }
 
-interface Message {
+/** A single sub-message inside a grouped message doc */
+interface SubMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   created_at: string;
   sources?: Array<{ id: string; score?: number; text?: string }>;
+  party_id?: string;
+  party_name?: string;
+}
+
+/** Raw grouped-message document from Firestore */
+interface GroupedMessageDoc {
+  id: string;
+  role: "user" | "assistant";
+  created_at: string;
+  messages?: SubMessage[];
+  /** Legacy flat fields (in case some docs use them) */
+  content?: string;
+  sources?: Array<{ id: string; score?: number; text?: string }>;
+}
+
+/** Flattened message for display */
+interface FlatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+  sources?: Array<{ id: string; score?: number; text?: string }>;
+  party_id?: string;
+  party_name?: string;
 }
 
 interface SessionDetail {
@@ -24,7 +49,7 @@ interface SessionDetail {
   municipality_name?: string;
   created_at?: string;
   updated_at?: string;
-  messages: Message[];
+  messages: GroupedMessageDoc[];
   debug?: {
     response_time_ms?: number;
     source_count?: number;
@@ -33,6 +58,36 @@ interface SessionDetail {
     error_messages?: string[];
     total_tokens?: number;
   };
+}
+
+/** Flatten grouped message docs into individual display messages */
+function flattenMessages(docs: GroupedMessageDoc[]): FlatMessage[] {
+  const result: FlatMessage[] = [];
+  for (const doc of docs) {
+    if (doc.messages && doc.messages.length > 0) {
+      for (const sub of doc.messages) {
+        result.push({
+          id: sub.id || doc.id,
+          role: sub.role || doc.role,
+          content: sub.content || "",
+          created_at: sub.created_at || doc.created_at,
+          sources: sub.sources,
+          party_id: sub.party_id,
+          party_name: sub.party_name,
+        });
+      }
+    } else if (doc.content) {
+      // Legacy flat format
+      result.push({
+        id: doc.id,
+        role: doc.role,
+        content: doc.content,
+        created_at: doc.created_at,
+        sources: doc.sources,
+      });
+    }
+  }
+  return result;
 }
 
 export default function ChatDetailPanel({
@@ -47,6 +102,13 @@ export default function ChatDetailPanel({
   const [expandedSources, setExpandedSources] = useState<Set<string>>(
     new Set(),
   );
+
+  const flatMessages = useMemo(
+    () => (detail ? flattenMessages(detail.messages) : []),
+    [detail],
+  );
+
+  const chatUrl = `/chat/${sessionId}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -110,6 +172,15 @@ export default function ChatDetailPanel({
             Session Detail
           </h3>
           <span className="font-mono text-xs text-muted-foreground">{sessionId}</span>
+          <a
+            href={chatUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 rounded bg-blue-500/15 px-2 py-0.5 text-[11px] font-medium text-blue-400 hover:bg-blue-500/25 transition-colors"
+          >
+            <ExternalLink className="size-3" />
+            Open chat
+          </a>
         </div>
         <button
           type="button"
@@ -219,14 +290,14 @@ export default function ChatDetailPanel({
             {/* Messages */}
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Messages ({detail.messages.length})
+                Messages ({flatMessages.length})
               </p>
-              {detail.messages.length === 0 && (
+              {flatMessages.length === 0 && (
                 <p className="text-sm text-muted-foreground italic">
                   No messages in this session.
                 </p>
               )}
-              {detail.messages.map((msg) => (
+              {flatMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`rounded-lg border border-border-subtle p-3 ${
@@ -236,15 +307,22 @@ export default function ChatDetailPanel({
                   }`}
                 >
                   <div className="mb-1.5 flex items-center justify-between">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider ${
-                        msg.role === "user"
-                          ? "text-blue-400"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {msg.role}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider ${
+                          msg.role === "user"
+                            ? "text-blue-400"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {msg.role}
+                      </span>
+                      {msg.party_name && (
+                        <span className="rounded bg-purple-500/15 px-1.5 py-0.5 text-[10px] font-medium text-purple-400">
+                          {msg.party_name}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-muted-foreground">
                       {formatTime(msg.created_at)}
                     </span>
