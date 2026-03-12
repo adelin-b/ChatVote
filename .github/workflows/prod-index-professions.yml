@@ -1,0 +1,86 @@
+name: "Prod: Index Profession de Foi"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  index-professions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        working-directory: CHATVOTE-BackEnd
+        run: poetry install --only main
+
+      - name: Download profession de foi PDFs
+        working-directory: CHATVOTE-BackEnd
+        env:
+          ENV: prod
+          API_NAME: chatvote-api
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          FIREBASE_CREDENTIALS_BASE64: ${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}
+          QDRANT_URL: https://chatvoteoan3waxf-qdrant-prod.functions.fnc.fr-par.scw.cloud
+        run: |
+          echo "=== Step 1: Download PDFs via professions pipeline node ==="
+          poetry run python -c "
+          import asyncio, os
+          os.environ['ENV'] = 'prod'
+          os.environ['API_NAME'] = 'chatvote-api'
+
+          async def main():
+              from src.services.data_pipeline.base import load_config
+              from src.services.data_pipeline.population import PopulationNode
+              from src.services.data_pipeline.candidatures import CandidaturesNode
+              from src.services.data_pipeline.professions import ProfessionsNode
+
+              # Population
+              pop = PopulationNode()
+              pop_cfg = await load_config('population', pop.default_config())
+              pop_cfg.settings['communes_to_scrap'] = 500
+              pop_cfg = await pop.run(pop_cfg, force=True)
+              print(f'Population: {pop_cfg.counts}')
+
+              # Candidatures
+              cand = CandidaturesNode()
+              cand_cfg = await load_config('candidatures', cand.default_config())
+              cand_cfg.settings['top_communes'] = 500
+              cand_cfg = await cand.run(cand_cfg, force=True)
+              print(f'Candidatures: {cand_cfg.counts}')
+
+              # Professions (downloads PDFs)
+              prof = ProfessionsNode()
+              prof_cfg = await load_config('professions', prof.default_config())
+              prof_cfg = await prof.run(prof_cfg, force=True)
+              print(f'Professions: {prof_cfg.counts}')
+
+          asyncio.run(main())
+          "
+
+      - name: Upload PDFs to Firebase Storage & update Firestore URLs
+        working-directory: CHATVOTE-BackEnd
+        env:
+          ENV: prod
+          API_NAME: chatvote-api
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          FIREBASE_CREDENTIALS_BASE64: ${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}
+          QDRANT_URL: https://chatvoteoan3waxf-qdrant-prod.functions.fnc.fr-par.scw.cloud
+        run: poetry run python scripts/upload_all_professions_to_storage.py
+
+      - name: Index professions into Qdrant
+        working-directory: CHATVOTE-BackEnd
+        env:
+          ENV: prod
+          API_NAME: chatvote-api
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          FIREBASE_CREDENTIALS_BASE64: ${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}
+          QDRANT_URL: https://chatvoteoan3waxf-qdrant-prod.functions.fnc.fr-par.scw.cloud
+        run: poetry run python -m src.services.profession_indexer
