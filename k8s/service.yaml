@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatvote-backend
+  namespace: chatvote
+  labels:
+    app: chatvote-backend
+spec:
+  type: LoadBalancer
+  selector:
+    app: chatvote-backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

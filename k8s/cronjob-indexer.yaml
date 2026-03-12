@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: indexer
+  namespace: chatvote
+spec:
+  schedule: "0 4 * * *"
+  timeZone: "Europe/Paris"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 10800 # 3h max
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            k8s.scaleway.com/pool-name: pool-pipeline
+          imagePullSecrets:
+            - name: scaleway-registry
+          containers:
+            - name: indexer
+              image: rg.fr-par.scw.cloud/chatvote/backend:latest
+              command: ["python", "-m", "src.job_runner", "indexer"]
+              resources:
+                requests:
+                  memory: "1Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2000m"
+              envFrom:
+                - secretRef:
+                    name: chatvote-pipeline-env

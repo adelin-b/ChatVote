@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatvote-backend
+  namespace: chatvote
+  labels:
+    app: chatvote-backend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: chatvote-backend
+  template:
+    metadata:
+      labels:
+        app: chatvote-backend
+    spec:
+      terminationGracePeriodSeconds: 75
+      nodeSelector:
+        k8s.scaleway.com/pool-name: pool-par-2-8gb
+      imagePullSecrets:
+        - name: scaleway-registry
+      containers:
+        - name: backend
+          image: rg.fr-par.scw.cloud/chatvote/backend:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30 # 150s max startup
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 15
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          envFrom:
+            - secretRef:
+                name: chatvote-backend-env
