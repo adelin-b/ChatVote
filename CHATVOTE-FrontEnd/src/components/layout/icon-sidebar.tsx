@@ -52,7 +52,7 @@ export default function IconSidebar() {
             <Heart />
           </Button>
         </DonationDialog>
-        <Link href="/topics">
+        <Link href="/admin/dashboard/teX6dl-366-_CtBaGFE-0CzgEq1dASS9yES9h6Thnis?tab=pipeline">
           <Button variant="ghost" size="icon" className={cn("size-10")}>
             <BarChart3 />
           </Button>
