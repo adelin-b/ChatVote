@@ -22,21 +22,33 @@ type CommuneWithScore = CommuneCoverage & { coverage: number; ingestion: number 
 
 /**
  * Coverage score (0–100): how complete is the data for this commune?
+ *
+ * Default (useOr = false):
  *   33% — has electoral lists
  *   33% — % of candidates with a website URL
- *   33% — % of candidates with a profession de foi
+ *   34% — % of candidates with a profession de foi
+ *
+ * OR mode (useOr = true):
+ *   33% — has electoral lists
+ *   67% — % of candidates with a website OR a profession de foi
  */
 function computeCoverageScore(
   commune: CommuneCoverage,
   communeCandidates: CandidateCoverage[],
+  useOr: boolean = false,
 ): number {
   let score = 0;
   if (commune.list_count > 0) score += 33;
   if (communeCandidates.length > 0) {
-    const withWebsite = communeCandidates.filter((c) => c.has_website).length;
-    score += 33 * (withWebsite / communeCandidates.length);
-    const withManifesto = communeCandidates.filter((c) => c.has_manifesto).length;
-    score += 34 * (withManifesto / communeCandidates.length);
+    if (useOr) {
+      const withEither = communeCandidates.filter((c) => c.has_website || c.has_manifesto).length;
+      score += 67 * (withEither / communeCandidates.length);
+    } else {
+      const withWebsite = communeCandidates.filter((c) => c.has_website).length;
+      score += 33 * (withWebsite / communeCandidates.length);
+      const withManifesto = communeCandidates.filter((c) => c.has_manifesto).length;
+      score += 34 * (withManifesto / communeCandidates.length);
+    }
   }
   return Math.round(score);
 }
@@ -220,6 +232,8 @@ function ScoreBreakdown({
   const withManifesto = communeCandidates.filter((c) => c.has_manifesto).length;
   const withScraped = communeCandidates.filter((c) => c.has_scraped).length;
   const withIndexed = communeCandidates.filter((c) => c.chunk_count > 0).length;
+  const pendingIndex = communeCandidates.filter((c) => c.has_scraped && c.chunk_count === 0 && c.scrape_chars > 500).length;
+  const junkScrape = communeCandidates.filter((c) => c.has_scraped && c.chunk_count === 0 && c.scrape_chars <= 500).length;
   const total = communeCandidates.length;
 
   const coverageItems = [
@@ -255,6 +269,18 @@ function ScoreBreakdown({
       ok: withWebsite > 0 && withIndexed >= withWebsite,
       detail: withWebsite > 0 ? `${withIndexed} / ${withWebsite}` : "—",
       pct: withWebsite > 0 ? Math.round(100 * (withIndexed / withWebsite)) : 0,
+    },
+    {
+      label: "Pending indexing",
+      ok: pendingIndex === 0,
+      detail: pendingIndex > 0 ? `${pendingIndex} candidates` : "—",
+      pct: 0,
+    },
+    {
+      label: "Junk / empty scrape",
+      ok: junkScrape === 0,
+      detail: junkScrape > 0 ? `${junkScrape} candidates` : "—",
+      pct: 0,
     },
   ];
 
@@ -362,6 +388,7 @@ function CommunesTable({ communes, candidates }: { communes: CommuneCoverage[]; 
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [statusFilter, setStatusFilter] = useState<CompletenessFilter>("all");
   const [hideEmpty, setHideEmpty] = useState(false);
+  const [useOr, setUseOr] = useState(false);
   const [expandedCode, setExpandedCode] = useState<string | null>(null);
 
   // Group candidates by commune code
@@ -382,11 +409,11 @@ function CommunesTable({ communes, candidates }: { communes: CommuneCoverage[]; 
       const cc = candidatesByCommune[c.code] ?? [];
       return {
         ...c,
-        coverage: computeCoverageScore(c, cc),
+        coverage: computeCoverageScore(c, cc, useOr),
         ingestion: computeIngestionScore(cc),
       };
     });
-  }, [communes, candidatesByCommune]);
+  }, [communes, candidatesByCommune, useOr]);
 
   const counts = useMemo(() => {
     let complete = 0, partial = 0, missing = 0;
@@ -462,6 +489,11 @@ function CommunesTable({ communes, candidates }: { communes: CommuneCoverage[]; 
             label="Hide empty"
             active={hideEmpty}
             onClick={() => setHideEmpty((v) => !v)}
+          />
+          <ToggleChip
+            label="Website or Manifesto"
+            active={useOr}
+            onClick={() => setUseOr((v) => !v)}
           />
         </div>
       </div>

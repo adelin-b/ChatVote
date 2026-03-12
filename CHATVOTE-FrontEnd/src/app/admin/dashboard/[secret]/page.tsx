@@ -9,13 +9,14 @@ const API_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL ||
   "http://localhost:8080";
 
-const TABS = ["overview", "pipeline", "coverage", "chats"] as const;
+const TABS = ["overview", "pipeline", "coverage", "charts", "chats"] as const;
 type TabId = (typeof TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
   overview: "Overview",
   pipeline: "Pipeline",
   coverage: "Coverage",
+  charts: "Charts",
   chats: "Chat Sessions",
 };
 
@@ -33,6 +34,9 @@ const ChatSessionsTab = dynamic(
   () => import("./components/chat-sessions-tab"),
   { ssr: false },
 );
+const ChartsTab = dynamic(() => import("./components/charts-tab"), {
+  ssr: false,
+});
 
 export default function AdminDashboard() {
   const params = useParams<{ secret: string }>();
@@ -152,6 +156,9 @@ export default function AdminDashboard() {
           )}
           {activeTab === "coverage" && (
             <CoverageTab secret={secret} apiUrl={API_URL} />
+          )}
+          {activeTab === "charts" && (
+            <ChartsTab secret={secret} apiUrl={API_URL} />
           )}
           {activeTab === "chats" && (
             <ChatSessionsTab

@@ -32,6 +32,7 @@ export type CandidateCoverage = {
   has_manifesto: boolean;
   has_scraped: boolean;
   chunk_count: number;
+  scrape_chars: number;
   party_label: string;
 };
 
@@ -204,6 +205,7 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
           ),
           has_scraped: Boolean(data.has_scraped),
           chunk_count: candidateChunks[doc.id] ?? 0,
+          scrape_chars: (data.scrape_chars as number) ?? 0,
           party_label:
             data.list_label ?? data.nuance_label ?? data.nuance_code ?? data.party_name ?? "",
         };
