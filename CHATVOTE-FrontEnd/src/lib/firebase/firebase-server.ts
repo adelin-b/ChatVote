@@ -23,6 +23,12 @@ import {
 import { db } from "./firebase-admin";
 import { firebaseConfig } from "./firebase-config";
 
+/** Strip non-serializable Firestore objects (Timestamps, GeoPoints, etc.)
+ *  so data can safely cross the Server → Client Component boundary. */
+function serialize<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 // --- Firebase Auth (still uses Client SDK for authStateReady) ---
 
 async function getServerApp({
@@ -116,7 +122,7 @@ async function getPartiesImpl() {
       .orderBy("election_result_forecast_percent", "desc")
       .get();
 
-    return snapshot.docs.map((doc) => doc.data()) as PartyDetails[];
+    return snapshot.docs.map((doc) => serialize(doc.data())) as PartyDetails[];
   } catch (error) {
     return [];
   }
@@ -137,7 +143,7 @@ async function getPartyImpl(partyId: string) {
     return;
   }
 
-  return docSnap.data() as PartyDetails;
+  return serialize(docSnap.data()) as PartyDetails;
 }
 
 export const getParty = cache(getPartyImpl, undefined, {
@@ -196,12 +202,12 @@ export async function getUsersChatSessions(
 
     return snapshot.docs.map((doc) => {
       const data = doc.data();
-      return {
+      return serialize({
         id: doc.id,
         ...data,
         updated_at: firestoreTimestampToDate(data.updated_at),
         created_at: firestoreTimestampToDate(data.created_at),
-      } as ChatSession;
+      }) as ChatSession;
     });
   } catch {
     return [];
@@ -218,17 +224,15 @@ export async function getChatSessionMessages(sessionId: string) {
 
   return snapshot.docs.map((doc) => {
     const data = doc.data();
-    return JSON.parse(
-      JSON.stringify({
-        ...data,
-        id: doc.id,
-        created_at: firestoreTimestampToDate(data.created_at),
-        messages: data.messages.map((message: MessageItem) => ({
-          ...message,
-          created_at: firestoreTimestampToDate(message.created_at),
-        })),
-      }),
-    ) as GroupedMessage;
+    return serialize({
+      ...data,
+      id: doc.id,
+      created_at: firestoreTimestampToDate(data.created_at),
+      messages: data.messages.map((message: MessageItem) => ({
+        ...message,
+        created_at: firestoreTimestampToDate(message.created_at),
+      })),
+    }) as GroupedMessage;
   });
 }
 
@@ -247,11 +251,11 @@ async function getProposedQuestionsImpl(partyIds?: string[]) {
     .get();
 
   const questions = snapshot.docs.map((doc) => {
-    return {
+    return serialize({
       id: doc.id,
       partyId: normalizedId,
       ...doc.data(),
-    } as ProposedQuestion;
+    }) as ProposedQuestion;
   });
 
   return questions.sort(() => Math.random() - 0.5);
@@ -271,11 +275,11 @@ async function getHomeInputProposedQuestionsImpl() {
     .get();
 
   return snapshot.docs.map((doc) => {
-    return {
+    return serialize({
       id: doc.id,
       partyId: ASSISTANT_ID,
       ...doc.data(),
-    } as ProposedQuestion;
+    }) as ProposedQuestion;
   });
 }
 
