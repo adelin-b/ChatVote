@@ -196,3 +196,11 @@ export type StreamingMessage = {
   voting_behavior?: VotingBehavior;
   feedback?: MessageFeedback;
 };
+
+/** Debug-only: LLM/RAG call metadata emitted by backend in local dev. */
+export type DebugLlmCallPayload = {
+  session_id: string;
+  stage: string;
+  timestamp: number;
+  [key: string]: unknown;
+};

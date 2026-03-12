@@ -7,6 +7,7 @@ import ChatSocket from "@lib/chat-socket";
 import {
   type CandidateProConPerspectiveReadyPayload,
   type ChatSessionInitializedPayload,
+  type DebugLlmCallPayload,
   type PartyResponseChunkReadyPayload,
   type PartyResponseCompletePayload,
   type ProConPerspectiveReadyPayload,
@@ -99,6 +100,7 @@ function SocketProvider({ children }: Props) {
   const resetStreamingMessage = useChatStore(
     (state) => state.resetStreamingMessage,
   );
+  const addDebugLlmCall = useChatStore((state) => state.addDebugLlmCall);
 
   // Update socket and store locale when locale changes
   useEffect(() => {
@@ -204,6 +206,10 @@ function SocketProvider({ children }: Props) {
       resetStreamingMessage(data.session_id, data.party_id, data.reason);
     }
 
+    function onDebugLlmCall(data: DebugLlmCallPayload) {
+      addDebugLlmCall(data);
+    }
+
     chatSocket.on("connect", onConnect);
     chatSocket.on("disconnect", onDisconnect);
     chatSocket.on("responding_parties_selected", onRespondingPartiesSelected);
@@ -224,6 +230,7 @@ function SocketProvider({ children }: Props) {
     chatSocket.on("voting_behavior_result", onVotingBehaviorResult);
     chatSocket.on("voting_behavior_complete", onVotingBehaviorComplete);
     chatSocket.on("stream_reset", onStreamReset);
+    chatSocket.on("debug_llm_call", onDebugLlmCall);
 
     return () => {
       chatSocket.off("connect", onConnect);
@@ -252,6 +259,7 @@ function SocketProvider({ children }: Props) {
       chatSocket.off("voting_behavior_result", onVotingBehaviorResult);
       chatSocket.off("voting_behavior_complete", onVotingBehaviorComplete);
       chatSocket.off("stream_reset", onStreamReset);
+      chatSocket.off("debug_llm_call", onDebugLlmCall);
     };
   }, [
     locale,
@@ -269,6 +277,7 @@ function SocketProvider({ children }: Props) {
     addVotingBehaviorResult,
     completeVotingBehavior,
     resetStreamingMessage,
+    addDebugLlmCall,
   ]);
 
   return children;

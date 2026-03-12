@@ -5,6 +5,7 @@ import { type UserDemographics } from "@lib/firebase/user-profile";
 import { type PartyDetails } from "@lib/party-details";
 import {
   type ChatScope,
+  type DebugLlmCallPayload,
   type LLMSize,
   type PartyResponseChunkReadyPayload,
   type StreamingMessage,
@@ -124,6 +125,7 @@ export type ChatStoreState = {
   locale: string;
   userDemographics: UserDemographics | null;
   demographicsLoaded: boolean;
+  debugLlmCalls: DebugLlmCallPayload[];
 };
 
 export type ChatStoreActions = {
@@ -236,6 +238,8 @@ export type ChatStoreActions = {
   ) => void;
   setUserDemographic: (field: keyof UserDemographics, value: unknown) => void;
   loadUserDemographics: (userId: string) => Promise<void>;
+  addDebugLlmCall: (payload: DebugLlmCallPayload) => void;
+  clearDebugLlmCalls: () => void;
 };
 
 export type ChatStore = ChatStoreState & ChatStoreActions;

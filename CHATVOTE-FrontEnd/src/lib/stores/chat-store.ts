@@ -76,6 +76,7 @@ const defaultState: ChatStoreState = {
   locale: "fr",
   userDemographics: null,
   demographicsLoaded: false,
+  debugLlmCalls: [],
 };
 
 export function createChatStore(initialState?: Partial<ChatStore>) {
@@ -145,6 +146,11 @@ export function createChatStore(initialState?: Partial<ChatStore>) {
         resetStreamingMessage: resetStreamingMessage(get, set),
         setUserDemographic: setUserDemographic(get, set),
         loadUserDemographics: loadUserDemographics(get, set),
+        addDebugLlmCall: (payload) =>
+          set((state) => {
+            state.debugLlmCalls.push(payload);
+          }),
+        clearDebugLlmCalls: () => set({ debugLlmCalls: [] }),
       })),
     ),
   );

@@ -136,6 +136,24 @@ def _log_timing(stage: str, start: float, sid: str, extra: dict = None):
         info.update(extra)
     logger.info(f"TIMING {json.dumps(info)}")
     return elapsed
+
+
+async def _emit_debug_llm_call(sid: str, session_id: str, stage: str, detail: dict):
+    """Emit debug info about an LLM/RAG call to the frontend (local dev only)."""
+    if os.getenv("ENV") not in ("local", "dev"):
+        return
+    payload = {
+        "session_id": session_id,
+        "stage": stage,
+        "timestamp": time.time(),
+        **detail,
+    }
+    try:
+        await sio.emit("debug_llm_call", payload, to=sid)
+    except Exception:
+        pass  # best-effort, never break the main flow
+
+
 socketio_logger = logging.getLogger("socketio.asyncserver")
 sio = socketio.AsyncServer(
     logger=socketio_logger,
@@ -249,6 +267,9 @@ async def chat_summary_request(sid: str, body: dict):
     try:
         chat_summary = await generate_chat_summary(chat_history)
         logger.debug(f"Chat summary generated: {chat_summary}")
+        await _emit_debug_llm_call(sid, "", "chat_summary", {
+            "summary": chat_summary[:200] if chat_summary else "",
+        })
         response_dto = SummaryDto(
             chat_summary=chat_summary,
             status=Status(indicator=StatusIndicator.SUCCESS, message="Success"),
@@ -306,6 +327,9 @@ async def get_pro_con_perspective(sid: str, body: dict):
         chat_history = [last_user_message, last_assistant_message]
 
         pro_con_perspective = await generate_pro_con_perspective(chat_history, party)
+        await _emit_debug_llm_call(sid, "", "pro_con_perspective", {
+            "party_id": party.party_id,
+        })
 
         logger.debug(f"Emitting pro/con perspective to client {sid}")
 
@@ -587,6 +611,11 @@ async def fetch_and_emit_response(
             )
             logger.debug(f"Improved RAG query: {improved_rag_query}")
             _log_timing("rag_query_improvement", t0, sid, {"party": responder.party_id})
+            await _emit_debug_llm_call(sid, group_chat_session.session_id, "rag_query_improvement", {
+                "party_id": responder.party_id,
+                "original_query": question,
+                "improved_query": improved_rag_query,
+            })
 
             # Identify relevant docs as a list
             relevant_docs_list = await identify_relevant_docs_with_llm_based_reranking(
@@ -596,6 +625,11 @@ async def fetch_and_emit_response(
                 user_message=question,
             )
             _log_timing("rag_search_and_rerank", t0, sid, {"party": responder.party_id, "n_docs": len(relevant_docs_list or [])})
+            await _emit_debug_llm_call(sid, group_chat_session.session_id, "rag_search_rerank", {
+                "party_id": responder.party_id,
+                "query": improved_rag_query,
+                "num_docs": len(relevant_docs_list or []),
+            })
             # comparing scenario requires improved_rag_query to be a list, so match for both scenarios
             improved_rag_query_list = [improved_rag_query]
 
@@ -717,6 +751,11 @@ async def fetch_and_emit_response(
                 locale=group_chat_session.locale,
             )
 
+        await _emit_debug_llm_call(sid, group_chat_session.session_id, "response_generation_start", {
+            "party_id": responder.party_id,
+            "is_comparing": is_comparing_question,
+            "num_sources": len(sources),
+        })
         chunk_index = 0
         async for message_chunk in chunk_stream:
             # Check if this is a reset marker (LLM fallback occurred)
@@ -1227,6 +1266,10 @@ async def handle_combined_answer_request(
         )()
 
     _log_timing("title_and_replies_combined", t0, sid)
+    await _emit_debug_llm_call(sid, chat_session.session_id, "title_and_quick_replies", {
+        "title": chat_title_and_quick_replies.chat_title or "",
+        "quick_replies": chat_title_and_quick_replies.quick_replies,
+    })
 
     quick_replies_and_title_dto = QuickRepliesAndTitleDto(
         session_id=chat_session.session_id,
@@ -1449,6 +1492,11 @@ async def chat_answer_request(sid: str, body: dict):
         return
 
     _log_timing("question_routing", t0, sid)
+    await _emit_debug_llm_call(sid, chat_session.session_id, "question_routing", {
+        "party_ids": party_id_list,
+        "is_general": general_question,
+        "is_comparing": is_comparing_question,
+    })
     logger.info(
         f"Identified question targets and type: party_id_list={party_id_list}, general_question={general_question}, is_comparing_question={is_comparing_question}"
     )
@@ -1651,6 +1699,10 @@ async def chat_answer_request(sid: str, body: dict):
         return
 
     _log_timing("title_and_replies", t0, sid)
+    await _emit_debug_llm_call(sid, chat_session.session_id, "title_and_quick_replies", {
+        "title": chat_title_and_quick_replies.chat_title or "",
+        "quick_replies": chat_title_and_quick_replies.quick_replies,
+    })
 
     quick_replies_and_title_dto = QuickRepliesAndTitleDto(
         session_id=chat_session.session_id,
@@ -1710,6 +1762,10 @@ async def get_voting_behavior(sid: str, body: dict):
         improved_rag_query = await get_improved_rag_query_voting_behavior(
             party, request_data.last_user_message, request_data.last_assistant_message
         )
+        await _emit_debug_llm_call(sid, request_data.request_id, "voting_behavior_rag", {
+            "party_id": request_data.party_id,
+            "improved_query": improved_rag_query,
+        })
 
         # Get the relevant votes for the last answer
         relevant_votes = await identify_relevant_votes(improved_rag_query)
