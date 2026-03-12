@@ -298,23 +298,17 @@ async def index_candidate_profession(candidate_id: str, pdf_path: str) -> int:
         logger.error(f"Could not read PDF for {candidate_id} at {pdf_path}: {e}")
         return 0
 
-    # Step 2: Load candidate from Firestore
-    candidate = await aget_candidate_by_id(candidate_id)
+    # Step 2: Load candidate from Firestore — must be fully seeded
+    try:
+        candidate = await aget_candidate_by_id(candidate_id)
+    except Exception:
+        candidate = None  # incomplete Firestore doc (e.g. only has_manifesto fields)
     if candidate is None:
         logger.warning(
-            f"Candidate {candidate_id} not found in Firestore — "
-            f"creating minimal stub for indexing"
+            f"[profession_indexer] skipping {candidate_id} — "
+            f"not fully seeded in Firestore (run seed pipeline first)"
         )
-        # Parse commune_code and panneau from candidate_id (cand-{code}-{panneau})
-        parts = candidate_id.split("-")
-        commune_code = parts[1] if len(parts) >= 3 else ""
-        candidate = Candidate(
-            candidate_id=candidate_id,
-            first_name="",
-            last_name=candidate_id,
-            municipality_code=commune_code,
-            election_type_id="municipalities-2026",
-        )
+        return 0
 
     # Step 3: Upload to Firebase Storage
     # Extract commune_code from candidate or candidate_id
