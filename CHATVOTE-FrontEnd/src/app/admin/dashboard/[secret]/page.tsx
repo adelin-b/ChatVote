@@ -68,6 +68,8 @@ export default function AdminDashboard() {
   });
   const [timeRange, setTimeRange] = useState(24); // hours
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean | null>(null);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   // Validate secret on mount
   useEffect(() => {
@@ -77,6 +79,38 @@ export default function AdminDashboard() {
       .then((r) => setAuthorized(r.ok))
       .catch(() => setAuthorized(false));
   }, [secret]);
+
+  // Fetch maintenance status on mount
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/admin/maintenance`, {
+      headers: { "X-Admin-Secret": secret },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setMaintenanceEnabled(Boolean(data.enabled)); })
+      .catch(() => {});
+  }, [secret]);
+
+  const toggleMaintenance = useCallback(async () => {
+    const next = !maintenanceEnabled;
+    if (next && !window.confirm("Activer le mode maintenance ? Les utilisateurs verront une page de maintenance.")) {
+      return;
+    }
+    setMaintenanceLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/admin/maintenance`, {
+        method: "PUT",
+        headers: { "X-Admin-Secret": secret, "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next, message: "" }),
+      });
+      if (res.ok) {
+        setMaintenanceEnabled(next);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  }, [maintenanceEnabled, secret]);
 
   const switchTab = useCallback(
     (tab: TabId) => {
@@ -110,6 +144,27 @@ export default function AdminDashboard() {
       <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
         <div className="flex items-center gap-4">
+          {/* Maintenance toggle */}
+          {maintenanceEnabled !== null && (
+            <button
+              type="button"
+              onClick={toggleMaintenance}
+              disabled={maintenanceLoading}
+              title={maintenanceEnabled ? "Désactiver la maintenance" : "Activer la maintenance"}
+              className={`flex items-center gap-2 rounded border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                maintenanceEnabled
+                  ? "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                  : "border-green-500/40 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  maintenanceEnabled ? "bg-red-500" : "bg-green-500"
+                }`}
+              />
+              {maintenanceEnabled ? "Maintenance ON" : "Live"}
+            </button>
+          )}
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}

@@ -2472,6 +2472,81 @@ async def admin_crawler_status(request: web.Request) -> web.Response:
         return web.json_response({"error": str(e)}, status=502)
 
 
+# ---------------------------------------------------------------------------
+# Maintenance mode endpoints
+# ---------------------------------------------------------------------------
+
+@routes.get(f"{route_prefix}/maintenance")
+async def public_maintenance_status(request: web.Request) -> web.Response:
+    """Public endpoint — check whether maintenance mode is active."""
+    try:
+        doc = await async_db.collection("settings").document("maintenance").get()
+        if doc.exists:
+            data = doc.to_dict()
+            return web.json_response({
+                "enabled": bool(data.get("enabled", False)),
+                "message": data.get("message", ""),
+            })
+    except Exception as e:
+        logger.warning("Could not read maintenance doc: %s", e)
+    return web.json_response({"enabled": False, "message": ""})
+
+
+@routes.get(f"{route_prefix}/admin/maintenance")
+async def admin_get_maintenance(request: web.Request) -> web.Response:
+    """Admin — get full maintenance status including updated_at."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    try:
+        doc = await async_db.collection("settings").document("maintenance").get()
+        if doc.exists:
+            data = doc.to_dict()
+            updated_at = data.get("updated_at")
+            return web.json_response({
+                "enabled": bool(data.get("enabled", False)),
+                "message": data.get("message", ""),
+                "updated_at": updated_at.isoformat() if updated_at else None,
+            })
+    except Exception as e:
+        logger.error("Error reading maintenance status: %s", e, exc_info=True)
+        return web.json_response({"error": str(e)}, status=500)
+
+    return web.json_response({"enabled": False, "message": "", "updated_at": None})
+
+
+@routes.put(f"{route_prefix}/admin/maintenance")
+async def admin_set_maintenance(request: web.Request) -> web.Response:
+    """Admin — enable or disable maintenance mode."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "Invalid JSON body"}, status=400)
+
+    enabled = bool(body.get("enabled", False))
+    message = str(body.get("message", ""))
+
+    from google.cloud.firestore_v1 import SERVER_TIMESTAMP
+    try:
+        await async_db.collection("settings").document("maintenance").set({
+            "enabled": enabled,
+            "message": message,
+            "updated_at": SERVER_TIMESTAMP,
+        })
+        logger.info("Maintenance mode set to %s by admin", enabled)
+        return web.json_response({
+            "enabled": enabled,
+            "message": message,
+            "updated_at": None,  # SERVER_TIMESTAMP not yet resolved
+        })
+    except Exception as e:
+        logger.error("Error setting maintenance status: %s", e, exc_info=True)
+        return web.json_response({"error": str(e)}, status=500)
+
+
 app = web.Application(middlewares=[api_key_middleware])
 
 # Add routes to the app
