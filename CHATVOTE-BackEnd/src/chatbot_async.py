@@ -4,6 +4,7 @@ import logging
 import os
 from typing import AsyncIterator, List, Tuple, Dict, Union, Optional
 from datetime import datetime
+from urllib.parse import urlparse
 from openai import AsyncOpenAI  # for API format
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -1101,9 +1102,9 @@ async def generate_streaming_candidate_local_response(
             if party is not None:
                 party_names.append(party.name)
         party_str = ", ".join(party_names) if party_names else "Indépendant"
-        website_part = f" - [Site web]({c.website_url})" if c.website_url else ""
-        manifesto = f" - [Profession de foi]({c.manifesto_pdf_url})" if c.has_manifesto and c.manifesto_pdf_url else ""
-        candidates_list += f"- {c.full_name} ({party_str}){website_part}{manifesto}\n"
+        website_part = f" - Site web : {c.website_url}" if c.website_url else ""
+        manifesto = f" - Profession de foi : {c.manifesto_pdf_url}" if c.has_manifesto and c.manifesto_pdf_url else ""
+        candidates_list += f"- **{c.full_name}** ({party_str}){website_part}{manifesto}\n"
 
     if not candidates_list:
         candidates_list = "Aucun candidat enregistré pour cette commune."
@@ -1418,25 +1419,25 @@ async def generate_streaming_global_combined_response(
                 )
                 if locale == "en":
                     website_info = (
-                        f" - [Website]({candidate.website_url})"
+                        f" - Website: {candidate.website_url}"
                         if candidate.website_url
                         else ""
                     )
                     incumbent_info = " (incumbent)" if candidate.is_incumbent else ""
                     manifesto_info = (
-                        f" - [Manifesto PDF]({candidate.manifesto_pdf_url})"
+                        f" - Manifesto PDF: {candidate.manifesto_pdf_url}"
                         if candidate.has_manifesto and candidate.manifesto_pdf_url
                         else ""
                     )
                 else:
                     website_info = (
-                        f" - [Site web]({candidate.website_url})"
+                        f" - Site web : {candidate.website_url}"
                         if candidate.website_url
                         else ""
                     )
                     incumbent_info = " (sortant)" if candidate.is_incumbent else ""
                     manifesto_info = (
-                        f" - [Profession de foi]({candidate.manifesto_pdf_url})"
+                        f" - Profession de foi : {candidate.manifesto_pdf_url}"
                         if candidate.has_manifesto and candidate.manifesto_pdf_url
                         else ""
                     )

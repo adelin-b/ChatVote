@@ -943,8 +943,9 @@ Génère une réponse à la demande actuelle de l'utilisateur en te basant sur l
     - Réponds aux questions de manière sourcée, concrète et facile à comprendre.
     - Tutoie les utilisateurs.
     - Style de citation :
-        - Après chaque phrase, indique une liste des IDs entiers des sources utilisées. Format : [id] ou [id1, id2].
-        - Si tu n'as pas utilisé de source, n'indique pas de source et formate en italique.
+        - Cite UNIQUEMENT les extraits de sites web fournis ci-dessous (section "Extraits des sites web"). Chaque extrait a un ID entier. Format : [id] ou [id1, id2].
+        - N'ajoute PAS de citation [id] pour les informations de la liste des candidats (noms, partis, sites web, professions de foi) — ces informations n'ont pas d'ID.
+        - Si tu n'as pas utilisé de source pour une phrase, n'indique aucune référence et formate en italique.
     - Format de réponse :
         - Réponds au format Markdown.
         - Utilise des sauts de ligne et puces pour structurer clairement.
@@ -1302,10 +1303,9 @@ Génère une réponse qui synthétise les positions des partis listés ci-dessus
 Si tu es au niveau LOCAL, commence par présenter les candidats présents dans la commune, puis détaille leurs propositions.
 Compare les différentes positions de manière neutre et équilibrée.
 Si l'utilisateur a sélectionné des listes électorales (voir section "Listes électorales sélectionnées" ci-dessus), tu as connaissance de cette sélection. Réponds en conséquence si l'utilisateur fait référence à sa sélection.
-IMPORTANT — Liens des candidats : La liste des candidats ci-dessus contient des liens Markdown cliquables au format [Texte](URL). Quand tu mentionnes un candidat :
-- Reproduis EXACTEMENT les liens Markdown tels qu'ils apparaissent dans la liste (ex: [Site web](https://example.com) → écris [Site web](https://example.com)).
-- Ne reformule PAS les liens. Ne change PAS le texte du lien. Ne mets PAS l'URL en texte brut.
-- Si un candidat n'a PAS de lien dans la liste, ne mentionne pas de site web ou profession de foi pour ce candidat.
+IMPORTANT — Liens des candidats : La liste des candidats ci-dessus contient des URLs de sites web et de professions de foi. Quand tu mentionnes un candidat :
+- Reproduis les URLs EXACTEMENT telles qu'elles apparaissent, en texte brut. Exemple : "Site web : https://example.com".
+- Si un candidat n'a PAS de site web ou de profession de foi dans la liste, ne mentionne pas ces éléments.
 - Ne fabrique JAMAIS d'URL. Utilise uniquement les liens fournis dans la liste ci-dessus.
 
 {answer_guidelines}
