@@ -27,7 +27,7 @@ spec:
         - name: scaleway-registry
       containers:
         - name: backend
-          image: rg.fr-par.scw.cloud/chatvote/backend:latest
+          image: rg.fr-par.scw.cloud/chatvote/backend:9842c9edea8a9c849cbde015736c24c0ea5a3243
           ports:
             - containerPort: 8080
               name: http
@@ -37,25 +37,25 @@ spec:
                 command: ["/bin/sh", "-c", "sleep 10"]
           startupProbe:
             httpGet:
-              path: /health/startup
+              path: /healthz
               port: 8080
             periodSeconds: 5
             failureThreshold: 30 # 150s max startup
             timeoutSeconds: 3
           livenessProbe:
             httpGet:
-              path: /health/live
+              path: /healthz
               port: 8080
             periodSeconds: 15
             failureThreshold: 3
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
-            periodSeconds: 5
+            periodSeconds: 10
             failureThreshold: 3
-            timeoutSeconds: 5
+            timeoutSeconds: 10
           resources:
             requests:
               memory: "512Mi"
