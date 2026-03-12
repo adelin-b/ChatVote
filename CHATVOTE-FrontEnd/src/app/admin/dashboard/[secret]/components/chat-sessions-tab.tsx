@@ -37,7 +37,7 @@ interface SessionsResponse {
   sessions: ChatSession[];
   total: number;
   has_more: boolean;
-  offset: number;
+  next_cursor?: string;
   limit: number;
 }
 
@@ -91,22 +91,21 @@ export default function ChatSessionsTab({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fetchRef = useRef<() => void>(() => {});
 
   const fetchSessions = useCallback(
-    async (resetOffset = false) => {
-      const currentOffset = resetOffset ? 0 : offset;
+    async (reset = false) => {
       try {
         const params = new URLSearchParams({
           limit: String(PAGE_SIZE),
-          offset: String(currentOffset),
           order: "desc",
           sort_by: "updated_at",
         });
+        if (!reset && nextCursor) params.set("cursor_after", nextCursor);
         if (statusFilter !== "all") params.set("status", statusFilter);
         if (timeRange > 0) {
           const since = new Date(
@@ -125,15 +124,13 @@ export default function ChatSessionsTab({
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data: SessionsResponse = await res.json();
 
-        if (resetOffset) {
+        if (reset) {
           setSessions(data.sessions);
-          setOffset(0);
         } else {
-          setSessions((prev) =>
-            currentOffset === 0 ? data.sessions : [...prev, ...data.sessions],
-          );
+          setSessions((prev) => [...prev, ...data.sessions]);
         }
         setHasMore(data.has_more);
+        setNextCursor(data.next_cursor ?? null);
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to fetch sessions");
@@ -141,14 +138,14 @@ export default function ChatSessionsTab({
         setLoading(false);
       }
     },
-    [secret, apiUrl, statusFilter, timeRange, offset],
+    [secret, apiUrl, statusFilter, timeRange, nextCursor],
   );
 
   // Initial load + filter/timeRange changes
   useEffect(() => {
     setLoading(true);
     setSessions([]);
-    setOffset(0);
+    setNextCursor(null);
     fetchSessions(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, timeRange, secret, apiUrl]);
@@ -168,8 +165,6 @@ export default function ChatSessionsTab({
   }, [active]);
 
   function loadMore() {
-    const next = offset + PAGE_SIZE;
-    setOffset(next);
     fetchSessions(false);
   }
 

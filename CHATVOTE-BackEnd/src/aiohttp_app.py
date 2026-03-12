@@ -1811,20 +1811,16 @@ async def admin_list_chat_sessions(request: web.Request) -> web.Response:
         return web.json_response({"error": "Unauthorized"}, status=401)
 
     limit = min(int(request.query.get("limit", "50")), 200)
-    offset = int(request.query.get("offset", "0"))
     status_filter = request.query.get("status")
     municipality = request.query.get("municipality_code")
     since = request.query.get("since")
     sort_by = request.query.get("sort_by", "updated_at")
     order = request.query.get("order", "desc")
+    cursor_after = request.query.get("cursor_after")
 
-    from google.cloud.firestore_v1 import Query as _FsQuery
-    query = db.collection("chat_sessions")
+    from google.cloud.firestore_v1 import AsyncQuery as _FsQuery
+    query = async_db.collection("chat_sessions")
 
-    if municipality:
-        query = query.where("municipality_code", "==", municipality)
-    if status_filter:
-        query = query.where("debug.status", "==", status_filter)
     if since:
         from datetime import datetime, timezone
         since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
@@ -1833,22 +1829,33 @@ async def admin_list_chat_sessions(request: web.Request) -> web.Response:
     direction = _FsQuery.DESCENDING if order == "desc" else _FsQuery.ASCENDING
     query = query.order_by(sort_by, direction=direction)
 
-    docs = query.offset(offset).limit(limit + 1).stream()
+    if municipality:
+        query = query.where("municipality_code", "==", municipality)
+    if status_filter:
+        query = query.where("debug.status", "==", status_filter)
+
+    # Cursor-based pagination (avoids slow offset scans)
+    if cursor_after:
+        cursor_doc = await async_db.collection("chat_sessions").document(cursor_after).get()
+        if cursor_doc.exists:
+            query = query.start_after(cursor_doc)
+
     sessions = []
-    for doc in docs:
+    async for doc in query.limit(limit + 1).stream():
         data = doc.to_dict()
         data["session_id"] = doc.id
         sessions.append(data)
 
     has_more = len(sessions) > limit
     sessions = sessions[:limit]
+    next_cursor = sessions[-1]["session_id"] if has_more and sessions else None
 
     return web.json_response(
         {
             "sessions": sessions,
             "total": len(sessions),
             "has_more": has_more,
-            "offset": offset,
+            "next_cursor": next_cursor,
             "limit": limit,
         },
         dumps=lambda obj: json.dumps(obj, default=str),
