@@ -20,6 +20,7 @@ import { Button } from "@components/ui/button";
 interface CrawlerTabProps {
   secret: string;
   apiUrl: string;
+  active?: boolean;
 }
 
 interface FailedJob {
@@ -164,7 +165,7 @@ function Section({
 // Crawler Tab
 // ---------------------------------------------------------------------------
 
-export default function CrawlerTab({ secret, apiUrl }: CrawlerTabProps) {
+export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) {
   const [status, setStatus] = useState<CrawlerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -195,6 +196,7 @@ export default function CrawlerTab({ secret, apiUrl }: CrawlerTabProps) {
   fetchRef.current = fetchStatus;
 
   useEffect(() => {
+    if (!active) return;
     pollRef.current = setInterval(() => fetchRef.current(), POLL_INTERVAL_MS);
     return () => {
       if (pollRef.current) {
@@ -202,7 +204,7 @@ export default function CrawlerTab({ secret, apiUrl }: CrawlerTabProps) {
         pollRef.current = null;
       }
     };
-  }, []);
+  }, [active]);
 
   // Derived counts
   const counts = status?.state_counts ?? {};

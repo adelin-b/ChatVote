@@ -17,7 +17,8 @@ const AdminCoverageLink = () => {
 
   useEffect(() => {
     if (!isDev) {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY)?.trim() ?? null;
+      if (stored) localStorage.setItem(LOCAL_STORAGE_KEY, stored);
       setSecret(stored);
     }
   }, []);
@@ -56,7 +57,7 @@ const AdminCoverageLink = () => {
 
   // Prod without secret: prompt for it
   const handleClick = () => {
-    const input = window.prompt("Enter admin secret:");
+    const input = window.prompt("Enter admin secret:")?.trim();
     if (input) {
       localStorage.setItem(LOCAL_STORAGE_KEY, input);
       setSecret(input);

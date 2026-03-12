@@ -13,6 +13,7 @@ interface ChatSessionsTabProps {
   secret: string;
   apiUrl: string;
   timeRange: number;
+  active?: boolean;
 }
 
 interface ChatSession {
@@ -84,6 +85,7 @@ export default function ChatSessionsTab({
   secret,
   apiUrl,
   timeRange,
+  active,
 }: ChatSessionsTabProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +157,7 @@ export default function ChatSessionsTab({
   fetchRef.current = () => fetchSessions(true);
 
   useEffect(() => {
+    if (!active) return;
     pollRef.current = setInterval(() => fetchRef.current(), POLL_INTERVAL_MS);
     return () => {
       if (pollRef.current) {
@@ -162,7 +165,7 @@ export default function ChatSessionsTab({
         pollRef.current = null;
       }
     };
-  }, []);
+  }, [active]);
 
   function loadMore() {
     const next = offset + PAGE_SIZE;

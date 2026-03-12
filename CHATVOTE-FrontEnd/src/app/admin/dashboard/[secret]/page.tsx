@@ -55,12 +55,13 @@ export default function AdminDashboard() {
   const params = useParams<{ secret: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const secret = params.secret;
+  const secret = decodeURIComponent(params.secret).replace(/\s+/g, "");
 
   const rawTab = searchParams.get("tab") as TabId | null;
   const initialTab: TabId =
     rawTab && TABS.includes(rawTab) ? rawTab : "overview";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  const [activatedTabs, setActivatedTabs] = useState<Set<TabId>>(new Set([initialTab]));
   const [warningCounts, setWarningCounts] = useState({
     critical: 0,
     warning: 0,
@@ -115,6 +116,12 @@ export default function AdminDashboard() {
   const switchTab = useCallback(
     (tab: TabId) => {
       setActiveTab(tab);
+      setActivatedTabs((prev) => {
+        if (prev.has(tab)) return prev;
+        const next = new Set(prev);
+        next.add(tab);
+        return next;
+      });
       router.replace(`/admin/dashboard/${secret}?tab=${tab}`, {
         scroll: false,
       });
@@ -211,38 +218,55 @@ export default function AdminDashboard() {
             </div>
           }
         >
-          {activeTab === "overview" && (
-            <OverviewTab
-              secret={secret}
-              apiUrl={API_URL}
-              timeRange={timeRange}
-              onWarningCounts={setWarningCounts}
-            />
+          {activatedTabs.has("overview") && (
+            <div className={activeTab !== "overview" ? "hidden" : undefined}>
+              <OverviewTab
+                secret={secret}
+                apiUrl={API_URL}
+                timeRange={timeRange}
+                onWarningCounts={setWarningCounts}
+              />
+            </div>
           )}
-          {activeTab === "pipeline" && (
-            <PipelineTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("pipeline") && (
+            <div className={activeTab !== "pipeline" ? "hidden" : undefined}>
+              <PipelineTab secret={secret} apiUrl={API_URL} active={activeTab === "pipeline"} />
+            </div>
           )}
-          {activeTab === "coverage" && (
-            <CoverageTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("coverage") && (
+            <div className={activeTab !== "coverage" ? "hidden" : undefined}>
+              <CoverageTab secret={secret} apiUrl={API_URL} />
+            </div>
           )}
-          {activeTab === "charts" && (
-            <ChartsTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("charts") && (
+            <div className={activeTab !== "charts" ? "hidden" : undefined}>
+              <ChartsTab secret={secret} apiUrl={API_URL} />
+            </div>
           )}
-          {activeTab === "chats" && (
-            <ChatSessionsTab
-              secret={secret}
-              apiUrl={API_URL}
-              timeRange={timeRange}
-            />
+          {activatedTabs.has("chats") && (
+            <div className={activeTab !== "chats" ? "hidden" : undefined}>
+              <ChatSessionsTab
+                secret={secret}
+                apiUrl={API_URL}
+                timeRange={timeRange}
+                active={activeTab === "chats"}
+              />
+            </div>
           )}
-          {activeTab === "multi-query" && (
-            <MultiQueryTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("multi-query") && (
+            <div className={activeTab !== "multi-query" ? "hidden" : undefined}>
+              <MultiQueryTab secret={secret} apiUrl={API_URL} />
+            </div>
           )}
-          {activeTab === "consistency" && (
-            <DataConsistencyTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("consistency") && (
+            <div className={activeTab !== "consistency" ? "hidden" : undefined}>
+              <DataConsistencyTab secret={secret} apiUrl={API_URL} />
+            </div>
           )}
-          {activeTab === "crawler" && (
-            <CrawlerTab secret={secret} apiUrl={API_URL} />
+          {activatedTabs.has("crawler") && (
+            <div className={activeTab !== "crawler" ? "hidden" : undefined}>
+              <CrawlerTab secret={secret} apiUrl={API_URL} active={activeTab === "crawler"} />
+            </div>
           )}
         </Suspense>
       </div>
