@@ -13,7 +13,7 @@ Usage:
     )
 
     # Delete all chunks for a party/candidate
-    await delete_by_namespace("all_parties_dev", "renaissance")
+    await delete_by_namespace("all_parties_dev", "lfi")
 
     # Ensure collection exists with correct config
     ensure_collection("candidates_websites_dev")

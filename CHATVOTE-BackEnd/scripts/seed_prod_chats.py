@@ -23,10 +23,10 @@ from src.firebase_service import db
 
 PARTY_IDS = [
     "europe-ecologie-les-verts",
-    "la-france-insoumise",
-    "place-publique",
+    "lfi",
+    "ps",
     "reconquete",
-    "renaissance",
+    "union_centre",
 ]
 
 ASSISTANT_ID = "assistant"
@@ -43,7 +43,7 @@ MUNICIPALITY_NAMES = {
 FAKE_CONVERSATIONS = [
     {
         "title": "Programme environnement",
-        "party_ids": ["europe-ecologie-les-verts", "place-publique"],
+        "party_ids": ["europe-ecologie-les-verts", "ps"],
         "municipality_code": "75056",
         "messages": [
             {
@@ -61,18 +61,18 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "place-publique",
+                "party_id": "ps",
                 "content": "Place Publique met l'écologie au cœur de son programme avec une grande loi Climat engageant tous les ministères. Ils proposent une trajectoire de -90% d'émissions en 2040 et la neutralité climat en 2050 [0].\n\nIls souhaitent aussi adopter un bouclier législatif pour la sobriété : loi contre la fast-fashion, score carbone obligatoire sur les produits, et fin des plastiques à usage unique d'ici 2030 [1].",
                 "sources": [
-                    {"source": "Place Publique - Programme électoral", "page": 28, "content_preview": "Faire une grande loi Climat...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/place-publique/programme.pdf", "source_type": "manifesto", "party_id": "place-publique"},
-                    {"source": "Place Publique - Programme électoral", "page": 29, "content_preview": "Adopter un bouclier législatif...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/place-publique/programme.pdf", "source_type": "manifesto", "party_id": "place-publique"},
+                    {"source": "Place Publique - Programme électoral", "page": 28, "content_preview": "Faire une grande loi Climat...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/ps/programme.pdf", "source_type": "manifesto", "party_id": "ps"},
+                    {"source": "Place Publique - Programme électoral", "page": 29, "content_preview": "Adopter un bouclier législatif...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/ps/programme.pdf", "source_type": "manifesto", "party_id": "ps"},
                 ],
             },
         ],
     },
     {
         "title": "Logement et urbanisme",
-        "party_ids": ["renaissance", "la-france-insoumise"],
+        "party_ids": ["union_centre", "lfi"],
         "municipality_code": "69123",
         "messages": [
             {
@@ -81,16 +81,16 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "renaissance",
+                "party_id": "union_centre",
                 "content": "Renaissance propose de relancer la construction de logements neufs, avec un objectif de 500 000 logements par an. Le parti souhaite simplifier les normes de construction et accélérer les permis de construire pour fluidifier le marché immobilier.",
                 "sources": [],
             },
             {
                 "role": "assistant",
-                "party_id": "la-france-insoumise",
+                "party_id": "lfi",
                 "content": "La France Insoumise propose un plan ambitieux pour le logement, incluant l'encadrement des loyers dans toutes les zones tendues, la construction de 200 000 logements sociaux par an, et la réquisition des logements vacants pour lutter contre la crise du logement [0].",
                 "sources": [
-                    {"source": "La France Insoumise - Programme électoral", "page": 15, "content_preview": "Encadrement des loyers...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/la-france-insoumise/programme.pdf", "source_type": "manifesto", "party_id": "la-france-insoumise"},
+                    {"source": "La France Insoumise - Programme électoral", "page": 15, "content_preview": "Encadrement des loyers...", "url": "https://storage.googleapis.com/chat-vote-dev.firebasestorage.app/public/lfi/programme.pdf", "source_type": "manifesto", "party_id": "lfi"},
                 ],
             },
         ],
@@ -114,7 +114,7 @@ FAKE_CONVERSATIONS = [
     },
     {
         "title": "Éducation nationale",
-        "party_ids": ["place-publique", "la-france-insoumise", "europe-ecologie-les-verts"],
+        "party_ids": ["ps", "lfi", "europe-ecologie-les-verts"],
         "municipality_code": "31555",
         "messages": [
             {
@@ -123,13 +123,13 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "place-publique",
+                "party_id": "ps",
                 "content": "Place Publique défend une école républicaine inclusive. Le parti propose d'augmenter le budget de l'Éducation nationale, de limiter les classes à 20 élèves en zones prioritaires, et de revaloriser les salaires des enseignants de 20% sur le quinquennat.",
                 "sources": [],
             },
             {
                 "role": "assistant",
-                "party_id": "la-france-insoumise",
+                "party_id": "lfi",
                 "content": "La France Insoumise souhaite une refonte complète du système éducatif avec la gratuité totale de l'école (fournitures, cantine, transport), le recrutement massif d'enseignants, et la fin du tri social via Parcoursup.",
                 "sources": [],
             },
@@ -162,7 +162,7 @@ FAKE_CONVERSATIONS = [
     },
     {
         "title": "Économie et emploi",
-        "party_ids": ["renaissance", "reconquete"],
+        "party_ids": ["union_centre", "reconquete"],
         "municipality_code": "75056",
         "messages": [
             {
@@ -171,7 +171,7 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "renaissance",
+                "party_id": "union_centre",
                 "content": "Renaissance mise sur la continuité de la politique macroéconomique avec la poursuite de la réindustrialisation, la baisse des impôts de production, et le soutien à l'innovation technologique. Le parti défend le plein emploi comme objectif prioritaire.",
                 "sources": [],
             },
@@ -185,7 +185,7 @@ FAKE_CONVERSATIONS = [
     },
     {
         "title": "Santé publique",
-        "party_ids": ["la-france-insoumise", "place-publique"],
+        "party_ids": ["lfi", "ps"],
         "municipality_code": "69123",
         "messages": [
             {
@@ -194,13 +194,13 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "la-france-insoumise",
+                "party_id": "lfi",
                 "content": "La France Insoumise propose le remboursement intégral des soins de santé par la Sécurité sociale (100% Sécu), la régulation de l'installation des médecins pour lutter contre les déserts médicaux, et la création de centres de santé publics dans chaque canton.",
                 "sources": [],
             },
             {
                 "role": "assistant",
-                "party_id": "place-publique",
+                "party_id": "ps",
                 "content": "Place Publique défend un grand plan de lutte contre les déserts médicaux avec des maisons de santé pluridisciplinaires, la revalorisation des métiers du soin, et un investissement massif dans l'hôpital public pour rattraper le retard accumulé.",
                 "sources": [],
             },
@@ -208,7 +208,7 @@ FAKE_CONVERSATIONS = [
     },
     {
         "title": "Immigration et intégration",
-        "party_ids": ["reconquete", "renaissance"],
+        "party_ids": ["reconquete", "union_centre"],
         "municipality_code": "13055",
         "messages": [
             {
@@ -223,7 +223,7 @@ FAKE_CONVERSATIONS = [
             },
             {
                 "role": "assistant",
-                "party_id": "renaissance",
+                "party_id": "union_centre",
                 "content": "Renaissance défend une immigration maîtrisée avec le renforcement des contrôles aux frontières européennes via Frontex, l'accélération du traitement des demandes d'asile, et des accords bilatéraux pour faciliter les retours. Le parti soutient aussi l'intégration par la langue et l'emploi.",
                 "sources": [],
             },

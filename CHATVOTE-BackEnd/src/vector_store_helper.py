@@ -781,7 +781,7 @@ async def identify_relevant_docs_combined(
 
     # Determine which Qdrant manifesto namespaces actually exist
     # so we can detect mismatches (e.g., local party_ids like "lfi"
-    # vs Qdrant namespaces like "la-france-insoumise")
+    # vs Qdrant manifesto namespaces)
     _existing_namespaces = _get_manifesto_namespaces()
 
     party_ids_with_manifesto = [pid for pid in party_ids if pid in _existing_namespaces]
@@ -816,8 +816,8 @@ async def identify_relevant_docs_combined(
         manifesto_task_count = 1
 
     # Search candidate websites
+    # Search specific candidates by ID (e.g. unaffiliated candidates)
     if candidate_ids:
-        # Search specific candidates
         for candidate_id in candidate_ids:
             tasks.append(
                 _identify_relevant_candidate_documents(
@@ -827,10 +827,9 @@ async def identify_relevant_docs_combined(
                     score_threshold=score_threshold,
                 )
             )
-    elif party_ids:
-        # Search candidates affiliated with the parties
+    # Also search candidates by party affiliation (handles affiliated candidates)
+    if party_ids:
         if scope == "local" and municipality_code is not None:
-            # Local scope: search candidates in the specific municipality
             tasks.append(
                 _search_candidate_docs_by_party_and_municipality(
                     rag_query=rag_query,
@@ -841,7 +840,6 @@ async def identify_relevant_docs_combined(
                 )
             )
         else:
-            # National scope: search all candidates of the party
             tasks.append(
                 _search_candidate_docs_by_party(
                     rag_query=rag_query,

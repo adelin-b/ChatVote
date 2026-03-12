@@ -16,7 +16,7 @@ from aiohttp_pydantic.decorator import inject_params
 from src.chatbot_async import (
     get_improved_rag_query_voting_behavior,
 )
-from src.firebase_service import aget_party_by_id, async_db, db
+from src.firebase_service import aget_party_by_id, aget_parties, aget_candidates_by_municipality, async_db, db
 from src.llms import reset_all_rate_limits, NON_DETERMINISTIC_LLMS
 from src.models.assistant import CHATVOTE_ASSISTANT
 from src.services.manifesto_indexer import index_all_parties, index_party_by_id
@@ -29,6 +29,7 @@ from src.vector_store_helper import (
     PARTY_INDEX_NAME,
     CANDIDATES_INDEX_NAME,
     embed,
+    identify_relevant_docs_combined,
 )
 from src.services.firestore_listener import (
     start_parties_listener,
@@ -547,7 +548,7 @@ async def admin_test_rag_search(request):
     """Test RAG search for a party."""
     try:
         data = await request.json()
-        party_id = data.get("party_id", "place-publique")
+        party_id = data.get("party_id", "lfi")
         query = data.get("query", "résumé du programme")
 
         from qdrant_client.models import Filter, FieldCondition, MatchValue
@@ -602,6 +603,165 @@ async def admin_test_rag_search(request):
             {"status": "error", "message": str(e)},
             status=500,
         )
+
+
+@routes.post(f"{route_prefix}/admin/multi-query")
+async def admin_multi_query(request):
+    """Run the same RAG search as the chat across multiple municipalities and report coverage."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    try:
+        data = await request.json()
+    except Exception:
+        return web.json_response({"status": "error", "message": "Invalid JSON body"}, status=400)
+
+    query = data.get("query", "")
+    if not query:
+        return web.json_response({"status": "error", "message": "query is required"}, status=400)
+
+    municipality_codes: list[str] = data.get("municipality_codes") or []
+    score_threshold: float = float(data.get("score_threshold", 0.5))
+
+    # Fetch all parties once (needed to build party_ids_to_search per commune)
+    all_parties = await aget_parties()
+
+    # If no municipality_codes provided, fetch all from Firestore
+    if not municipality_codes:
+        def _fetch_all_municipality_codes() -> list[str]:
+            codes = []
+            for doc in db.collection("municipalities").stream():
+                d = doc.to_dict() or {}
+                code = d.get("code") or d.get("municipality_code") or doc.id
+                if code:
+                    codes.append(code)
+            return codes
+
+        municipality_codes = await asyncio.get_event_loop().run_in_executor(
+            None, _fetch_all_municipality_codes
+        )
+
+    # Improve the query once (same LLM call the chat would do) — skip for speed,
+    # just use raw query directly (no reranking requested by spec).
+    rag_query = query
+
+    semaphore = asyncio.Semaphore(3)
+
+    async def _process_municipality(municipality_code: str) -> dict:
+        async with semaphore:
+            try:
+                # Fetch candidates for this commune
+                candidates = await aget_candidates_by_municipality(municipality_code)
+
+                municipality_name = candidates[0].municipality_name if candidates else ""
+                if not municipality_name:
+                    # Try to resolve name from Firestore municipalities collection
+                    def _fetch_muni_name(code: str) -> str:
+                        for doc in db.collection("municipalities").where("code", "==", code).stream():
+                            d = doc.to_dict() or {}
+                            return d.get("nom", d.get("name", ""))
+                        return ""
+
+                    municipality_name = await asyncio.get_event_loop().run_in_executor(
+                        None, _fetch_muni_name, municipality_code
+                    )
+
+                # Determine party_ids_to_search (same logic as websocket_app lines 1016-1027)
+                local_party_ids: set[str] = set()
+                for candidate in candidates:
+                    for pid in candidate.party_ids:
+                        local_party_ids.add(pid)
+                party_ids_to_search = (
+                    list(local_party_ids) if local_party_ids else [p.party_id for p in all_parties]
+                )
+
+                # Run combined RAG search
+                manifesto_docs, candidate_docs = await identify_relevant_docs_combined(
+                    rag_query=rag_query,
+                    chat_history="",
+                    user_message=query,
+                    party_ids=party_ids_to_search,
+                    candidate_ids=[],
+                    scope="local",
+                    municipality_code=municipality_code,
+                    score_threshold=score_threshold,
+                )
+
+                # Map candidate chunks back to candidate details
+                candidate_chunk_map: dict[str, dict] = {}
+                for doc in candidate_docs:
+                    meta = doc.metadata if hasattr(doc, "metadata") else {}
+                    cid = meta.get("candidate_id", "")
+                    cname = meta.get("candidate_name", "")
+                    preview = (doc.page_content[:200] + "...") if hasattr(doc, "page_content") and doc.page_content else ""
+                    if cid not in candidate_chunk_map:
+                        candidate_chunk_map[cid] = {
+                            "candidate_id": cid,
+                            "candidate_name": cname,
+                            "chunk_count": 0,
+                            "chunks_preview": [],
+                        }
+                    candidate_chunk_map[cid]["chunk_count"] += 1
+                    if len(candidate_chunk_map[cid]["chunks_preview"]) < 3:
+                        candidate_chunk_map[cid]["chunks_preview"].append(preview)
+
+                all_candidate_ids = {c.candidate_id for c in candidates}
+                candidates_with_chunks = len(candidate_chunk_map)
+                candidates_without_chunks = len(all_candidate_ids) - len(
+                    all_candidate_ids & set(candidate_chunk_map.keys())
+                )
+
+                # Add candidates without chunks to the details list
+                for candidate in candidates:
+                    if candidate.candidate_id not in candidate_chunk_map:
+                        name = getattr(candidate, "candidate_name", "") or getattr(candidate, "name", "") or candidate.candidate_id
+                        candidate_chunk_map[candidate.candidate_id] = {
+                            "candidate_id": candidate.candidate_id,
+                            "candidate_name": name,
+                            "chunk_count": 0,
+                            "chunks_preview": [],
+                        }
+
+                # Sort: candidates with chunks first, then without
+                sorted_details = sorted(
+                    candidate_chunk_map.values(),
+                    key=lambda x: (-x["chunk_count"], x["candidate_name"]),
+                )
+
+                return {
+                    "municipality_code": municipality_code,
+                    "municipality_name": municipality_name,
+                    "total_candidates": len(candidates),
+                    "candidates_with_chunks": candidates_with_chunks,
+                    "candidates_without_chunks": candidates_without_chunks,
+                    "manifesto_chunks": len(manifesto_docs),
+                    "candidate_chunks": len(candidate_docs),
+                    "candidate_details": sorted_details,
+                }
+            except Exception as e:
+                logger.error(f"Error processing municipality {municipality_code}: {e}", exc_info=True)
+                return {
+                    "municipality_code": municipality_code,
+                    "municipality_name": "",
+                    "error": str(e),
+                }
+
+    # Run in batches of 5 to avoid overwhelming Qdrant/embeddings
+    results = []
+    batch_size = 5
+    for i in range(0, len(municipality_codes), batch_size):
+        batch = municipality_codes[i : i + batch_size]
+        batch_results = await asyncio.gather(*[_process_municipality(code) for code in batch])
+        results.extend(batch_results)
+
+    return web.json_response(
+        {
+            "query": query,
+            "score_threshold": score_threshold,
+            "total_communes": len(municipality_codes),
+            "results": results,
+        }
+    )
 
 
 @routes.post(f"{route_prefix}/experiment/search")

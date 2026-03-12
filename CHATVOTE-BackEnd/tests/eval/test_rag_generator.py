@@ -66,21 +66,21 @@ MOCK_CONTEXTS = {
         "développement durable et innovantes, notamment le recyclage des plastiques et la "
         "valorisation des déchets.",
     ],
-    "renaissance": [
+    "union_centre": [
         "Renaissance - 50 ambitions pour les communes : Renaissance présente un programme de "
         "50 ambitions pour les communes incluant la qualité de vie, les déplacements, l'accès "
         "aux soins et le soutien aux citoyens au quotidien.",
         "Renaissance - Artisanat local : Le parti propose de soutenir l'artisanat local avec des "
         "bourses de formation, l'aide à l'installation et la promotion des productions locales.",
     ],
-    "place-publique": [
+    "ps": [
         "Place Publique - Immigration : Place Publique propose de partir des faits sur "
         "l'immigration et refuse les mensonges. Le parti ancre le sujet des migrations dans un "
         "projet juste et utile pour les Français.",
         "Place Publique est un parti citoyen qui propose des actions concrètes et de terrain "
         "pour les communes et les quartiers.",
     ],
-    "la-france-insoumise": [
+    "lfi": [
         "La France Insoumise - Municipales 2026 : LFI propose une boîte à outils programmatique "
         "pour les élections municipales 2026 à destination des candidats et des collectifs citoyens.",
         "La France Insoumise - Économie : planification écologique, nationalisation des autoroutes "
@@ -247,7 +247,7 @@ STATIC_TEST_CASES = [
             "répartition renforcé, avec une pension minimale au niveau du SMIC. "
             "(Source : Programme LFI)"
         ),
-        "retrieval_context": MOCK_CONTEXTS["la-france-insoumise"],
+        "retrieval_context": MOCK_CONTEXTS["lfi"],
         "expected_output": "LFI propose la retraite à 60 ans avec un système par répartition renforcé.",
     },
 ]

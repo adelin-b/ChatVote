@@ -33,23 +33,23 @@ from src.models.general import LLMSize
 
 # 10 test questions across key political domains
 TEST_QUESTIONS = [
-    ("Quelles sont les propositions pour les transports ?", "place-publique"),
+    ("Quelles sont les propositions pour les transports ?", "ps"),
     ("Que proposent les partis pour l'écologie et le climat ?", "europe-ecologie-les-verts"),
     ("Quelle est la position sur l'immigration ?", "reconquete"),
-    ("Quelle est la position sur l'immigration ?", "la-france-insoumise"),
-    ("Comment améliorer le pouvoir d'achat des ménages ?", "place-publique"),
+    ("Quelle est la position sur l'immigration ?", "lfi"),
+    ("Comment améliorer le pouvoir d'achat des ménages ?", "ps"),
     ("Quelles réformes pour l'éducation nationale ?", "reconquete"),
     ("Quelle politique énergétique pour la France ?", "europe-ecologie-les-verts"),
-    ("Comment réduire le chômage ?", "la-france-insoumise"),
-    ("Que proposent-ils pour le système de santé ?", "place-publique"),
-    ("Quelle vision pour l'Europe et la souveraineté ?", "renaissance"),
+    ("Comment réduire le chômage ?", "lfi"),
+    ("Que proposent-ils pour le système de santé ?", "ps"),
+    ("Quelle vision pour l'Europe et la souveraineté ?", "union_centre"),
 ]
 
 # 3 questions for full LLM pipeline (slow - uses Ollama)
 FULL_PIPELINE_QUESTIONS = [
     ("Que proposent les partis pour l'écologie et le climat ?", "europe-ecologie-les-verts"),
-    ("Comment améliorer le pouvoir d'achat des ménages ?", "place-publique"),
-    ("Quelle est la position sur l'immigration ?", "la-france-insoumise"),
+    ("Comment améliorer le pouvoir d'achat des ménages ?", "ps"),
+    ("Quelle est la position sur l'immigration ?", "lfi"),
 ]
 
 

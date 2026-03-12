@@ -165,7 +165,7 @@ class TestDeleteByNamespace:
         # Ensure collection is already cached so we don't hit get_collections
         _ensured_collections.add("all_parties_dev")
 
-        delete_by_namespace("all_parties_dev", "renaissance")
+        delete_by_namespace("all_parties_dev", "union_centre")
 
         _mock_qdrant_client.delete.assert_called_once()
         call_kwargs = _mock_qdrant_client.delete.call_args.kwargs
@@ -173,7 +173,7 @@ class TestDeleteByNamespace:
         selector = call_kwargs["points_selector"]
         condition = selector.filter.must[0]
         assert condition.key == "metadata.namespace"
-        assert condition.match.value == "renaissance"
+        assert condition.match.value == "union_centre"
 
     def test_ensures_collection_first(self):
         _mock_qdrant_client.get_collections.return_value = SimpleNamespace(collections=[])
@@ -193,7 +193,7 @@ class TestCountByNamespace:
         _ensured_collections.add("all_parties_dev")
         _mock_qdrant_client.count.return_value = SimpleNamespace(count=42)
 
-        result = count_by_namespace("all_parties_dev", "renaissance")
+        result = count_by_namespace("all_parties_dev", "union_centre")
 
         assert result == 42
         call_kwargs = _mock_qdrant_client.count.call_args.kwargs
@@ -203,7 +203,7 @@ class TestCountByNamespace:
         _ensured_collections.add("all_parties_dev")
         _mock_qdrant_client.count.side_effect = Exception("timeout")
 
-        result = count_by_namespace("all_parties_dev", "renaissance")
+        result = count_by_namespace("all_parties_dev", "union_centre")
         assert result == 0
 
 
@@ -214,8 +214,8 @@ class TestGetIndexedNamespaces:
     def test_aggregates_namespace_counts(self):
         _ensured_collections.add("all_parties_dev")
 
-        point_a = SimpleNamespace(payload={"metadata": {"namespace": "renaissance"}})
-        point_b = SimpleNamespace(payload={"metadata": {"namespace": "renaissance"}})
+        point_a = SimpleNamespace(payload={"metadata": {"namespace": "union_centre"}})
+        point_b = SimpleNamespace(payload={"metadata": {"namespace": "union_centre"}})
         point_c = SimpleNamespace(payload={"metadata": {"namespace": "lfi"}})
 
         # First scroll returns points, second returns empty
@@ -225,7 +225,7 @@ class TestGetIndexedNamespaces:
 
         result = get_indexed_namespaces("all_parties_dev")
 
-        assert result == {"renaissance": 2, "lfi": 1}
+        assert result == {"union_centre": 2, "lfi": 1}
 
     def test_handles_pagination(self):
         _ensured_collections.add("all_parties_dev")

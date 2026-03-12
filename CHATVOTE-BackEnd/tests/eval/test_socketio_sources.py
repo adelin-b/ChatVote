@@ -117,7 +117,7 @@ def test_socketio_delivers_sources(backend_url, event_loop):
         await sio.emit("chat_answer_request", {
             "session_id": session_id,
             "user_message": "Que propose Renaissance pour les communes ?",
-            "party_ids": ["renaissance"],
+            "party_ids": ["union_centre"],
         })
 
         try:
