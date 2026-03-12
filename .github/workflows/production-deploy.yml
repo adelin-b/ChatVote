@@ -89,10 +89,13 @@ jobs:
               environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
               environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
               environment-variables.FIRECRAWL_API_KEY=${{ secrets.FIRECRAWL_API_KEY }} \
+              environment-variables.GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }} \
               secret-environment-variables.0.key=GOOGLE_API_KEY \
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
               secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_JSON \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }} \
               region=$SCW_REGION
             scw container container deploy $EXISTING region=$SCW_REGION
             ID=$EXISTING
@@ -118,10 +121,13 @@ jobs:
               environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
               environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
               environment-variables.FIRECRAWL_API_KEY=${{ secrets.FIRECRAWL_API_KEY }} \
+              environment-variables.GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }} \
               secret-environment-variables.0.key=GOOGLE_API_KEY \
               secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
               secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_JSON \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }} \
               -o json)
             ID=$(echo "$RESULT" | jq -r '.id')
           fi
