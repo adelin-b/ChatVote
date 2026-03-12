@@ -2462,6 +2462,7 @@ async def admin_crawler_status(request: web.Request) -> web.Response:
             async with session.get(
                 f"{crawl_api_url}/api/status",
                 params={"secret": crawl_api_secret},
+                headers={"x-forwarded-proto": "https"},
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 data = await resp.json()
