@@ -7,7 +7,6 @@ Scheduler service for periodic tasks.
 
 Runs CRON jobs for:
 - Municipalities sync: every Sunday at midnight
-- Candidate websites re-indexing: every day at 3 AM
 
 Usage:
     python -m src.services.scheduler
@@ -22,7 +21,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from src.services.municipalities_sync import sync_municipalities
-from src.services.candidate_indexer import index_all_candidates
 
 logger = logging.getLogger(__name__)
 
@@ -73,25 +71,6 @@ async def sync_and_import_municipalities() -> None:
         logger.error(f"Scheduled sync failed: {e}", exc_info=True)
 
 
-async def reindex_candidate_websites() -> None:
-    """Re-scrape and re-index all candidate websites."""
-    try:
-        logger.info("Starting scheduled candidate websites re-indexing...")
-
-        results = await index_all_candidates()
-
-        total = sum(results.values())
-        successful = sum(1 for v in results.values() if v > 0)
-
-        logger.info(
-            f"Candidate websites re-indexing complete: "
-            f"{total} chunks for {successful}/{len(results)} candidates"
-        )
-
-    except Exception as e:
-        logger.error(f"Scheduled candidate re-indexing failed: {e}", exc_info=True)
-
-
 def create_scheduler() -> AsyncIOScheduler:
     """Create and configure the scheduler."""
     scheduler = AsyncIOScheduler()
@@ -105,19 +84,9 @@ def create_scheduler() -> AsyncIOScheduler:
         replace_existing=True,
     )
 
-    # Re-index candidate websites every day at 3 AM
-    scheduler.add_job(
-        reindex_candidate_websites,
-        CronTrigger(hour=3, minute=0),
-        id="candidates_reindex",
-        name="Re-index candidate websites daily",
-        replace_existing=True,
-    )
-
     logger.info(
         "Scheduler configured: "
-        "municipalities sync every Sunday at midnight, "
-        "candidate websites re-indexing daily at 3 AM"
+        "municipalities sync every Sunday at midnight"
     )
     return scheduler
 
