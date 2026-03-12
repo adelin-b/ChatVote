@@ -1061,141 +1061,6 @@ async def _collect_user_messages(
     return await loop.run_in_executor(None, _sync_collect)
 
 
-async def _run_bertopic_analysis(
-    user_messages: list[dict],
-    session_ids: set[str],
-    cache_key: str,
-) -> dict:
-    """Run BERTopic on user messages with Firestore result caching.
-
-    Checks bertopic_cache/{cache_key} for a previous result. If the set of
-    session_ids hasn't changed, returns the cached result. Otherwise re-runs
-    BERTopic and stores the new result.
-    """
-    import asyncio
-
-    try:
-        from bertopic import BERTopic  # noqa: F811
-    except ImportError:
-        return {"status": "error", "message": "bertopic not installed", "topics": []}
-
-    if len(user_messages) < 5:
-        return {
-            "status": "insufficient_data",
-            "message": f"Only {len(user_messages)} user messages found. Need at least 5.",
-            "total_messages": len(user_messages),
-            "topics": [],
-        }
-
-    # ── Check cache ──
-    sorted_ids = sorted(session_ids)
-    loop = asyncio.get_event_loop()
-    try:
-        def _read_cache():
-            return db.collection("bertopic_cache").document(cache_key).get()
-
-        cache_doc = await loop.run_in_executor(None, _read_cache)
-        if cache_doc.exists:
-            cached = cache_doc.to_dict() or {}
-            if cached.get("session_ids") == sorted_ids:
-                logger.info(f"BERTopic cache hit for '{cache_key}' ({len(sorted_ids)} sessions unchanged)")
-                return cached.get("result", {})
-            else:
-                logger.info(
-                    f"BERTopic cache miss for '{cache_key}': "
-                    f"{len(cached.get('session_ids', []))} cached vs {len(sorted_ids)} current sessions"
-                )
-    except Exception as e:
-        logger.warning(f"BERTopic cache read failed: {e}")
-
-    # ── Run BERTopic ──
-    try:
-        texts = [m["text"] for m in user_messages]
-
-        def _run():
-            from sklearn.feature_extraction.text import CountVectorizer
-
-            topic_model = BERTopic(
-                language="french",
-                min_topic_size=max(2, len(texts) // 20),
-                nr_topics="auto",
-                vectorizer_model=CountVectorizer(
-                    stop_words="french", ngram_range=(1, 2)
-                ),
-                calculate_probabilities=False,
-            )
-            topics, _ = topic_model.fit_transform(texts)
-            return topic_model, topics
-
-        loop = asyncio.get_event_loop()
-        topic_model, topics = await loop.run_in_executor(None, _run)
-
-        topic_info = topic_model.get_topic_info()
-        topics_list = []
-        for _, row in topic_info.iterrows():
-            topic_id = int(row["Topic"])
-            label = "Outliers" if topic_id == -1 else row.get("Name", f"Topic {topic_id}")
-            topic_words = topic_model.get_topic(topic_id)
-            words = [{"word": w, "weight": round(s, 4)} for w, s in (topic_words or [])]
-            doc_indices = [i for i, t in enumerate(topics) if t == topic_id]
-            representative_msgs = [
-                {
-                    "text": user_messages[i]["text"],
-                    "session_id": user_messages[i]["session_id"],
-                    "chat_title": user_messages[i]["chat_title"],
-                }
-                for i in doc_indices[:5]
-            ]
-            party_counts: dict[str, int] = {}
-            for i in doc_indices:
-                for pid in user_messages[i].get("party_ids", []):
-                    party_counts[pid] = party_counts.get(pid, 0) + 1
-
-            topics_list.append({
-                "topic_id": topic_id,
-                "label": label,
-                "count": int(row["Count"]),
-                "percentage": round(int(row["Count"]) / len(texts) * 100, 1),
-                "words": words[:10],
-                "representative_messages": representative_msgs,
-                "by_party": party_counts,
-            })
-
-        result = {
-            "status": "success",
-            "total_messages": len(texts),
-            "num_topics": len(topics_list),
-            "topics": sorted(topics_list, key=lambda x: x["count"], reverse=True),
-        }
-
-        # ── Store in cache ──
-        try:
-            def _write_cache():
-                db.collection("bertopic_cache").document(cache_key).set(
-                    {"session_ids": sorted_ids, "result": result}
-                )
-
-            await loop.run_in_executor(None, _write_cache)
-            logger.info(f"BERTopic result cached for '{cache_key}' ({len(sorted_ids)} sessions)")
-        except Exception as e:
-            logger.warning(f"BERTopic cache write failed: {e}")
-
-        return result
-
-    except Exception as e:
-        logger.error(f"BERTopic failed for '{cache_key}': {e}", exc_info=True)
-        return {"status": "error", "message": str(e), "topics": []}
-
-
-@routes.get(f"{route_prefix}/experiment/bertopic-analysis")
-async def experiment_bertopic_analysis(request):
-    """Run BERTopic clustering on user chat messages from Firestore."""
-    # DISABLED: BERTopic triggers Numba JIT which causes SIGABRT crashes on
-    # macOS ARM64 when called from async thread executors. Re-enable when Adelin asks for it.
-    # user_messages, session_ids = await _collect_user_messages()
-    # result = await _run_bertopic_analysis(user_messages, session_ids, cache_key="global")
-    result = {"status": "disabled", "message": "BERTopic temporarily disabled", "topics": []}
-    return web.json_response(result, status=200)
 
 
 @routes.get(f"{route_prefix}/experiment/candidate-coverage")
@@ -1486,15 +1351,6 @@ async def commune_dashboard(request):
 
     themes_detected = len(theme_data)
 
-    # ── 5. BERTopic on commune messages (cached per commune) ────────────────
-    # DISABLED: BERTopic triggers Numba JIT which causes SIGABRT crashes on
-    # macOS ARM64 when called from async thread executors (concurrent with
-    # Socket.IO events). Re-enable when Adelin asks for it.
-    # bertopic_result = await _run_bertopic_analysis(
-    #     user_messages, session_ids, cache_key=f"commune_{commune_code}"
-    # )
-    bertopic_result = {"status": "disabled", "message": "BERTopic temporarily disabled", "topics": []}
-
     return web.json_response({
         "commune": commune_info,
         "stats": {
@@ -1511,7 +1367,6 @@ async def commune_dashboard(request):
             "classified_messages": sum(citizen_theme_counts.values()),
             "themes": citizen_themes,
         },
-        "bertopic": bertopic_result,
     })
 
 
