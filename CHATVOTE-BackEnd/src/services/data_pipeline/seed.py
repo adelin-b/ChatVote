@@ -27,6 +27,32 @@ logger = logging.getLogger(__name__)
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SEED_DIR = REPO_ROOT / "firebase" / "firestore_data" / "dev"
 
+# Map nuance codes from the candidatures CSV to Firestore party_ids.
+# These must match the party_id values in parties.json.
+NUANCE_TO_PARTY_ID: dict[str, str] = {
+    "LDIV": "divers",
+    "LDSV": "divers",
+    "LDVC": "divers_centre",
+    "LDVD": "divers_droite",
+    "LDVG": "divers_gauche",
+    "LECO": "europe-ecologie-les-verts",
+    "LEXD": "extreme_droite",
+    "LEXG": "extreme_gauche",
+    "LFI": "lfi",
+    "LHOR": "divers",
+    "LLR": "lr",
+    "LREC": "reconquete",
+    "LREN": "union_centre",
+    "LRN": "rn",
+    "LSOC": "ps",
+    "LUC": "union_centre",
+    "LUD": "union_droite",
+    "LUDI": "union_droite",
+    "LUG": "union_gauche",
+    "LUXD": "extreme_droite",
+    "LVEC": "europe-ecologie-les-verts",
+}
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -116,15 +142,26 @@ def _build_candidates(communes: dict[str, dict]) -> dict[str, Any]:
                 continue
 
             cand_id = f"cand-{commune_code}-{panneau}"
+            nuance_code = lst["nuance_code"]
+            party_id = NUANCE_TO_PARTY_ID.get(nuance_code)
+            if not party_id:
+                logger.warning(
+                    "Unknown nuance code %r for %s — defaulting to 'divers'",
+                    nuance_code, cand_id,
+                )
+                party_id = "divers"
             result[cand_id] = {
                 "candidate_id": cand_id,
                 "first_name": head["prenom"],
                 "last_name": head["nom"],
                 "commune_code": commune_code,
                 "commune_name": commune["commune_name"],
+                "municipality_code": commune_code,
+                "municipality_name": commune["commune_name"],
+                "party_ids": [party_id],
                 "list_label": lst["list_label"],
                 "nuance_label": lst["nuance_label"],
-                "nuance_code": lst["nuance_code"],
+                "nuance_code": nuance_code,
                 "panel_number": lst["panneau"],
                 "election_type_id": "municipalities-2026",
                 "position": "Tête de liste",

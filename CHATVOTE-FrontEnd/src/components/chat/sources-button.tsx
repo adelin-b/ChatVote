@@ -47,10 +47,12 @@ const SourcesButton = ({ sources, messageContent }: Props) => {
 
     const uniqueNumbers = [...new Set(numbers)];
 
-    const sourcesReferenced = uniqueNumbers.map((number) => ({
-      ...sources[number],
-      index: number,
-    }));
+    const sourcesReferenced = uniqueNumbers
+      .filter((number) => number < sources.length && sources[number] != null)
+      .map((number) => ({
+        ...sources[number],
+        index: number,
+      }));
 
     const notReferencedNumbers = sources
       .map((_, index) => index)

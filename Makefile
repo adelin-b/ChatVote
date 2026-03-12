@@ -48,8 +48,8 @@ setup:
 
 dev: dev-infra
 	@mkdir -p $(CURDIR)/.logs
-	@echo "Seeding data..."
-	@$(MAKE) seed
+	@echo "Seeding Firestore (no vectors)..."
+	@$(MAKE) seed-firestore
 	@echo ""
 	@echo "Starting backend (logs → .logs/backend.log)..."
 	@cd CHATVOTE-BackEnd && \

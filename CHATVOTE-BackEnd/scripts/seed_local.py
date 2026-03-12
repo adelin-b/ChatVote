@@ -46,6 +46,19 @@ os.environ.setdefault("OLLAMA_EMBED_DIM", "768")
 
 FIREBASE_DATA_DIR = PROJECT_ROOT / "firebase" / "firestore_data" / "dev"
 
+# Map old crawled-content directory names (national election slugs) to current
+# Firestore party_ids (nuance-based IDs used in municipal elections).
+# The manifesto_indexer uses party.party_id from Firestore; this mapping keeps
+# the seed script consistent so `make seed` doesn't create namespace mismatches.
+DIR_TO_PARTY_ID: dict[str, str] = {
+    "la-france-insoumise": "lfi",
+    "renaissance": "union_centre",
+    "place-publique": "ps",
+    # These already match:
+    # "europe-ecologie-les-verts": "europe-ecologie-les-verts",
+    # "reconquete": "reconquete",
+}
+
 # Collections to seed and their JSON files
 FIRESTORE_COLLECTIONS = {
     "parties": "parties.json",
@@ -302,8 +315,8 @@ def seed_crawled_vectors():
         for party_dir in sorted(parties_dir.iterdir()):
             if not party_dir.is_dir():
                 continue
-            party_id = party_dir.name
-            party_name = party_names.get(party_id, party_id)
+            party_id = DIR_TO_PARTY_ID.get(party_dir.name, party_dir.name)
+            party_name = party_names.get(party_id, party_names.get(party_dir.name, party_id))
             # Markdown files live in markdown/ subdirectory (from crawler output)
             md_dir = party_dir / "markdown"
             md_files = sorted(md_dir.glob("*.md")) if md_dir.exists() else sorted(party_dir.glob("*.md"))

@@ -21,5 +21,97 @@
       "code": "200054781",
       "nom": ""
     }
+  },
+  "13055": {
+    "code": "13055",
+    "nom": "Marseille",
+    "population": 886040,
+    "codeDepartement": "13",
+    "departement": {
+      "code": "13",
+      "nom": ""
+    },
+    "codeRegion": "93",
+    "region": {
+      "code": "93",
+      "nom": ""
+    },
+    "codesPostaux": [
+      "13001"
+    ],
+    "codeEpci": "200054807",
+    "epci": {
+      "code": "200054807",
+      "nom": ""
+    }
+  },
+  "69123": {
+    "code": "69123",
+    "nom": "Lyon",
+    "population": 519127,
+    "codeDepartement": "69",
+    "departement": {
+      "code": "69",
+      "nom": ""
+    },
+    "codeRegion": "84",
+    "region": {
+      "code": "84",
+      "nom": ""
+    },
+    "codesPostaux": [
+      "69001"
+    ],
+    "codeEpci": "200046977",
+    "epci": {
+      "code": "200046977",
+      "nom": ""
+    }
+  },
+  "31555": {
+    "code": "31555",
+    "nom": "Toulouse",
+    "population": 514819,
+    "codeDepartement": "31",
+    "departement": {
+      "code": "31",
+      "nom": ""
+    },
+    "codeRegion": "76",
+    "region": {
+      "code": "76",
+      "nom": ""
+    },
+    "codesPostaux": [
+      "31000"
+    ],
+    "codeEpci": "243100518",
+    "epci": {
+      "code": "243100518",
+      "nom": ""
+    }
+  },
+  "06088": {
+    "code": "06088",
+    "nom": "Nice",
+    "population": 357737,
+    "codeDepartement": "06",
+    "departement": {
+      "code": "06",
+      "nom": ""
+    },
+    "codeRegion": "93",
+    "region": {
+      "code": "93",
+      "nom": ""
+    },
+    "codesPostaux": [
+      "06000"
+    ],
+    "codeEpci": "200030195",
+    "epci": {
+      "code": "200030195",
+      "nom": ""
+    }
   }
 }

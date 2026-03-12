@@ -1026,13 +1026,24 @@ async def handle_combined_answer_request(
         # NATIONAL scope without specific party - search all parties
         party_ids_to_search = [p.party_id for p in all_parties]
 
+    # Build candidate IDs for unaffiliated candidates that the party-based
+    # search would miss (their content is indexed under candidate_id namespace,
+    # not a party namespace). Affiliated candidates are found via party search.
+    candidate_ids_to_search = []
+    if is_local_scope and local_candidates:
+        candidate_ids_to_search = [
+            c.candidate_id
+            for c in local_candidates
+            if not c.party_ids
+        ]
+
     # Perform combined search
     manifesto_docs, candidate_docs = await identify_relevant_docs_combined(
         rag_query=improved_rag_query,
         chat_history=chat_history_str,
         user_message=user_message.content,
         party_ids=party_ids_to_search,
-        candidate_ids=[],  # Empty - we search by party affiliation, not specific candidates
+        candidate_ids=candidate_ids_to_search,
         scope=chat_session.scope,
         municipality_code=municipality_code,
     )

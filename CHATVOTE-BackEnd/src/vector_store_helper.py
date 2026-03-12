@@ -602,8 +602,8 @@ async def _identify_relevant_candidate_documents(
     if candidate_id is not None:
         filter_conditions.append(
             FieldCondition(
-                key="metadata.candidate_id",
-                match=MatchValue(value=candidate_id),
+                key="metadata.candidate_ids",
+                match=MatchAny(any=[candidate_id]),
             )
         )
     elif municipality_code is not None:
