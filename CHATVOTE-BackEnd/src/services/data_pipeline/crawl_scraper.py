@@ -948,13 +948,12 @@ class CrawlScraperNode(DataSourceNode):
         for cid in already_processed_ids - tracked_ids:
             try:
                 ref = async_db.collection("candidates").document(cid)
-                await ref.set(
+                await ref.update(
                     {"has_scraped": True, "scrape_backend": "crawl_service"},
-                    merge=True,
                 )
                 bulk_marked += 1
             except Exception:
-                pass
+                pass  # doc doesn't exist — skip (don't create stubs)
         if bulk_marked:
             logger.info(
                 "[crawl_scraper] bulk-marked %d previously PROCESSED candidates as has_scraped",
