@@ -153,7 +153,11 @@ class WebsitesNode(DataSourceNode):
             result = await self._load_sheets_api(file_id, cfg, force)
             rows, content_hash = result
             if rows is None:
-                return cfg  # unchanged
+                if _cached_websites is None:
+                    # Cache empty (server restart) — force re-fetch
+                    rows, content_hash = await self._load_sheets_api(file_id, cfg, True)
+                else:
+                    return cfg  # unchanged and cache populated
 
         # ------------------------------------------------------------------
         # Parse rows

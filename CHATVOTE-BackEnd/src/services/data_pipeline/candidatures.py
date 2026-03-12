@@ -131,8 +131,12 @@ class CandidaturesNode(DataSourceNode):
         tmp_path, source_hash, last_modified = await self._load_csv(source, force, cfg)
 
         if not tmp_path:
-            # Last-Modified unchanged → skip
-            return cfg
+            if _cached_communes is None:
+                # Cache is empty (server restart) — force re-download
+                tmp_path, source_hash, last_modified = await self._load_csv(source, True, cfg)
+            else:
+                # Last-Modified unchanged and cache populated → skip
+                return cfg
 
         # ------------------------------------------------------------------
         # 2. Content-hash check
