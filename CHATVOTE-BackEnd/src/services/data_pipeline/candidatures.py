@@ -9,6 +9,7 @@ import logging
 import os
 import shutil
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -227,6 +228,7 @@ class CandidaturesNode(DataSourceNode):
         # ------------------------------------------------------------------
         cfg.checkpoints["source_hash"] = source_hash
         cfg.checkpoints["source_modified"] = last_modified
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         logger.info(

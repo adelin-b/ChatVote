@@ -9,6 +9,7 @@ import io
 import json
 import logging
 import os
+from datetime import datetime, timezone
 import re
 import unicodedata
 from hashlib import sha256
@@ -231,6 +232,7 @@ class WebsitesNode(DataSourceNode):
         # Update checkpoints and counts
         # ------------------------------------------------------------------
         cfg.checkpoints["source_hash"] = content_hash
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         cfg.counts = {

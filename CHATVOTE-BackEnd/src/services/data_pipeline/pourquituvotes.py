@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import re
 import unicodedata
+from datetime import datetime, timezone
 from typing import Any
 
 import aiohttp
@@ -168,6 +169,7 @@ class PourQuiTuVotesNode(DataSourceNode):
                 "[pourquituvotes] merged %d new URLs into websites cache", merged
             )
 
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         cfg.counts = {

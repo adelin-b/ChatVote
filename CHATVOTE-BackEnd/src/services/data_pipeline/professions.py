@@ -296,6 +296,7 @@ class ProfessionsNode(DataSourceNode):
         # 5. Update cache and save
         # ------------------------------------------------------------------
         _cached_pdfs = all_pdfs
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         elapsed = _time.monotonic() - t0

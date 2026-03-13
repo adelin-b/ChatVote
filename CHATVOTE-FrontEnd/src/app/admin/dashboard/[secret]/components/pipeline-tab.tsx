@@ -274,6 +274,25 @@ function NodeCard({
           </span>
         </div>
 
+        {/* Cache status */}
+        {!isRunning && (
+          <div className="flex items-center gap-1.5 text-[11px]">
+            {node.checkpoints?.cached_at ? (
+              <>
+                <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  Cached {formatTimestamp(node.checkpoints.cached_at)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="size-1.5 rounded-full bg-muted-foreground shrink-0" />
+                <span className="text-muted-foreground">No cached data</span>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Live progress (visible when running with any counts) */}
         {isRunning &&
           Object.keys(node.counts).length > 0 &&

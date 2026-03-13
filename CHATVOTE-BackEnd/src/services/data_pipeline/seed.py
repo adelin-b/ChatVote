@@ -23,6 +23,7 @@ import logging
 import re
 import time as _time
 import unicodedata
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -462,6 +463,7 @@ class SeedNode(DataSourceNode):
         cfg.checkpoints["municipalities_count"] = len(municipalities)
         cfg.checkpoints["electoral_lists_count"] = len(electoral_lists)
         cfg.checkpoints["candidates_count"] = len(candidates)
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         cfg.counts = {

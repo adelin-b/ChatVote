@@ -4,6 +4,7 @@ metadata:
   name: indexer
   namespace: chatvote-prod
 spec:
+  suspend: true
   schedule: "0 4 * * *"
   timeZone: "Europe/Paris"
   concurrencyPolicy: Forbid

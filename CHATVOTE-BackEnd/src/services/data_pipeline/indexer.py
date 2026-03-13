@@ -374,6 +374,7 @@ class IndexerNode(DataSourceNode):
             "elapsed_s": round(elapsed, 1),
         }
         cfg.checkpoints["last_indexed_at"] = datetime.now(timezone.utc).isoformat()
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
 
         if errors and parties_indexed == 0 and candidates_indexed == 0:
             raise RuntimeError("; ".join(errors))

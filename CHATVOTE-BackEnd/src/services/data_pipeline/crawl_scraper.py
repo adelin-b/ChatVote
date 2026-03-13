@@ -33,6 +33,7 @@ import logging
 import os
 import re
 import time as _time
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
@@ -989,6 +990,9 @@ class CrawlScraperNode(DataSourceNode):
             "pages": total_pages,
             "total_chars": total_chars,
         }
+
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
+        await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         logger.info(
             "[crawl_scraper] done — %d processed, %d with content, %d pages, %d chars",

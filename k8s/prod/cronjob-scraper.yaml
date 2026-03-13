@@ -4,6 +4,7 @@ metadata:
   name: crawl-scraper
   namespace: chatvote-prod
 spec:
+  suspend: true
   schedule: "0 2 * * *"
   timeZone: "Europe/Paris"
   concurrencyPolicy: Forbid

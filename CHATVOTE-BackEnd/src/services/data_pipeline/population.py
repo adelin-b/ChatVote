@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 import aiohttp
@@ -128,6 +129,7 @@ class PopulationNode(DataSourceNode):
         # 5. Update config: checkpoints and counts
         # ------------------------------------------------------------------
         cfg.checkpoints["source_hash"] = source_hash
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
         await save_checkpoint(cfg.node_id, cfg.checkpoints)
 
         cfg.counts = {

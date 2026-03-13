@@ -297,6 +297,9 @@ class ScraperNode(DataSourceNode):
             "elapsed_s": round(elapsed, 1),
         }
 
+        cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
+        await save_checkpoint(cfg.node_id, cfg.checkpoints)
+
         logger.info(
             "[scraper] done — %d scraped, %d errors, %d pages, %d chars in %.1fs",
             len(scraped_map) - errors, errors, total_pages, total_chars, elapsed,
