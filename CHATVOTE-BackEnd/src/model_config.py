@@ -41,9 +41,7 @@ GOOGLE_EMBED_DIM = 3072
 # Scaleway (OpenAI-compatible endpoint)
 SCALEWAY_EMBED_MODEL = os.getenv("SCALEWAY_EMBED_MODEL", "qwen3-embedding-8b")
 SCALEWAY_EMBED_DIM = int(os.getenv("SCALEWAY_EMBED_DIM", "4096"))
-SCALEWAY_EMBED_DEFAULT_URL = (
-    "https://api.scaleway.ai/78c3d473-15a8-46bf-9c9a-339d618c75b5/v1"
-)
+SCALEWAY_EMBED_DEFAULT_URL = "https://api.scaleway.ai/v1"
 
 # OpenAI
 OPENAI_EMBED_MODEL = "text-embedding-3-large"

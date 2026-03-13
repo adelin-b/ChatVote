@@ -83,12 +83,12 @@ jobs:
             echo "Updating existing production container..."
             scw container container update $EXISTING \
               registry-image=${{ env.SCW_REGISTRY }}/backend:${{ github.sha }} \
-              memory-limit=2048 \
-              cpu-limit=1120 \
+              memory-limit=4096 \
+              cpu-limit=2240 \
               sandbox=v1 \
               environment-variables.API_NAME=chatvote-api \
               environment-variables.ENV=prod \
-              environment-variables.EMBEDDING_PROVIDER=google \
+              environment-variables.EMBEDDING_PROVIDER=scaleway \
               environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
               environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
               environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
@@ -100,6 +100,10 @@ jobs:
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
               secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
               secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.3.key=QDRANT_API_KEY \
+              secret-environment-variables.3.value=${{ secrets.QDRANT_API_KEY }} \
+              secret-environment-variables.4.key=SCALEWAY_EMBED_API_KEY \
+              secret-environment-variables.4.value=${{ secrets.SCALEWAY_EMBED_API_KEY }} \
               region=$SCW_REGION
             scw container container deploy $EXISTING region=$SCW_REGION
             ID=$EXISTING
@@ -112,15 +116,15 @@ jobs:
               port=8080 \
               min-scale=1 \
               max-scale=3 \
-              memory-limit=2048 \
-              cpu-limit=1120 \
+              memory-limit=4096 \
+              cpu-limit=2240 \
               sandbox=v1 \
               privacy=public \
               deploy=true \
               region=$SCW_REGION \
               environment-variables.API_NAME=chatvote-api \
               environment-variables.ENV=prod \
-              environment-variables.EMBEDDING_PROVIDER=google \
+              environment-variables.EMBEDDING_PROVIDER=scaleway \
               environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
               environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
               environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
@@ -132,6 +136,10 @@ jobs:
               secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
               secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
               secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.3.key=QDRANT_API_KEY \
+              secret-environment-variables.3.value=${{ secrets.QDRANT_API_KEY }} \
+              secret-environment-variables.4.key=SCALEWAY_EMBED_API_KEY \
+              secret-environment-variables.4.value=${{ secrets.SCALEWAY_EMBED_API_KEY }} \
               -o json)
             ID=$(echo "$RESULT" | jq -r '.id')
           fi
@@ -206,6 +214,15 @@ jobs:
           sync_var NEXT_PUBLIC_APP_URL "$SYNC_NEXT_PUBLIC_APP_URL"
           sync_var STRIPE_SECRET_KEY "$SYNC_STRIPE_SECRET_KEY"
           sync_var NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$SYNC_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: CHATVOTE-FrontEnd/.next/cache
+          key: nextjs-prod-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-${{ hashFiles('CHATVOTE-FrontEnd/src/**') }}
+          restore-keys: |
+            nextjs-prod-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-
+            nextjs-prod-${{ runner.os }}-
 
       - name: Build
         env:
