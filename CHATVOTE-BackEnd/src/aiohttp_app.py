@@ -1477,9 +1477,18 @@ async def ds_run_node(request):
 
     body = await request.json() if request.content_length else {}
     force = body.get("force", False)
+    # mode: "auto" (default — K8s for heavy nodes when in cluster),
+    #        "k8s" (force K8s Job), "in-process" (force in-process)
+    exec_mode = body.get("mode", "auto")
 
-    # Heavy nodes: delegate to a K8s Job when running inside the cluster.
-    if node_id in _K8S_JOB_NODES:
+    # Decide whether to use K8s Job
+    use_k8s = False
+    if exec_mode == "k8s":
+        use_k8s = True
+    elif exec_mode == "auto" and node_id in _K8S_JOB_NODES:
+        use_k8s = True
+
+    if use_k8s:
         from src.services.k8s_job_launcher import is_running_in_k8s, create_pipeline_job
         if is_running_in_k8s():
             try:
@@ -1495,6 +1504,11 @@ async def ds_run_node(request):
                 "mode": "k8s-job",
                 "job_name": job_meta.get("name"),
             })
+        elif exec_mode == "k8s":
+            return web.json_response(
+                {"error": "K8s mode requested but not running inside a cluster"},
+                status=400,
+            )
 
     # Don't start if already running (in-process fallback or non-K8s nodes)
     if node_id in _pipeline_tasks and not _pipeline_tasks[node_id].done():
@@ -1792,6 +1806,17 @@ async def ds_preview(request):
         preview["sample"] = list(sites.items())[:5] if sites else []
 
     return web.json_response(preview)
+
+
+@routes.get(f"{route_prefix}/admin/data-sources/k8s-status")
+async def ds_k8s_status(request):
+    """Return K8s cluster status: pods, jobs, cronjobs, statefulsets."""
+    if not _check_admin_secret(request):
+        return web.json_response({"error": "Unauthorized"}, status=401)
+
+    from src.services.k8s_job_launcher import get_k8s_cluster_status
+    status = await get_k8s_cluster_status()
+    return web.json_response(status)
 
 
 @routes.get(f"{route_prefix}/admin/chat-sessions")

@@ -768,6 +768,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [communesToScrap, setCommunesToScrap] = useState<number>(287);
+  const [execMode, setExecMode] = useState<"in-process" | "k8s">("in-process");
+  const [k8sStatus, setK8sStatus] = useState<any>(null);
 
   // ---- API helpers ----
 
@@ -822,20 +824,35 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
     }
   }, [headers, apiUrl]);
 
+  const fetchK8sStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${apiUrl}/api/v1/admin/data-sources/k8s-status`, {
+        headers: headers(),
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setK8sStatus(data);
+      }
+    } catch {
+      // K8s status is optional — ignore errors
+    }
+  }, [headers, apiUrl]);
+
   const runNode = useCallback(
     async (nodeId: string, force: boolean) => {
       try {
         await fetch(`${apiUrl}/api/v1/admin/data-sources/run/${nodeId}`, {
           method: "POST",
           headers: headers(),
-          body: JSON.stringify({ force }),
+          body: JSON.stringify({ force, mode: execMode }),
         });
         await fetchStatus();
       } catch (err: any) {
         setError(err.message);
       }
     },
-    [headers, fetchStatus, apiUrl],
+    [headers, fetchStatus, apiUrl, execMode],
   );
 
   const updateConfig = useCallback(
@@ -996,7 +1013,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
   useEffect(() => {
     fetchStatus();
-  }, [fetchStatus]);
+    fetchK8sStatus();
+  }, [fetchStatus, fetchK8sStatus]);
 
   const fetchStatusRef = useRef(fetchStatus);
   fetchStatusRef.current = fetchStatus;
@@ -1252,6 +1270,138 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           <RotateCcw className="size-3" />
           Refresh
         </Button>
+      </div>
+
+      {/* Execution mode + K8s status */}
+      <div className="mb-3 flex items-start gap-4 rounded-lg border border-border-subtle bg-card px-4 py-3">
+        {/* Mode toggle */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-medium text-muted-foreground">Execution mode</span>
+          <div className="flex items-center gap-1 rounded-md bg-background p-0.5">
+            <button
+              type="button"
+              onClick={() => setExecMode("in-process")}
+              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                execMode === "in-process"
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              In-Process
+            </button>
+            <button
+              type="button"
+              onClick={() => setExecMode("k8s")}
+              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                execMode === "k8s"
+                  ? "bg-blue-500/20 text-blue-400"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              K8s Workers
+            </button>
+          </div>
+          <span className="text-[10px] text-muted-foreground">
+            {execMode === "in-process"
+              ? "Nodes run inside backend process (local/dev)"
+              : "Heavy nodes spawn as K8s Jobs on pool-pipeline"}
+          </span>
+        </div>
+
+        {/* K8s cluster status */}
+        {k8sStatus && (
+          <div className="flex flex-1 flex-col gap-1.5">
+            <span className="text-[11px] font-medium text-muted-foreground">
+              K8s Cluster
+              {k8sStatus.in_cluster ? (
+                <span className="ml-1.5 inline-flex items-center gap-1 text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-500" /> Connected
+                </span>
+              ) : (
+                <span className="ml-1.5 inline-flex items-center gap-1 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-muted-foreground" /> Not in cluster
+                </span>
+              )}
+            </span>
+
+            {k8sStatus.in_cluster && (
+              <div className="grid grid-cols-3 gap-3 text-[11px]">
+                {/* Pods */}
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-foreground">
+                    Pods ({k8sStatus.pods?.length ?? 0})
+                  </span>
+                  {k8sStatus.pods?.map((pod: any) => (
+                    <div key={pod.name} className="flex items-center gap-1 text-[10px]">
+                      <span className={`size-1.5 rounded-full ${
+                        pod.phase === "Running" && pod.ready ? "bg-emerald-500" :
+                        pod.phase === "Running" ? "bg-amber-400" :
+                        pod.phase === "Succeeded" ? "bg-blue-400" : "bg-red-500"
+                      }`} />
+                      <span className="truncate text-muted-foreground" title={pod.name}>
+                        {pod.name?.replace("chatvote-", "").slice(0, 30)}
+                      </span>
+                      {pod.restarts > 0 && (
+                        <span className="text-amber-500">{pod.restarts}x</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* CronJobs */}
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-foreground">
+                    CronJobs ({k8sStatus.cronjobs?.length ?? 0})
+                  </span>
+                  {k8sStatus.cronjobs?.map((cj: any) => (
+                    <div key={cj.name} className="flex items-center gap-1 text-[10px]">
+                      <span className={`size-1.5 rounded-full ${
+                        cj.suspend ? "bg-muted-foreground" :
+                        cj.active_jobs > 0 ? "bg-amber-400" : "bg-emerald-500"
+                      }`} />
+                      <span className="truncate text-muted-foreground" title={cj.name}>
+                        {cj.name}
+                      </span>
+                      <span className="ml-auto shrink-0 font-mono text-muted-foreground">
+                        {cj.suspend ? "suspended" : cj.schedule}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Jobs + StatefulSets */}
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium text-foreground">
+                    Jobs ({k8sStatus.jobs?.length ?? 0})
+                  </span>
+                  {k8sStatus.jobs?.slice(0, 5).map((job: any) => (
+                    <div key={job.name} className="flex items-center gap-1 text-[10px]">
+                      <span className={`size-1.5 rounded-full ${
+                        job.active > 0 ? "bg-amber-400" :
+                        job.succeeded > 0 ? "bg-emerald-500" : "bg-red-500"
+                      }`} />
+                      <span className="truncate text-muted-foreground" title={job.name}>
+                        {job.name?.slice(0, 30)}
+                      </span>
+                    </div>
+                  ))}
+                  {k8sStatus.statefulsets?.map((sts: any) => (
+                    <div key={sts.name} className="flex items-center gap-1 text-[10px]">
+                      <span className={`size-1.5 rounded-full ${
+                        sts.ready === sts.replicas && sts.replicas > 0
+                          ? "bg-emerald-500" : "bg-amber-400"
+                      }`} />
+                      <span className="text-muted-foreground">{sts.name}</span>
+                      <span className="ml-auto font-mono text-muted-foreground">
+                        {sts.ready}/{sts.replicas}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Toolbar: Run/Stop */}
