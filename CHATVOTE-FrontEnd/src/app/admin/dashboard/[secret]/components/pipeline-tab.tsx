@@ -84,17 +84,39 @@ const DAG_ROWS: { id: string; col: number; row: number }[] = [
   { id: "candidatures", col: 1, row: 0 },
   { id: "websites", col: 2, row: 0 },
   { id: "pourquituvotes", col: 3, row: 0 },
+  // Output nodes — display-only, show what each source feeds into
+  { id: "_out_autocomplete", col: 4, row: 0 },
+  { id: "_out_chat_lists", col: 4, row: 1 },
   { id: "seed", col: 1, row: 1 },
   { id: "professions", col: 2, row: 1 },
   { id: "scraper", col: 1, row: 2 },
   { id: "crawl_scraper", col: 2, row: 2 },
   { id: "indexer", col: 1, row: 3 },
+  { id: "_out_rag", col: 2, row: 3 },
 ];
+
+/** Output nodes: display-only nodes showing what pipeline data feeds into */
+const OUTPUT_NODES: Record<string, { label: string; description: string }> = {
+  _out_autocomplete: {
+    label: "Autocomplete",
+    description: "All 35k communes for search & autocomplete in the app",
+  },
+  _out_chat_lists: {
+    label: "Chat List Selector",
+    description: "Candidate lists & party labels shown in chat sidebar",
+  },
+  _out_rag: {
+    label: "RAG Search",
+    description: "Vector search for AI-powered Q&A responses",
+  },
+};
 
 /** Edges in the DAG: [from, to] */
 const DAG_EDGES: [string, string][] = [
   ["population", "seed"],
+  ["population", "_out_autocomplete"],
   ["candidatures", "seed"],
+  ["candidatures", "_out_chat_lists"],
   ["websites", "seed"],
   ["pourquituvotes", "seed"],
   ["professions", "seed"],
@@ -102,6 +124,7 @@ const DAG_EDGES: [string, string][] = [
   ["seed", "crawl_scraper"],
   ["scraper", "indexer"],
   ["crawl_scraper", "indexer"],
+  ["indexer", "_out_rag"],
 ];
 
 // ---------------------------------------------------------------------------
@@ -985,7 +1008,28 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
   // ---- Render helpers ----
 
+  function renderOutputNode(nodeId: string) {
+    const info = OUTPUT_NODES[nodeId];
+    if (!info) return null;
+    return (
+      <div
+        data-node-id={nodeId}
+        className="flex flex-col gap-1 rounded-lg border border-dashed border-indigo-500/30 bg-indigo-500/5 px-3 py-2.5"
+      >
+        <h3 className="text-xs font-semibold text-indigo-400">{info.label}</h3>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">
+          {info.description}
+        </p>
+      </div>
+    );
+  }
+
   function renderNodeCard(nodeId: string) {
+    // Output nodes (display-only, not pipeline nodes)
+    if (nodeId.startsWith("_out_")) {
+      return renderOutputNode(nodeId);
+    }
+
     const node = getNode(nodeId);
     if (!node) {
       return (
@@ -1238,43 +1282,47 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           })}
         </svg>
 
-        {/* Row 0: Sources */}
-        <div className="relative z-10 grid grid-cols-4 gap-4">
+        {/* Row 0: Sources + Autocomplete output */}
+        <div className="relative z-10 grid grid-cols-5 gap-4">
           {renderNodeCard("population")}
           {renderNodeCard("candidatures")}
           {renderNodeCard("websites")}
           {renderNodeCard("pourquituvotes")}
+          {renderNodeCard("_out_autocomplete")}
         </div>
 
         {/* Spacer for arrows */}
         <div className="h-10" />
 
-        {/* Row 1: Seed + Professions */}
-        <div className="relative z-10 grid grid-cols-4 gap-4">
+        {/* Row 1: Seed + Professions + Chat Lists output */}
+        <div className="relative z-10 grid grid-cols-5 gap-4">
           <div />
           {renderNodeCard("seed")}
           {renderNodeCard("professions")}
           <div />
+          {renderNodeCard("_out_chat_lists")}
         </div>
 
         {/* Spacer for arrows */}
         <div className="h-10" />
 
         {/* Row 2: Scrapers */}
-        <div className="relative z-10 grid grid-cols-4 gap-4">
+        <div className="relative z-10 grid grid-cols-5 gap-4">
           <div />
           {renderNodeCard("scraper")}
           {renderNodeCard("crawl_scraper")}
+          <div />
           <div />
         </div>
 
         {/* Spacer for arrows */}
         <div className="h-10" />
 
-        {/* Row 3: Indexer */}
-        <div className="relative z-10 grid grid-cols-4 gap-4">
+        {/* Row 3: Indexer + RAG output */}
+        <div className="relative z-10 grid grid-cols-5 gap-4">
           <div />
           {renderNodeCard("indexer")}
+          {renderNodeCard("_out_rag")}
           <div />
           <div />
         </div>
