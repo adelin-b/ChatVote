@@ -196,7 +196,7 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Sync runtime env vars to Vercel
+      - name: Sync env vars to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           SYNC_FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
@@ -205,8 +205,15 @@ jobs:
           SYNC_NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           SYNC_STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           SYNC_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          SYNC_NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          SYNC_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          SYNC_NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          SYNC_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
         run: |
-          # Ensure server-side env vars are set for Vercel runtime (not just build time)
+          # Sync all env vars to Vercel so vercel pull + build use correct values
           sync_var() {
             local name="$1" value="$2"
             vercel env rm "$name" production --yes --token="$VERCEL_TOKEN" 2>/dev/null || true
@@ -218,6 +225,13 @@ jobs:
           sync_var NEXT_PUBLIC_APP_URL "$SYNC_NEXT_PUBLIC_APP_URL"
           sync_var STRIPE_SECRET_KEY "$SYNC_STRIPE_SECRET_KEY"
           sync_var NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$SYNC_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+          sync_var NEXT_PUBLIC_FIREBASE_API_KEY "$SYNC_NEXT_PUBLIC_FIREBASE_API_KEY"
+          sync_var NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN "$SYNC_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+          sync_var NEXT_PUBLIC_FIREBASE_PROJECT_ID "$SYNC_NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET "$SYNC_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+          sync_var NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID "$SYNC_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_APP_ID "$SYNC_NEXT_PUBLIC_FIREBASE_APP_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID "$SYNC_NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
 
       - name: Cache Next.js build
         uses: actions/cache@v4
