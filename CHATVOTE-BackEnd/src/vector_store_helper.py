@@ -42,14 +42,10 @@ logger = logging.getLogger(__name__)
 
 BASE_PATH = Path(__file__).parent
 
-# Get environment suffix
-env = os.getenv("ENV", "dev")
-env_suffix = f"_{env}" if env in ["prod", "dev"] else "_dev"
-
-PARTY_INDEX_NAME = f"all_parties{env_suffix}"
-VOTING_BEHAVIOR_INDEX_NAME = f"justified_voting_behavior{env_suffix}"
-PARLIAMENTARY_QUESTIONS_INDEX_NAME = f"parliamentary_questions{env_suffix}"
-CANDIDATES_INDEX_NAME = f"candidates_websites{env_suffix}"
+PARTY_INDEX_NAME = "all_parties"
+VOTING_BEHAVIOR_INDEX_NAME = "justified_voting_behavior"
+PARLIAMENTARY_QUESTIONS_INDEX_NAME = "parliamentary_questions"
+CANDIDATES_INDEX_NAME = "candidates_websites"
 
 
 def _ensure_payload_indexes(collection_name: str) -> None:

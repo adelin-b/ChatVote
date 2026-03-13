@@ -13,7 +13,7 @@ Pipeline:
 2. Upload to Firebase Storage for user-accessible viewing
 3. Extract text with pypdf (page-aware)
 4. Chunk with RecursiveCharacterTextSplitter
-5. Embed and index into candidates_websites_{env} Qdrant collection
+5. Embed and index into candidates_websites Qdrant collection
 6. Update Firestore candidate doc with Firebase Storage URL
 """
 

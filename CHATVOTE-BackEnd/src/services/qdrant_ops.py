@@ -13,13 +13,13 @@ Usage:
     )
 
     # Delete all chunks for a party/candidate
-    await delete_by_namespace("all_parties_dev", "lfi")
+    await delete_by_namespace("all_parties", "lfi")
 
     # Ensure collection exists with correct config
-    ensure_collection("candidates_websites_dev")
+    ensure_collection("candidates_websites")
 
     # Get a ready-to-use vector store
-    vs = get_vector_store("all_parties_dev")
+    vs = get_vector_store("all_parties")
 """
 
 import logging

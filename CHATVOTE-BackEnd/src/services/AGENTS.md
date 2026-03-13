@@ -9,9 +9,9 @@ Background services that run alongside the HTTP/Socket.IO server. Handles automa
 ## Key Files
 | File | Description |
 |------|-------------|
-| `manifesto_indexer.py` | Fetches party manifesto PDFs from Firebase Storage URLs into memory, extracts text with `pypdf`, chunks with `RecursiveCharacterTextSplitter` (1000 chars / 200 overlap), embeds, and upserts into Qdrant `all_parties_{env}` collection |
+| `manifesto_indexer.py` | Fetches party manifesto PDFs from Firebase Storage URLs into memory, extracts text with `pypdf`, chunks with `RecursiveCharacterTextSplitter` (1000 chars / 200 overlap), embeds, and upserts into Qdrant `all_parties_` collection |
 | `candidate_website_scraper.py` | Playwright-based async BFS crawler: sitemap.xml → homepage → internal links (max depth 2, max 15 pages + 5 PDFs per site); content extraction via BeautifulSoup; returns `ScrapedWebsite` with page content |
-| `candidate_indexer.py` | Orchestrates scrape → chunk → embed → upsert pipeline for candidate websites into `candidates_websites_{env}` collection; supports single candidate or all candidates with a website URL |
+| `candidate_indexer.py` | Orchestrates scrape → chunk → embed → upsert pipeline for candidate websites into `candidates_websites_` collection; supports single candidate or all candidates with a website URL |
 | `firestore_listener.py` | Firestore real-time listeners on `parties` and `candidates` collections; triggers manifesto or website indexing when documents are added or modified; runs in a separate thread and dispatches to the main asyncio event loop |
 | `scheduler.py` | APScheduler `AsyncIOScheduler` with two cron jobs: municipalities sync every Sunday at midnight, candidate website re-indexing daily at 3 AM |
 | `municipalities_sync.py` | Fetches all French communes from `geo.api.gouv.fr` with full metadata (code, name, region, department, EPCI, population, etc.) and writes to `firebase/firestore_data/dev/municipalities.json` |
