@@ -30,7 +30,7 @@ QDRANT_URL = os.environ.get("QDRANT_URL", "https://chatvoteoan3waxf-qdrant-prod.
 COLLECTION = "candidates_websites_prod"
 EXTERNAL_DOMAIN = "programme-candidats.interieur.gouv.fr"
 # Firebase Storage bucket — env-aware
-BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET", f"chat-vote-{os.getenv('ENV', 'dev')}.firebasestorage.app")
+BUCKET_NAME = os.environ["FIREBASE_STORAGE_BUCKET"]
 STORAGE_PREFIX = "public/posters"  # e.g. public/posters/37261/panneau_1.pdf
 DOWNLOAD_SEMAPHORE = asyncio.Semaphore(20)  # max concurrent downloads
 
