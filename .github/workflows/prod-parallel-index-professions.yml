@@ -26,6 +26,7 @@ jobs:
   # Step 1: Enqueue remaining work items into Firestore
   enqueue:
     runs-on: ubuntu-latest
+    environment: PROD
     timeout-minutes: 15
     outputs:
       run_id: ${{ steps.enqueue.outputs.run_id }}
@@ -74,6 +75,7 @@ jobs:
     needs: enqueue
     if: needs.enqueue.outputs.run_id != ''
     runs-on: ubuntu-latest
+    environment: PROD
     timeout-minutes: 180
     strategy:
       matrix:
@@ -121,6 +123,7 @@ jobs:
     needs: [enqueue, worker]
     if: always() && needs.enqueue.outputs.run_id != ''
     runs-on: ubuntu-latest
+    environment: PROD
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4

@@ -6,6 +6,7 @@ on:
 jobs:
   index-professions:
     runs-on: ubuntu-latest
+    environment: PROD
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
