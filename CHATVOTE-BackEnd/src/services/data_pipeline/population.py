@@ -57,9 +57,7 @@ class PopulationNode(DataSourceNode):
         global _cached_communes, _cached_all_communes
 
         api_url = os.environ.get("GEO_API_COMMUNES_URL", GEO_API_URL)
-        top_n: int = int(
-            cfg.settings.get("communes_to_scrap") or cfg.settings.get("top_communes", 287)
-        )
+        top_n: int = int(cfg.settings.get("communes_to_scrap", 287))
 
         # ------------------------------------------------------------------
         # 1. Fetch communes JSON from geo.api.gouv.fr

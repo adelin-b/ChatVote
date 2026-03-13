@@ -687,7 +687,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
   const [previewNode, setPreviewNode] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [topCommunes, setTopCommunes] = useState<number>(1);
+  const [communesToScrap, setCommunesToScrap] = useState<number>(287);
 
   // ---- API helpers ----
 
@@ -729,6 +729,11 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         );
       }
       setNodes(data);
+      // Sync communesToScrap from population node settings
+      const popSettings = data?.population?.settings;
+      if (popSettings?.communes_to_scrap) {
+        setCommunesToScrap(Number(popSettings.communes_to_scrap) || 287);
+      }
       setError(null);
     } catch (err: any) {
       setError(err.message || "Failed to fetch status");
@@ -805,24 +810,42 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
     }
   }, [headers, fetchStatus, apiUrl]);
 
+  const saveCommunesToScrap = useCallback(
+    async (value: number) => {
+      const popNode = nodes.population;
+      if (!popNode) return;
+      await fetch(`${apiUrl}/api/v1/admin/data-sources/config/population`, {
+        method: "PUT",
+        headers: headers(),
+        body: JSON.stringify({
+          enabled: popNode.enabled,
+          settings: { ...popNode.settings, communes_to_scrap: value },
+        }),
+      });
+    },
+    [nodes, headers, apiUrl],
+  );
+
   const runAll = useCallback(
     async (force: boolean) => {
       try {
+        // Save communes_to_scrap to population node before running
+        await saveCommunesToScrap(communesToScrap);
         console.log(
-          `%c[Pipeline] Starting run-all (force=${force}, top_communes=${topCommunes})`,
+          `%c[Pipeline] Starting run-all (force=${force}, communes_to_scrap=${communesToScrap})`,
           "color: #6366f1; font-weight: bold",
         );
         await fetch(`${apiUrl}/api/v1/admin/data-sources/run-all`, {
           method: "POST",
           headers: headers(),
-          body: JSON.stringify({ force, top_communes: topCommunes }),
+          body: JSON.stringify({ force }),
         });
         await fetchStatus();
       } catch (err: any) {
         setError(err.message);
       }
     },
-    [headers, fetchStatus, topCommunes, apiUrl],
+    [headers, fetchStatus, apiUrl, communesToScrap, saveCommunesToScrap],
   );
 
   const stopNode = useCallback(
@@ -1023,6 +1046,31 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         </div>
       )}
 
+      {/* Communes to scrap control */}
+      <div className="mb-3 flex items-center gap-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 px-4 py-3">
+        <label
+          htmlFor="communes-to-scrap"
+          className="text-sm font-semibold text-foreground whitespace-nowrap"
+        >
+          Communes to scrap
+        </label>
+        <input
+          id="communes-to-scrap"
+          type="number"
+          min={1}
+          max={35000}
+          value={communesToScrap}
+          onChange={(e) =>
+            setCommunesToScrap(Math.max(1, parseInt(e.target.value) || 1))
+          }
+          onBlur={() => saveCommunesToScrap(communesToScrap)}
+          className="w-20 rounded-md border border-border-subtle bg-card px-2.5 py-1.5 text-sm font-mono font-semibold text-foreground outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+        />
+        <span className="text-xs text-muted-foreground">
+          Top communes by population (controls scraping, indexing, professions de foi)
+        </span>
+      </div>
+
       {/* Toolbar */}
       <div className="mb-4 flex items-center gap-2 rounded-lg border border-border-subtle bg-card px-4 py-3">
         {anyRunning ? (
@@ -1056,26 +1104,6 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
             </Button>
           </>
         )}
-
-        <div className="ml-4 flex items-center gap-1.5">
-          <label
-            htmlFor="top-communes"
-            className="text-xs font-medium text-muted-foreground whitespace-nowrap"
-          >
-            Communes:
-          </label>
-          <input
-            id="top-communes"
-            type="number"
-            min={1}
-            max={500}
-            value={topCommunes}
-            onChange={(e) =>
-              setTopCommunes(Math.max(1, parseInt(e.target.value) || 1))
-            }
-            className="w-16 rounded-md border border-border-subtle bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
-          />
-        </div>
 
         {anyRunning && (
           <span className="ml-2 flex items-center gap-1.5 text-xs text-amber-600">

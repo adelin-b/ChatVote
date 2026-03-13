@@ -1580,7 +1580,6 @@ async def ds_run_all(request):
 
     body = await request.json() if request.content_length else {}
     force = body.get("force", False)
-    top_communes = body.get("top_communes")
 
     from src.services.data_pipeline import PIPELINE_NODES, clear_context
     from src.services.data_pipeline.base import load_config
@@ -1591,15 +1590,6 @@ async def ds_run_all(request):
 
     async def _run_all():
         clear_context()
-
-        # If top_communes is specified, inject it into population settings
-        if top_communes is not None:
-            from src.services.data_pipeline.base import save_config as _save
-            node = PIPELINE_NODES.get("population")
-            if node:
-                cfg = await load_config("population", node.default_config())
-                cfg.settings["top_communes"] = top_communes
-                await _save(cfg)
 
         for node_id in _PIPELINE_ORDER:
             node = PIPELINE_NODES.get(node_id)
