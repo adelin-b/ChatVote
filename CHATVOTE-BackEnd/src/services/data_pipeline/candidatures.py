@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_CSV_URL = (
     "https://static.data.gouv.fr/resources/"
     "elections-municipales-2026-listes-candidates-au-premier-tour/"
-    "20260306-161147/municipales-2026-candidatures-france-entiere-tour-1-2026-03-06-13h56.csv"
+    "20260313-152615/municipales-2026-candidatures-france-entiere-tour-1-2026-03-13.csv"
 )
 
 # ---------------------------------------------------------------------------
