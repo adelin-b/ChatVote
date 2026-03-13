@@ -24,8 +24,8 @@ spec:
             - name: scaleway-registry
           containers:
             - name: qdrant-snapshot
-              image: rg.fr-par.scw.cloud/chatvote/backend:latest
-              command: ["python", "-m", "scripts.qdrant_snapshot"]
+              image: rg.fr-par.scw.cloud/chatvote/qdrant-snapshot:latest
+              command: ["python", "qdrant_snapshot.py"]
               resources:
                 requests:
                   memory: "256Mi"
