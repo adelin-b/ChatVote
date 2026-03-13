@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
+import asyncio
 import logging
 import os
 import time
@@ -438,18 +439,49 @@ logger.info(
 )
 
 
+RATE_LIMIT_AUTO_RESET_SECONDS = int(
+    os.getenv("RATE_LIMIT_AUTO_RESET_SECONDS", "60")
+)
+_rate_limit_reset_task: asyncio.Task | None = None
+
+
+async def _auto_reset_rate_limits():
+    """Background task that waits, then auto-resets all rate limit flags."""
+    try:
+        await asyncio.sleep(RATE_LIMIT_AUTO_RESET_SECONDS)
+        logger.info(
+            f"Auto-resetting LLM rate limits after {RATE_LIMIT_AUTO_RESET_SECONDS}s TTL"
+        )
+        await reset_all_rate_limits()
+    except asyncio.CancelledError:
+        pass
+
+
 async def handle_rate_limit_hit_for_all_llms():
-    """Called when all LLMs have failed - notify Firestore."""
+    """Called when all LLMs have failed - notify Firestore and schedule auto-reset."""
+    global _rate_limit_reset_task
     await awrite_llm_status(is_at_rate_limit=True)
+    # Schedule auto-reset to break the deadlock (cancel any previous timer)
+    if _rate_limit_reset_task and not _rate_limit_reset_task.done():
+        _rate_limit_reset_task.cancel()
+    _rate_limit_reset_task = asyncio.create_task(_auto_reset_rate_limits())
 
 
 async def handle_llm_success():
     """Called when an LLM succeeds - reset the Firestore flag."""
+    global _rate_limit_reset_task
+    if _rate_limit_reset_task and not _rate_limit_reset_task.done():
+        _rate_limit_reset_task.cancel()
+        _rate_limit_reset_task = None
     await awrite_llm_status(is_at_rate_limit=False)
 
 
 async def reset_all_rate_limits():
     """Reset rate limit flags for all LLMs (both in memory and Firestore)."""
+    global _rate_limit_reset_task
+    if _rate_limit_reset_task and not _rate_limit_reset_task.done():
+        _rate_limit_reset_task.cancel()
+        _rate_limit_reset_task = None
     for llm in NON_DETERMINISTIC_LLMS:
         llm.is_at_rate_limit = False
     for llm in DETERMINISTIC_LLMS:

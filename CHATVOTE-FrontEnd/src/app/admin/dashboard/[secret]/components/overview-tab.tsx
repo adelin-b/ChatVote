@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, ShieldOff } from "lucide-react";
 import { Button } from "@components/ui/button";
 import WarningCard, { type Warning } from "./warning-card";
 
@@ -32,6 +32,30 @@ export default function OverviewTab({
   const [warnings, setWarnings] = useState<WarningsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resettingRateLimit, setResettingRateLimit] = useState(false);
+  const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
+
+  const resetRateLimit = useCallback(async () => {
+    setResettingRateLimit(true);
+    setRateLimitMsg(null);
+    try {
+      const res = await fetch(`${apiUrl}/api/v1/admin/reset-rate-limit`, {
+        method: "POST",
+        headers: { "X-Admin-Secret": secret },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRateLimitMsg("Rate limit reset (memory + Firestore)");
+      } else {
+        setRateLimitMsg(`Error: ${data.message || res.status}`);
+      }
+    } catch (err: any) {
+      setRateLimitMsg(`Error: ${err.message}`);
+    } finally {
+      setResettingRateLimit(false);
+      setTimeout(() => setRateLimitMsg(null), 5000);
+    }
+  }, [apiUrl, secret]);
 
   const fetchWarnings = useCallback(async () => {
     setLoading(true);
@@ -138,6 +162,34 @@ export default function OverviewTab({
           <RefreshCw className="size-3.5" />
           Refresh
         </Button>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-muted/30 px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Quick Actions
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={resetRateLimit}
+          disabled={resettingRateLimit}
+          className="h-7 gap-1.5 text-xs"
+        >
+          {resettingRateLimit ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <ShieldOff className="size-3" />
+          )}
+          Reset Rate Limit
+        </Button>
+        {rateLimitMsg && (
+          <span
+            className={`text-xs ${rateLimitMsg.startsWith("Error") ? "text-red-400" : "text-green-400"}`}
+          >
+            {rateLimitMsg}
+          </span>
+        )}
       </div>
 
       {/* Data Completeness */}
