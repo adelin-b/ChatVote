@@ -91,7 +91,7 @@ async function fetchTopicStats(): Promise<TopicStatsResponse | null> {
     "http://localhost:8080";
   try {
     const res = await fetch(`${backendUrl}/api/v1/experiment/topic-stats`, {
-      cache: "no-store",
+      next: { revalidate: 600 },
     });
     if (!res.ok) return null;
     return res.json() as Promise<TopicStatsResponse>;
