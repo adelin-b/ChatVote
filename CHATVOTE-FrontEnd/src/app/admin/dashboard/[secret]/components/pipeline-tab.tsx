@@ -78,6 +78,19 @@ const NODE_DESCRIPTIONS: Record<string, string> = {
     "Embeds scraped content into Qdrant vector DB for RAG retrieval. Indexes party manifestos (PDFs) and candidate websites (from scraper node) using LLM embeddings.",
 };
 
+/** Input sources for each pipeline node */
+const NODE_INPUTS: Record<string, string[]> = {
+  population: ["geo.api.gouv.fr API"],
+  candidatures: ["data.gouv.fr CSV (887K+ rows)"],
+  websites: ["Google Sheets API"],
+  pourquituvotes: ["pourquituvotes.fr JSON API"],
+  professions: ["Candidatures (panneau numbers)", "programme-candidats.interieur.gouv.fr"],
+  seed: ["Population", "Candidatures", "Websites", "PourQuiTuVotes", "Professions"],
+  scraper: ["Seed (candidates with websites)"],
+  crawl_scraper: ["Seed (candidates with websites)"],
+  indexer: ["Scraper / Crawl Scraper content", "Party manifesto PDFs"],
+};
+
 /** Output descriptions for each pipeline node — what data it produces */
 const NODE_OUTPUTS: Record<string, string[]> = {
   population: ["Top N communes list (INSEE codes)", "All 35k communes → Autocomplete"],
@@ -268,7 +281,7 @@ function NodeCard({
 
   return (
     <div
-      className={`relative flex w-full flex-col rounded-lg border border-border-subtle bg-card shadow-sm transition-shadow hover:shadow-md ${
+      className={`relative flex h-full w-full flex-col rounded-lg border border-border-subtle bg-card shadow-sm transition-shadow hover:shadow-md ${
         isRunning
           ? "border-amber-500/30"
           : node.status === "error"
@@ -293,25 +306,25 @@ function NodeCard({
         />
       </div>
 
-      {/* Description */}
-      {NODE_DESCRIPTIONS[node.node_id] && (
-        <p className="px-4 pt-2 text-[11px] leading-relaxed text-muted-foreground">
-          {NODE_DESCRIPTIONS[node.node_id]}
-        </p>
-      )}
-
-      {/* Output tags */}
-      {NODE_OUTPUTS[node.node_id] && NODE_OUTPUTS[node.node_id].length > 0 && (
-        <div className="flex flex-wrap gap-1 px-4 pt-1.5">
-          {NODE_OUTPUTS[node.node_id].map((output, i) => (
+      {/* Input tags */}
+      {NODE_INPUTS[node.node_id] && NODE_INPUTS[node.node_id].length > 0 && (
+        <div className="flex flex-wrap gap-1 px-4 pt-2">
+          {NODE_INPUTS[node.node_id].map((input, i) => (
             <span
               key={i}
-              className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-400"
+              className="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-400"
             >
-              → {output}
+              ← {input}
             </span>
           ))}
         </div>
+      )}
+
+      {/* Description */}
+      {NODE_DESCRIPTIONS[node.node_id] && (
+        <p className="px-4 pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+          {NODE_DESCRIPTIONS[node.node_id]}
+        </p>
       )}
 
       {/* Body */}
@@ -713,6 +726,23 @@ function NodeCard({
                 Save
               </Button>
             )}
+          </div>
+        )}
+
+        {/* Spacer to push outputs to bottom */}
+        <div className="flex-1" />
+
+        {/* Output tags at bottom */}
+        {NODE_OUTPUTS[node.node_id] && NODE_OUTPUTS[node.node_id].length > 0 && (
+          <div className="flex flex-wrap gap-1 border-t border-border-subtle pt-2">
+            {NODE_OUTPUTS[node.node_id].map((output, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-400"
+              >
+                → {output}
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -1284,7 +1314,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
               refY="3"
               orient="auto"
             >
-              <path d="M0,0 L8,3 L0,6 Z" fill="#a1a1aa" />
+              <path d="M0,0 L8,3 L0,6 Z" fill="#818cf8" />
             </marker>
           </defs>
           {DAG_EDGES.map(([from, to]) => {
@@ -1321,7 +1351,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
                 key={`${from}-${to}`}
                 d={d}
                 fill="none"
-                stroke="#d4d4d8"
+                stroke="#818cf8"
+                strokeOpacity="0.5"
                 strokeWidth="1.5"
                 markerEnd="url(#arrowhead)"
               />
