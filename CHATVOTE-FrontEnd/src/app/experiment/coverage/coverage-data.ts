@@ -149,6 +149,7 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
       municipalityCountSnap,
       candidatesTotalSnap,
       candidatesScrapedSnap,
+      candidatesSnap,
     ] = await Promise.all([
       db.collection("parties").select("party_id", "name", "long_name", "short_name", "election_manifesto_url").get(),
       db.collection("municipalities").where("has_electoral_data", "==", true).select("code", "nom", "name", "population").get(),
@@ -161,6 +162,16 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
       // count() queries for summary stats — avoids loading all candidate docs for totals
       db.collection("candidates").count().get(),
       db.collection("candidates").where("has_scraped", "==", true).count().get(),
+      // Full candidates query for aggregation — run in parallel instead of sequentially
+      db.collection("candidates").select(
+        "first_name", "last_name",
+        "commune_code", "municipality_code",
+        "commune_name", "municipality_name",
+        "website_url", "website",
+        "has_manifesto", "manifesto_url", "election_manifesto_url", "manifesto_pdf_path",
+        "has_scraped", "scrape_chars",
+        "list_label", "nuance_label", "nuance_code", "party_name",
+      ).get(),
     ]);
 
     const questionsByCommune: Record<string, number> = {};
@@ -250,17 +261,6 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
 
     let candidates: CandidateCoverage[] = [];
     try {
-      // Fetch only the fields needed for aggregation.
-      const candidatesSnap = await db.collection("candidates").select(
-        "first_name", "last_name",
-        "commune_code", "municipality_code",
-        "commune_name", "municipality_name",
-        "website_url", "website",
-        "has_manifesto", "manifesto_url", "election_manifesto_url", "manifesto_pdf_path",
-        "has_scraped", "scrape_chars",
-        "list_label", "nuance_label", "nuance_code", "party_name",
-      ).get();
-
       // Populate per-commune candidate_count using the already-loaded docs
       const candidateCountByCommune: Record<string, number> = {};
       for (const doc of candidatesSnap.docs) {
