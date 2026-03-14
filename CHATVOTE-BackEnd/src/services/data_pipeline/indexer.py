@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time as _time
 from datetime import datetime, timezone
 from typing import Any
@@ -55,6 +56,14 @@ class IndexerNode(DataSourceNode):
         errors: list[str] = []
         t0 = _time.monotonic()
         classify_themes = settings.get("classify_themes", True)
+
+        # Allow env vars to override phase selection (useful for K8s Jobs)
+        if os.getenv("INDEX_SKIP_MANIFESTOS", "").lower() in ("true", "1", "yes"):
+            settings["index_manifestos"] = False
+        if os.getenv("INDEX_SKIP_CANDIDATES", "").lower() in ("true", "1", "yes"):
+            settings["index_candidates"] = False
+        if os.getenv("INDEX_SKIP_PROFESSIONS", "").lower() in ("true", "1", "yes"):
+            settings["index_professions"] = False
 
         # --- Manifesto indexing -------------------------------------------
         if settings.get("index_manifestos", True):

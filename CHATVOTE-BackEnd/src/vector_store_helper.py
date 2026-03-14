@@ -252,53 +252,52 @@ _known_collections: set[str] = set()
 def _ensure_collection_exists(collection_name: str) -> None:
     """
     Ensure a Qdrant collection exists with correct dimensions, creating/recreating if necessary.
+
+    Uses get_collection() which resolves aliases, so ``all_parties`` correctly
+    finds ``all_parties_prod`` instead of trying to create a conflicting collection.
     """
     try:
-        collections = qdrant_client.get_collections().collections
-        existing_collection = next(
-            (c for c in collections if c.name == collection_name), None
-        )
+        # get_collection resolves aliases — unlike get_collections() which only lists real names
+        collection_info = qdrant_client.get_collection(collection_name)
 
-        if existing_collection is not None:
-            # Check if dimensions match
-            collection_info = qdrant_client.get_collection(collection_name)
-            existing_dim = None
-            if hasattr(collection_info.config.params, "vectors"):
-                vectors_config = collection_info.config.params.vectors
-                if isinstance(vectors_config, dict) and "dense" in vectors_config:
-                    existing_dim = vectors_config["dense"].size
-                elif hasattr(vectors_config, "size"):
-                    existing_dim = vectors_config.size
+        # Collection (or alias) exists — check dimensions
+        existing_dim = None
+        if hasattr(collection_info.config.params, "vectors"):
+            vectors_config = collection_info.config.params.vectors
+            if isinstance(vectors_config, dict) and "dense" in vectors_config:
+                existing_dim = vectors_config["dense"].size
+            elif hasattr(vectors_config, "size"):
+                existing_dim = vectors_config.size
 
-            if existing_dim is not None and existing_dim != EMBEDDING_DIM:
-                logger.warning(
-                    f"Collection {collection_name} has {existing_dim} dimensions but expected {EMBEDDING_DIM}. "
-                    f"Recreating collection..."
-                )
-                qdrant_client.delete_collection(collection_name)
-                existing_collection = None
-            else:
-                logger.debug(
-                    f"Collection {collection_name} already exists with correct dimensions"
-                )
-
-        if existing_collection is None:
-            logger.info(
-                f"Creating Qdrant collection: {collection_name} with {EMBEDDING_DIM} dimensions"
+        if existing_dim is not None and existing_dim != EMBEDDING_DIM:
+            logger.warning(
+                f"Collection {collection_name} has {existing_dim} dimensions but expected {EMBEDDING_DIM}. "
+                f"Recreating collection..."
             )
-            qdrant_client.create_collection(
-                collection_name=collection_name,
-                vectors_config={
-                    "dense": VectorParams(
-                        size=EMBEDDING_DIM,
-                        distance=Distance.COSINE,
-                    )
-                },
+            qdrant_client.delete_collection(collection_name)
+        else:
+            logger.debug(
+                f"Collection {collection_name} already exists with correct dimensions"
             )
-            logger.info(f"Collection {collection_name} created successfully")
-    except Exception as e:
-        logger.error(f"Error ensuring collection {collection_name} exists: {e}")
-        raise
+            return
+
+    except Exception:
+        # Collection does not exist (UnexpectedResponse 404 or similar)
+        pass
+
+    logger.info(
+        f"Creating Qdrant collection: {collection_name} with {EMBEDDING_DIM} dimensions"
+    )
+    qdrant_client.create_collection(
+        collection_name=collection_name,
+        vectors_config={
+            "dense": VectorParams(
+                size=EMBEDDING_DIM,
+                distance=Distance.COSINE,
+            )
+        },
+    )
+    logger.info(f"Collection {collection_name} created successfully")
 
 
 def _get_vector_store(
@@ -308,16 +307,15 @@ def _get_vector_store(
     Get or create a Qdrant vector store for the given collection.
     """
     if force_recreate:
-        # Delete collection if it exists
+        # Delete collection if it exists (get_collection resolves aliases)
         try:
-            collections = qdrant_client.get_collections().collections
-            if any(c.name == collection_name for c in collections):
-                logger.info(
-                    f"Force recreating collection {collection_name}, deleting existing..."
-                )
-                qdrant_client.delete_collection(collection_name)
-        except Exception as e:
-            logger.warning(f"Error deleting collection {collection_name}: {e}")
+            qdrant_client.get_collection(collection_name)
+            logger.info(
+                f"Force recreating collection {collection_name}, deleting existing..."
+            )
+            qdrant_client.delete_collection(collection_name)
+        except Exception:
+            pass  # Collection doesn't exist, nothing to delete
 
     _ensure_collection_exists(collection_name)
     _ensure_payload_indexes(collection_name)

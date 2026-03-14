@@ -76,7 +76,7 @@ resource "scaleway_k8s_pool" "pipeline" {
 
   container_runtime = "containerd"
   root_volume_type  = "sbs_5k"
-  root_volume_size_in_gb = 20
+  root_volume_size_in_gb = 40
 
   upgrade_policy {
     max_unavailable = 1
