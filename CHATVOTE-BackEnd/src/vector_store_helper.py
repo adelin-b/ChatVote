@@ -900,17 +900,17 @@ async def identify_relevant_docs_combined(
 
 
 def _collection_exists(collection_name: str) -> bool:
-    """Check if a Qdrant collection exists (positive results are cached)."""
+    """Check if a Qdrant collection exists or is a valid alias (positive results are cached)."""
     if collection_name in _known_collections:
         return True
     try:
-        collections = qdrant_client.get_collections().collections
-        exists = any(c.name == collection_name for c in collections)
-        if exists:
-            _known_collections.add(collection_name)
-        return exists
+        # Use get_collection (singular) which resolves aliases,
+        # unlike get_collections() which only lists actual collection names.
+        qdrant_client.get_collection(collection_name)
+        _known_collections.add(collection_name)
+        return True
     except Exception as e:
-        logger.warning(f"Error checking collection {collection_name}: {e}")
+        logger.warning(f"Collection {collection_name} not found: {e}")
         return False
 
 
@@ -1048,7 +1048,11 @@ async def _search_candidate_docs_by_party_and_municipality(
             score_threshold=score_threshold,
         )
         search_result = _query_response.points
-        logger.info(f"Candidate Qdrant search returned {len(search_result)} results")
+        logger.info(
+            f"Candidate search by municipality: municipality={municipality_code}, "
+            f"party_ids={party_ids}, results={len(search_result)}, "
+            f"score_threshold={score_threshold}"
+        )
     except (ConnectionError, TimeoutError) as e:
         logger.warning(f"Qdrant unavailable for candidates search: {type(e).__name__}: {e!r}")
         return []
@@ -1114,6 +1118,10 @@ async def _identify_relevant_manifesto_documents(
             score_threshold=score_threshold,
         )
         search_result = _query_response.points
+        logger.info(
+            f"Manifesto search: namespace={namespace}, n_docs={n_docs}, "
+            f"score_threshold={score_threshold}, results={len(search_result)}"
+        )
     except Exception as e:
         logger.error(f"Qdrant query_points failed for {PARTY_INDEX_NAME}: {type(e).__name__}: {e!r}")
         raise
