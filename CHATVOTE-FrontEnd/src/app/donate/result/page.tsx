@@ -5,9 +5,12 @@ import { getStripe } from "@lib/stripe/stripe";
 
 async function validateStripeSession(sessionId: string): Promise<boolean> {
   try {
-    const checkoutSession = await getStripe().checkout.sessions.retrieve(sessionId, {
-      expand: ["payment_intent"],
-    });
+    const checkoutSession = await getStripe().checkout.sessions.retrieve(
+      sessionId,
+      {
+        expand: ["payment_intent"],
+      },
+    );
 
     // Vérifier le statut de la session (expired, open, complete)
     if (checkoutSession.status !== "complete") {

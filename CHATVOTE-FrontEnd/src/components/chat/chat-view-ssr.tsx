@@ -19,8 +19,7 @@ type Props = {
 };
 
 async function getChatSessionServer(chatId: string, partyIds?: string[]) {
-  const inEmulator =
-    process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
+  const inEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
 
   if (!inEmulator) {
     const auth = await getAuth();
@@ -39,7 +38,9 @@ async function getChatSessionServer(chatId: string, partyIds?: string[]) {
       // Session may not exist in Firestore yet (e.g. just created client-side
       // via Socket.IO). Return undefined so the client can proceed with its
       // in-memory Zustand state instead of redirecting away from the chat.
-      console.warn(`Chat session ${chatId} not found in Firestore — proceeding with client state`);
+      console.warn(
+        `Chat session ${chatId} not found in Firestore — proceeding with client state`,
+      );
       return undefined;
     }
 

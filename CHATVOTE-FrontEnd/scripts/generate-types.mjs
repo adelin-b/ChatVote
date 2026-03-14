@@ -40,10 +40,7 @@ try {
     );
     process.exit(0);
   }
-  console.error(
-    "[generate-types] Failed to run Python exporter:",
-    err.message,
-  );
+  console.error("[generate-types] Failed to run Python exporter:", err.message);
   console.error(
     "[generate-types] No existing generated file found. Install poetry and backend dependencies first.",
   );

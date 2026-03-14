@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Button } from "@components/ui/button";
 import {
-  Loader2,
-  RefreshCw,
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  CheckCircle2,
-  AlertTriangle,
+  Loader2,
+  RefreshCw,
   Zap,
-  Activity,
 } from "lucide-react";
-import { Button } from "@components/ui/button";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,15 +112,21 @@ function SummaryCard({
   animated?: boolean;
 }) {
   return (
-    <div className={`rounded-xl border border-border-subtle bg-card p-4 flex items-center gap-3`}>
+    <div
+      className={`border-border-subtle bg-card flex items-center gap-3 rounded-xl border p-4`}
+    >
       <div className={`rounded-lg p-2 ${color}`}>
-        <span className={animated ? "animate-pulse inline-flex" : "inline-flex"}>
+        <span
+          className={animated ? "inline-flex animate-pulse" : "inline-flex"}
+        >
           {icon}
         </span>
       </div>
       <div>
-        <div className="text-2xl font-bold text-foreground tabular-nums">{value}</div>
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="text-foreground text-2xl font-bold tabular-nums">
+          {value}
+        </div>
+        <div className="text-muted-foreground text-xs">{label}</div>
       </div>
     </div>
   );
@@ -139,24 +146,24 @@ function Section({
   const [open, setOpen] = useState(defaultOpen ?? false);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-card overflow-hidden">
+    <div className="border-border-subtle bg-card overflow-hidden rounded-xl border">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-surface-elevated transition-colors"
+        className="hover:bg-surface-elevated flex w-full items-center gap-2 px-4 py-3 text-left transition-colors"
       >
         {open ? (
-          <ChevronDown className="size-4 text-muted-foreground shrink-0" />
+          <ChevronDown className="text-muted-foreground size-4 shrink-0" />
         ) : (
-          <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+          <ChevronRight className="text-muted-foreground size-4 shrink-0" />
         )}
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        <span className="ml-1 rounded-full bg-surface-elevated px-2 py-0.5 text-xs text-muted-foreground">
+        <span className="text-foreground text-sm font-semibold">{title}</span>
+        <span className="bg-surface-elevated text-muted-foreground ml-1 rounded-full px-2 py-0.5 text-xs">
           {count}
         </span>
       </button>
 
-      {open && <div className="border-t border-border-subtle">{children}</div>}
+      {open && <div className="border-border-subtle border-t">{children}</div>}
     </div>
   );
 }
@@ -165,7 +172,11 @@ function Section({
 // Crawler Tab
 // ---------------------------------------------------------------------------
 
-export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) {
+export default function CrawlerTab({
+  secret,
+  apiUrl,
+  active,
+}: CrawlerTabProps) {
   const [status, setStatus] = useState<CrawlerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,8 +193,10 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
       const data: CrawlerStatus = await res.json();
       setStatus(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch crawler status");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch crawler status",
+      );
     } finally {
       setLoading(false);
     }
@@ -211,19 +224,22 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
   const completed = counts.completed ?? 0;
   const executing = counts.executing ?? 0;
   const retryable = (counts.retryable ?? 0) + (counts.discarded ?? 0);
-  const total = Object.values(counts).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0;
+  const total =
+    Object.values(counts).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0;
   const progressPct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
     <div className="space-y-5">
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Crawler Status</h2>
+        <h2 className="text-foreground text-sm font-semibold">
+          Crawler Status
+        </h2>
         <div className="flex items-center gap-2">
           {loading && (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 className="text-muted-foreground size-4 animate-spin" />
           )}
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             Auto-refresh every 10s
           </span>
           <Button
@@ -277,14 +293,14 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
           </div>
 
           {/* Progress bar */}
-          <div className="rounded-xl border border-border-subtle bg-card p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="border-border-subtle bg-card space-y-2 rounded-xl border p-4">
+            <div className="text-muted-foreground flex items-center justify-between text-xs">
               <span>Progress</span>
-              <span className="tabular-nums font-medium text-foreground">
+              <span className="text-foreground font-medium tabular-nums">
                 {completed} / {total} ({progressPct}%)
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-surface-elevated overflow-hidden">
+            <div className="bg-surface-elevated h-2 w-full overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full bg-green-500 transition-all duration-500"
                 style={{ width: `${progressPct}%` }}
@@ -299,49 +315,52 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
             defaultOpen
           >
             {status.executing.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
                 No jobs currently executing.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border-subtle bg-background">
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16">
+                    <tr className="border-border-subtle bg-background border-b">
+                      <th className="text-muted-foreground w-16 px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         ID
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         URL
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider whitespace-nowrap uppercase">
                         Started
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider whitespace-nowrap uppercase">
                         Duration
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border-subtle">
+                  <tbody className="divide-border-subtle divide-y">
                     {status.executing.map((job) => (
-                      <tr key={job.id} className="hover:bg-surface-elevated transition-colors">
-                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                      <tr
+                        key={job.id}
+                        className="hover:bg-surface-elevated transition-colors"
+                      >
+                        <td className="text-muted-foreground px-4 py-3 font-mono text-xs">
                           {job.id}
                         </td>
-                        <td className="px-4 py-3 text-xs max-w-xs">
+                        <td className="max-w-xs px-4 py-3 text-xs">
                           <a
                             href={job.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline truncate block"
+                            className="block truncate text-blue-400 hover:underline"
                             title={job.url}
                           >
                             {truncateUrl(job.url)}
                           </a>
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap">
                           {formatRelative(job.attempted_at)}
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap tabular-nums">
                           {formatDuration(job.attempted_at)}
                         </td>
                       </tr>
@@ -358,49 +377,52 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
             count={status.recent_completed.length}
           >
             {status.recent_completed.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
                 No recently completed jobs.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border-subtle bg-background">
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16">
+                    <tr className="border-border-subtle bg-background border-b">
+                      <th className="text-muted-foreground w-16 px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         ID
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         URL
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider whitespace-nowrap uppercase">
                         Completed
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider whitespace-nowrap uppercase">
                         Duration
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border-subtle">
+                  <tbody className="divide-border-subtle divide-y">
                     {status.recent_completed.map((job) => (
-                      <tr key={job.id} className="hover:bg-surface-elevated transition-colors">
-                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                      <tr
+                        key={job.id}
+                        className="hover:bg-surface-elevated transition-colors"
+                      >
+                        <td className="text-muted-foreground px-4 py-3 font-mono text-xs">
                           {job.id}
                         </td>
-                        <td className="px-4 py-3 text-xs max-w-xs">
+                        <td className="max-w-xs px-4 py-3 text-xs">
                           <a
                             href={job.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline truncate block"
+                            className="block truncate text-blue-400 hover:underline"
                             title={job.url}
                           >
                             {truncateUrl(job.url)}
                           </a>
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap">
                           {formatRelative(job.completed_at)}
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap tabular-nums">
                           {formatDuration(job.attempted_at, job.completed_at)}
                         </td>
                       </tr>
@@ -412,64 +434,64 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
           </Section>
 
           {/* Failed / Retryable section */}
-          <Section
-            title="Failed / Retryable"
-            count={status.failed.length}
-          >
+          <Section title="Failed / Retryable" count={status.failed.length}>
             {status.failed.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
                 No failed jobs.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border-subtle bg-background">
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16">
+                    <tr className="border-border-subtle bg-background border-b">
+                      <th className="text-muted-foreground w-16 px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         ID
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         URL
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center w-20">
+                      <th className="text-muted-foreground w-20 px-4 py-3 text-center text-left text-xs font-semibold tracking-wider uppercase">
                         Attempts
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         Last Error
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-24">
+                      <th className="text-muted-foreground w-24 px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                         State
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border-subtle">
+                  <tbody className="divide-border-subtle divide-y">
                     {status.failed.map((job) => {
                       const lastError =
                         job.errors.length > 0
                           ? job.errors[job.errors.length - 1].error
                           : null;
                       return (
-                        <tr key={job.id} className="hover:bg-surface-elevated transition-colors">
-                          <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                        <tr
+                          key={job.id}
+                          className="hover:bg-surface-elevated transition-colors"
+                        >
+                          <td className="text-muted-foreground px-4 py-3 font-mono text-xs">
                             {job.id}
                           </td>
-                          <td className="px-4 py-3 text-xs max-w-xs">
+                          <td className="max-w-xs px-4 py-3 text-xs">
                             <a
                               href={job.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:underline truncate block"
+                              className="block truncate text-blue-400 hover:underline"
                               title={job.url}
                             >
                               {truncateUrl(job.url)}
                             </a>
                           </td>
-                          <td className="px-4 py-3 text-xs text-muted-foreground text-center tabular-nums">
+                          <td className="text-muted-foreground px-4 py-3 text-center text-xs tabular-nums">
                             {job.errors.length}
                           </td>
-                          <td className="px-4 py-3 text-xs text-red-400 max-w-sm">
+                          <td className="max-w-sm px-4 py-3 text-xs text-red-400">
                             <span
-                              className="truncate block"
+                              className="block truncate"
                               title={lastError ?? ""}
                             >
                               {lastError
@@ -496,7 +518,7 @@ export default function CrawlerTab({ secret, apiUrl, active }: CrawlerTabProps) 
       )}
 
       {!loading && !status && !error && (
-        <div className="rounded-xl border border-border-subtle bg-card py-16 text-center text-sm text-muted-foreground">
+        <div className="border-border-subtle bg-card text-muted-foreground rounded-xl border py-16 text-center text-sm">
           No crawler data available.
         </div>
       )}

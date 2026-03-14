@@ -164,7 +164,7 @@ def main():
     )
 
     print(f"\n{'═' * 60}")
-    print(f"  Summary")
+    print("  Summary")
     print(f"{'═' * 60}")
     print(f"  {parties_collection:<40} {parties_total:>4} pts  {'✅ PASS' if parties_pass else '❌ FAIL'}")
     print(f"  {candidates_collection:<40} {candidates_total:>4} pts  {'✅ PASS' if candidates_pass else '❌ FAIL'}")

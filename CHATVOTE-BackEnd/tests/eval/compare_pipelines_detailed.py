@@ -18,8 +18,8 @@ for mod in ["src.firebase_service", "src.vector_store_helper"]:
     if mod not in sys.modules:
         sys.modules[mod] = MagicMock()
 
-from src.models.chunk_metadata import ChunkMetadata, THEME_TAXONOMY
-from src.services.theme_classifier import classify_theme, ThemeResult
+from src.models.chunk_metadata import ChunkMetadata  # noqa: E402
+from src.services.theme_classifier import classify_theme  # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -217,8 +217,8 @@ def compare_candidate_pipeline():
         d["metadata"]["total_chunks"] = len(legacy_docs)
 
     print(f"  Chunks produced: {len(legacy_docs)}")
-    print(f"  Theme classification: ❌ NONE (candidate_indexer never calls theme classifier)")
-    print(f"  Sub-theme: ❌ NONE")
+    print("  Theme classification: ❌ NONE (candidate_indexer never calls theme classifier)")
+    print("  Sub-theme: ❌ NONE")
     print()
 
     for i, doc in enumerate(legacy_docs):
@@ -338,8 +338,8 @@ def compare_manifesto_pipeline():
         d["metadata"]["total_chunks"] = len(legacy_docs)
 
     print(f"  Chunks: {len(legacy_docs)}")
-    print(f"  Theme: requires LLM call per chunk → expensive, slow, fails in dev")
-    print(f"  If LLM unavailable: ALL chunks have theme=None")
+    print("  Theme: requires LLM call per chunk → expensive, slow, fails in dev")
+    print("  If LLM unavailable: ALL chunks have theme=None")
     print()
 
     for i, doc in enumerate(legacy_docs):
@@ -426,9 +426,9 @@ def compare_upload_pipeline():
     legacy_chunks = [c for c in legacy_chunks if len(c.strip()) >= 30]
 
     print(f"  Chunks: {len(legacy_chunks)}")
-    print(f"  Theme classification: ❌ NONE (document_upload never classifies themes)")
-    print(f"  Page tracking: ❌ NONE (all chunks get page=0, no page info)")
-    print(f"  party_name in metadata: ❌ DEPENDS on assignment (often missing)")
+    print("  Theme classification: ❌ NONE (document_upload never classifies themes)")
+    print("  Page tracking: ❌ NONE (all chunks get page=0, no page info)")
+    print("  party_name in metadata: ❌ DEPENDS on assignment (often missing)")
     print()
 
     for i, chunk in enumerate(legacy_chunks):
@@ -468,7 +468,7 @@ def compare_upload_pipeline():
     classified = sum(1 for d in new_docs if d.metadata.get("theme"))
     print(f"  Chunks: {len(new_docs)}")
     print(f"  Theme classification: ✅ {classified}/{len(new_docs)} classified by keyword (FREE)")
-    print(f"  party_name: ✅ Always present")
+    print("  party_name: ✅ Always present")
     print()
 
     for i, doc in enumerate(new_docs):
@@ -496,7 +496,7 @@ def compare_upload_pipeline():
 def compare_pdf_extraction():
     print_separator("4. PDF EXTRACTION — Legacy vs New")
 
-    from src.services.pdf_extract import extract_pages, extract_text, extract_or_ocr
+    from src.services.pdf_extract import extract_pages, extract_text
 
     fixtures_dir = Path(__file__).resolve().parent.parent / "fixtures"
     text_pdf = fixtures_dir / "text_manifesto.pdf"
@@ -517,7 +517,7 @@ def compare_pdf_extraction():
                 if text and text.strip():
                     pages.append((page_num, text))
             return pages
-        except:
+        except:  # noqa: E722
             return []
 
     def legacy_extract_text(pdf_bytes):
@@ -549,23 +549,23 @@ def compare_pdf_extraction():
         new_text = extract_text(data)
         new_chars = len(new_text.strip())
 
-        print(f"  Legacy (pypdf only):")
+        print("  Legacy (pypdf only):")
         print(f"    Pages extracted: {len(legacy_pages)}")
         print(f"    Total chars: {legacy_chars}")
         if legacy_chars > 0:
             print(f"    Preview: \"{legacy_text[:100]}...\"")
         else:
-            print(f"    ❌ ZERO TEXT — this document is INVISIBLE to legacy pipeline")
+            print("    ❌ ZERO TEXT — this document is INVISIBLE to legacy pipeline")
 
         print()
-        print(f"  New (pypdf + OCR fallback):")
+        print("  New (pypdf + OCR fallback):")
         print(f"    Pages extracted: {len(new_pages)}")
         print(f"    Total chars: {new_chars}")
 
         if new_chars == 0 and legacy_chars == 0:
-            print(f"    Same as legacy: 0 chars from pypdf")
-            print(f"    ✅ BUT: extract_or_ocr() would send to Gemini OCR → recovers full text")
-            print(f"    (OCR not run here to avoid API calls, but test_ocr_fixtures.py proves it works)")
+            print("    Same as legacy: 0 chars from pypdf")
+            print("    ✅ BUT: extract_or_ocr() would send to Gemini OCR → recovers full text")
+            print("    (OCR not run here to avoid API calls, but test_ocr_fixtures.py proves it works)")
         elif new_chars > 0:
             print(f"    Preview: \"{new_text[:100]}...\"")
 

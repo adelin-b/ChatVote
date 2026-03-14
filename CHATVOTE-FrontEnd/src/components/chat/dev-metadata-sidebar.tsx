@@ -2,18 +2,23 @@
 
 import React, { useState } from "react";
 
-import { Badge } from "@components/ui/badge";
-import { Button } from "@components/ui/button";
 import {
   FiabiliteBadge,
-  ThemeBadge,
   SourceDocBadge,
+  ThemeBadge,
 } from "@components/experiment/metadata-badge";
 import { useChatStore } from "@components/providers/chat-store-provider";
-import { type Source } from "@lib/stores/chat-store.types";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@components/ui/button";
 import { type DebugLlmCallPayload } from "@lib/socket.types";
-import { BugIcon, XIcon, ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { type Source } from "@lib/stores/chat-store.types";
 import { cn } from "@lib/utils";
+import {
+  BugIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  XIcon,
+} from "lucide-react";
 
 export default function DevMetadataSidebar() {
   // Must check before any hooks to avoid conditional hook calls
@@ -43,7 +48,9 @@ function DevMetadataSidebarInner() {
   }
 
   if (allSources.length === 0 && messages.length > 0) {
-    const lastGroup = [...messages].reverse().find((g) => g.role === "assistant");
+    const lastGroup = [...messages]
+      .reverse()
+      .find((g) => g.role === "assistant");
     if (lastGroup) {
       for (const msg of lastGroup.messages) {
         if (msg.sources?.length && msg.party_id) {
@@ -90,7 +97,10 @@ function DevMetadataSidebarInner() {
             >
               LLM Calls
               {debugLlmCalls.length > 0 && (
-                <Badge variant="secondary" className="ml-1 px-1 py-0 text-[9px]">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 px-1 py-0 text-[9px]"
+                >
                   {debugLlmCalls.length}
                 </Badge>
               )}
@@ -158,14 +168,38 @@ function DevMetadataSidebarInner() {
 }
 
 const stageConfig: Record<string, { label: string; color: string }> = {
-  question_routing: { label: "Question Routing", color: "bg-blue-500/20 text-blue-700 dark:text-blue-300" },
-  rag_query_improvement: { label: "RAG Query Improve", color: "bg-purple-500/20 text-purple-700 dark:text-purple-300" },
-  rag_search_rerank: { label: "RAG Search", color: "bg-green-500/20 text-green-700 dark:text-green-300" },
-  response_generation_start: { label: "Response Gen", color: "bg-orange-500/20 text-orange-700 dark:text-orange-300" },
-  title_and_quick_replies: { label: "Title & Replies", color: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" },
-  chat_summary: { label: "Chat Summary", color: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300" },
-  pro_con_perspective: { label: "Pro/Con", color: "bg-pink-500/20 text-pink-700 dark:text-pink-300" },
-  voting_behavior_rag: { label: "Voting RAG", color: "bg-red-500/20 text-red-700 dark:text-red-300" },
+  question_routing: {
+    label: "Question Routing",
+    color: "bg-blue-500/20 text-blue-700 dark:text-blue-300",
+  },
+  rag_query_improvement: {
+    label: "RAG Query Improve",
+    color: "bg-purple-500/20 text-purple-700 dark:text-purple-300",
+  },
+  rag_search_rerank: {
+    label: "RAG Search",
+    color: "bg-green-500/20 text-green-700 dark:text-green-300",
+  },
+  response_generation_start: {
+    label: "Response Gen",
+    color: "bg-orange-500/20 text-orange-700 dark:text-orange-300",
+  },
+  title_and_quick_replies: {
+    label: "Title & Replies",
+    color: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300",
+  },
+  chat_summary: {
+    label: "Chat Summary",
+    color: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300",
+  },
+  pro_con_perspective: {
+    label: "Pro/Con",
+    color: "bg-pink-500/20 text-pink-700 dark:text-pink-300",
+  },
+  voting_behavior_rag: {
+    label: "Voting RAG",
+    color: "bg-red-500/20 text-red-700 dark:text-red-300",
+  },
 };
 
 function DebugLlmCallCard({ call }: { call: DebugLlmCallPayload }) {
@@ -183,22 +217,33 @@ function DebugLlmCallCard({ call }: { call: DebugLlmCallPayload }) {
 
   return (
     <div
-      className="cursor-pointer rounded border p-2 text-xs transition-colors hover:bg-muted/30"
+      className="hover:bg-muted/30 cursor-pointer rounded border p-2 text-xs transition-colors"
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center gap-1.5">
-        <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", config.color)}>
+        <span
+          className={cn(
+            "rounded px-1.5 py-0.5 text-[10px] font-medium",
+            config.color,
+          )}
+        >
           {config.label}
         </span>
-        <span className="text-muted-foreground ml-auto text-[10px]">{time}</span>
+        <span className="text-muted-foreground ml-auto text-[10px]">
+          {time}
+        </span>
       </div>
       {expanded && details.length > 0 && (
         <div className="bg-muted/20 mt-1.5 rounded border p-1.5">
           {details.map(([key, value]) => (
             <div key={key} className="flex gap-1 text-[10px]">
-              <span className="text-muted-foreground shrink-0 font-mono">{key}:</span>
+              <span className="text-muted-foreground shrink-0 font-mono">
+                {key}:
+              </span>
               <span className="truncate font-mono">
-                {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                {typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value)}
               </span>
             </div>
           ))}
@@ -294,7 +339,10 @@ function SourceMetadataCard({
             label="municipality_name"
             value={source.municipality_name}
           />
-          <MetadataRow label="publish_date" value={source.document_publish_date} />
+          <MetadataRow
+            label="publish_date"
+            value={source.document_publish_date}
+          />
         </div>
       )}
     </div>

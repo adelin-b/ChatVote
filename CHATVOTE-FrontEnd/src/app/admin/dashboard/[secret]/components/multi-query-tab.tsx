@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+import { Button } from "@components/ui/button";
 import {
-  Search,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  X,
   Clock,
+  Loader2,
+  Search,
+  X,
+  XCircle,
 } from "lucide-react";
-import { Button } from "@components/ui/button";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -88,9 +89,9 @@ function StatCard({
           ? "text-yellow-400"
           : "text-foreground";
   return (
-    <div className="rounded-lg border border-border-subtle bg-background p-3">
+    <div className="border-border-subtle bg-background rounded-lg border p-3">
       <p className={`text-xl font-bold tabular-nums ${colorClass}`}>{value}</p>
-      <p className="text-xs uppercase text-muted-foreground mt-1">{label}</p>
+      <p className="text-muted-foreground mt-1 text-xs uppercase">{label}</p>
     </div>
   );
 }
@@ -235,7 +236,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
   return (
     <div className="space-y-4">
       {/* Input section */}
-      <div className="rounded-lg border border-border-subtle bg-card p-4 space-y-4">
+      <div className="border-border-subtle bg-card space-y-4 rounded-lg border p-4">
         <h2 className="text-foreground font-semibold">Multi Query</h2>
         <p className="text-muted-foreground text-sm">
           Run a RAG query against selected communes to check which candidates
@@ -244,19 +245,19 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-1">
-            <label className="text-xs uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs uppercase">
               Query
             </label>
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded border border-border-subtle bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="border-border-subtle bg-background text-foreground focus:ring-ring w-full rounded border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
               placeholder="Enter query..."
             />
           </div>
           <div className="space-y-1 sm:w-40">
-            <label className="text-xs uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs uppercase">
               Score Threshold
             </label>
             <input
@@ -266,13 +267,13 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
               step={0.05}
               min={0}
               max={1}
-              className="w-full rounded border border-border-subtle bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="border-border-subtle bg-background text-foreground focus:ring-ring w-full rounded border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
             />
           </div>
           <Button
             onClick={runQuery}
             disabled={loading || !query.trim() || selectedCodes.size === 0}
-            className="flex items-center gap-2 shrink-0"
+            className="flex shrink-0 items-center gap-2"
           >
             {loading ? (
               <>
@@ -291,7 +292,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
         {/* Commune selector */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs uppercase">
               Communes{" "}
               {selectedCodes.size > 0
                 ? `(${selectedCodes.size} selected)`
@@ -303,7 +304,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                   key={n}
                   type="button"
                   onClick={() => selectTopN(n)}
-                  className="rounded border border-border-subtle px-2.5 py-1 text-xs text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors"
+                  className="border-border-subtle text-muted-foreground hover:bg-background/60 hover:text-foreground rounded border px-2.5 py-1 text-xs transition-colors"
                 >
                   Top {n}
                 </button>
@@ -319,7 +320,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
               <button
                 type="button"
                 onClick={clearSelection}
-                className="text-xs text-muted-foreground hover:underline"
+                className="text-muted-foreground text-xs hover:underline"
               >
                 Clear
               </button>
@@ -351,16 +352,16 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
             type="text"
             value={communeSearch}
             onChange={(e) => setCommuneSearch(e.target.value)}
-            className="w-full rounded border border-border-subtle bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="border-border-subtle bg-background text-foreground focus:ring-ring w-full rounded border px-3 py-1.5 text-sm focus:ring-1 focus:outline-none"
             placeholder="Search communes..."
           />
-          <div className="max-h-40 overflow-y-auto rounded border border-border-subtle bg-background">
+          <div className="border-border-subtle bg-background max-h-40 overflow-y-auto rounded border">
             {loadingMunicipalities ? (
               <div className="flex items-center justify-center p-3">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
               </div>
             ) : filteredMunicipalities.length === 0 ? (
-              <p className="p-3 text-xs text-muted-foreground">
+              <p className="text-muted-foreground p-3 text-xs">
                 No communes found.
               </p>
             ) : (
@@ -369,7 +370,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                   key={m.code}
                   type="button"
                   onClick={() => toggleSelect(m.code)}
-                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-background/60 ${
+                  className={`hover:bg-background/60 flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors ${
                     selectedCodes.has(m.code)
                       ? "bg-blue-500/10 text-blue-300"
                       : "text-foreground"
@@ -383,7 +384,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                     }`}
                   />
                   <span className="truncate">{m.name}</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
+                  <span className="text-muted-foreground ml-auto text-xs">
                     {m.population ? formatPop(m.population) : ""} · {m.code}
                   </span>
                 </button>
@@ -402,8 +403,8 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
 
       {/* Loading progress */}
       {loading && (
-        <div className="rounded-lg border border-border-subtle bg-card p-6 flex items-center justify-center gap-3">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <div className="border-border-subtle bg-card flex items-center justify-center gap-3 rounded-lg border p-6">
+          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
           <span className="text-muted-foreground text-sm">
             Querying {selectedCodes.size} communes...
           </span>
@@ -415,8 +416,8 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
         <div className="space-y-4">
           {/* Aggregate stats (from backend) */}
           {agg && (
-            <div className="rounded-lg border border-border-subtle bg-card p-4">
-              <h3 className="text-foreground font-semibold mb-3">
+            <div className="border-border-subtle bg-card rounded-lg border p-4">
+              <h3 className="text-foreground mb-3 font-semibold">
                 RAG Coverage Stats
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
@@ -460,8 +461,8 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
           )}
 
           {/* Per-candidate summary */}
-          <div className="rounded-lg border border-border-subtle bg-card p-4">
-            <h3 className="text-foreground font-semibold mb-3">
+          <div className="border-border-subtle bg-card rounded-lg border p-4">
+            <h3 className="text-foreground mb-3 font-semibold">
               Candidate Coverage
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -485,40 +486,40 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
           </div>
 
           {/* Results table */}
-          <div className="rounded-lg border border-border-subtle bg-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-border-subtle">
+          <div className="border-border-subtle bg-card overflow-hidden rounded-lg border">
+            <div className="border-border-subtle border-b px-4 py-3">
               <h3 className="text-foreground font-semibold">
                 Results for &ldquo;{results.query}&rdquo;
               </h3>
             </div>
             {/* Table header */}
-            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] gap-x-4 px-4 py-2 border-b border-border-subtle bg-background/50">
-              <span className="text-xs uppercase text-muted-foreground">
+            <div className="border-border-subtle bg-background/50 grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] gap-x-4 border-b px-4 py-2">
+              <span className="text-muted-foreground text-xs uppercase">
                 Commune
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 Candidates
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 With
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 Without
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 Manifesto
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 Candidate
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right">
+              <span className="text-muted-foreground text-right text-xs uppercase">
                 Time
               </span>
-              <span className="text-xs uppercase text-muted-foreground text-right" />
+              <span className="text-muted-foreground text-right text-xs uppercase" />
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-border-subtle">
+            <div className="divide-border-subtle divide-y">
               {results.results.map((commune) => {
                 const isExpanded = expandedCommunes.has(
                   commune.municipality_code,
@@ -529,7 +530,9 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                   commune.manifesto_chunks === 0 &&
                   commune.candidate_chunks === 0;
                 const hasIssues =
-                  hasError || hasNoData || commune.candidates_without_chunks > 0;
+                  hasError ||
+                  hasNoData ||
+                  commune.candidates_without_chunks > 0;
 
                 return (
                   <div key={commune.municipality_code}>
@@ -537,9 +540,9 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                     <button
                       type="button"
                       onClick={() => toggleCommune(commune.municipality_code)}
-                      className="w-full grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] gap-x-4 px-4 py-3 text-left hover:bg-background/40 transition-colors items-center"
+                      className="hover:bg-background/40 grid w-full grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] items-center gap-x-4 px-4 py-3 text-left transition-colors"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
                         {hasError ? (
                           <XCircle className="h-4 w-4 shrink-0 text-red-400" />
                         ) : hasNoData ? (
@@ -549,36 +552,36 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                         ) : (
                           <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
                         )}
-                        <span className="text-sm text-foreground font-medium truncate">
+                        <span className="text-foreground truncate text-sm font-medium">
                           {commune.municipality_name ||
                             commune.municipality_code}
                         </span>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-muted-foreground shrink-0 text-xs">
                           {commune.municipality_code}
                         </span>
                       </div>
-                      <span className="text-sm text-foreground tabular-nums text-right">
+                      <span className="text-foreground text-right text-sm tabular-nums">
                         {commune.total_candidates ?? "-"}
                       </span>
-                      <span className="text-sm text-green-400 tabular-nums text-right">
+                      <span className="text-right text-sm text-green-400 tabular-nums">
                         {commune.candidates_with_chunks ?? "-"}
                       </span>
                       <span
-                        className={`text-sm tabular-nums text-right ${(commune.candidates_without_chunks ?? 0) > 0 ? "text-red-400" : "text-muted-foreground"}`}
+                        className={`text-right text-sm tabular-nums ${(commune.candidates_without_chunks ?? 0) > 0 ? "text-red-400" : "text-muted-foreground"}`}
                       >
                         {commune.candidates_without_chunks ?? "-"}
                       </span>
                       <span
-                        className={`text-sm tabular-nums text-right ${commune.manifesto_chunks === 0 ? "text-yellow-400" : "text-muted-foreground"}`}
+                        className={`text-right text-sm tabular-nums ${commune.manifesto_chunks === 0 ? "text-yellow-400" : "text-muted-foreground"}`}
                       >
                         {commune.manifesto_chunks ?? "-"}
                       </span>
                       <span
-                        className={`text-sm tabular-nums text-right ${commune.candidate_chunks === 0 ? "text-yellow-400" : "text-muted-foreground"}`}
+                        className={`text-right text-sm tabular-nums ${commune.candidate_chunks === 0 ? "text-yellow-400" : "text-muted-foreground"}`}
                       >
                         {commune.candidate_chunks ?? "-"}
                       </span>
-                      <span className="text-sm text-muted-foreground tabular-nums text-right flex items-center justify-end gap-1">
+                      <span className="text-muted-foreground flex items-center justify-end gap-1 text-right text-sm tabular-nums">
                         <Clock className="h-3 w-3" />
                         {commune.elapsed_seconds != null
                           ? `${commune.elapsed_seconds.toFixed(1)}s`
@@ -595,20 +598,20 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
 
                     {/* Expanded candidate details */}
                     {isExpanded && (
-                      <div className="bg-background/30 border-t border-border-subtle px-4 py-3 space-y-2">
+                      <div className="bg-background/30 border-border-subtle space-y-2 border-t px-4 py-3">
                         {hasError ? (
                           <p className="text-xs text-red-400">
                             Error: {commune.error}
                           </p>
                         ) : commune.candidate_details.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             No candidate details available.
                           </p>
                         ) : (
                           commune.candidate_details.map((candidate) => (
                             <div
                               key={candidate.candidate_id}
-                              className={`rounded-lg border p-3 space-y-1 ${
+                              className={`space-y-1 rounded-lg border p-3 ${
                                 candidate.chunk_count === 0
                                   ? "border-red-500/30 bg-red-500/5"
                                   : "border-border-subtle bg-card"
@@ -621,10 +624,10 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                                   ) : (
                                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-400" />
                                   )}
-                                  <span className="text-sm font-medium text-foreground">
+                                  <span className="text-foreground text-sm font-medium">
                                     {candidate.candidate_name}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className="text-muted-foreground text-xs">
                                     {candidate.candidate_id}
                                   </span>
                                 </div>
@@ -636,7 +639,7 @@ export default function MultiQueryTab({ secret, apiUrl }: MultiQueryTabProps) {
                                 </span>
                               </div>
                               {candidate.chunks_preview.length > 0 && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
+                                <p className="text-muted-foreground line-clamp-2 pl-5 text-xs">
                                   {candidate.chunks_preview[0]}
                                 </p>
                               )}

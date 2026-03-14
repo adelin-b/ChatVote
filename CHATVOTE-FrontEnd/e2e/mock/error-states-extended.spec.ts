@@ -1,31 +1,41 @@
-import { test, expect } from '../support/base-test';
-import { setupChat, sendMessage, getChatInput } from '../support/test-helpers';
+import { expect, test } from "../support/base-test";
+import { getChatInput, sendMessage, setupChat } from "../support/test-helpers";
 
-test.describe('Error States Extended', () => {
-  test('16.4 Very long message input is handled gracefully', async ({ page }) => {
+test.describe("Error States Extended", () => {
+  test("16.4 Very long message input is handled gracefully", async ({
+    page,
+  }) => {
     await setupChat(page);
 
-    const longMessage = 'a'.repeat(1200);
+    const longMessage = "a".repeat(1200);
     const chatInput = getChatInput(page);
     await chatInput.fill(longMessage);
 
     // Send button should be enabled (input is non-empty)
-    const sendButton = page.locator('button[type="submit"]').filter({ has: page.locator('svg') });
+    const sendButton = page
+      .locator('button[type="submit"]')
+      .filter({ has: page.locator("svg") });
     await expect(sendButton).toBeEnabled({ timeout: 5000 });
 
     // Submit and verify the app handles it without crashing
-    await chatInput.press('Enter');
+    await chatInput.press("Enter");
 
     // The message (or a truncated version) should appear in the conversation,
     // or at minimum the page should not show an unhandled error
-    await expect(page.locator('body')).not.toContainText('Unhandled', { timeout: 10000 });
-    await expect(page.locator('body')).not.toContainText('Application error', { timeout: 5000 });
+    await expect(page.locator("body")).not.toContainText("Unhandled", {
+      timeout: 10000,
+    });
+    await expect(page.locator("body")).not.toContainText("Application error", {
+      timeout: 5000,
+    });
   });
 
-  test('16.5 Special characters in message input are not executed as script (XSS)', async ({ page }) => {
+  test("16.5 Special characters in message input are not executed as script (XSS)", async ({
+    page,
+  }) => {
     await setupChat(page);
 
-    const xssPayload = '<script>alert(1)</script>';
+    const xssPayload = "<script>alert(1)</script>";
     await sendMessage(page, xssPayload);
 
     // The text should appear as plain text in the conversation, not executed
@@ -33,7 +43,7 @@ test.describe('Error States Extended', () => {
 
     // Confirm no alert dialog was triggered by the XSS payload
     let alertFired = false;
-    page.on('dialog', (dialog) => {
+    page.on("dialog", (dialog) => {
       alertFired = true;
       dialog.dismiss();
     });
@@ -43,17 +53,25 @@ test.describe('Error States Extended', () => {
     expect(alertFired).toBe(false);
   });
 
-  test('1.8 Navigating to non-existent chat session ID shows error or redirects', async ({ page, expectedErrors }) => {
+  test("1.8 Navigating to non-existent chat session ID shows error or redirects", async ({
+    page,
+    expectedErrors,
+  }) => {
     // Server logs "Chat session not found" to console — expected here
     expectedErrors.push(/Chat session not found/);
-    await page.goto('/chat/nonexistent-chat-id-12345', { waitUntil: 'domcontentloaded' });
+    await page.goto("/chat/nonexistent-chat-id-12345", {
+      waitUntil: "domcontentloaded",
+    });
 
     // The app must not crash with an unhandled error boundary message
-    await expect(page.locator('body')).not.toContainText('Application error', { timeout: 10000 });
+    await expect(page.locator("body")).not.toContainText("Application error", {
+      timeout: 10000,
+    });
 
     // Accept either: an error/not-found page, or a redirect back to /chat
     const url = page.url();
-    const isOnChatRoot = url.includes('/chat') || url.endsWith('/chat/nonexistent-chat-id-12345');
+    const isOnChatRoot =
+      url.includes("/chat") || url.endsWith("/chat/nonexistent-chat-id-12345");
     expect(isOnChatRoot).toBe(true);
   });
 });

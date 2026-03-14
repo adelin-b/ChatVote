@@ -5,15 +5,15 @@ import LoadingSpinner from "@components/loading-spinner";
 import { getAuth, getSystemStatus } from "@lib/firebase/firebase-server";
 import { cn } from "@lib/utils";
 
-import ChatContextSidebar from "./chat-context-sidebar";
 import ChatSidebar from "./sidebar/chat-sidebar";
 import ChatSidebarDesktop from "./sidebar/chat-sidebar-desktop";
-import DevMetadataSidebarWrapper from "./dev-metadata-sidebar-wrapper";
+import ChatContextSidebar from "./chat-context-sidebar";
 import ChatDynamicChatInput from "./chat-dynamic-chat-input";
 import ChatHeader from "./chat-header";
 import ChatMainContent from "./chat-main-content";
 import ChatScrollDownIndicator from "./chat-scroll-down-indicator";
 import ChatViewSsr from "./chat-view-ssr";
+import DevMetadataSidebarWrapper from "./dev-metadata-sidebar-wrapper";
 
 type Props = {
   sessionId?: string;
@@ -63,7 +63,7 @@ async function ChatView({
           </Suspense>
           <div
             className={cn(
-              "absolute right-0 bottom-0 left-0 z-20 w-full bg-linear-to-t from-background/50 to-transparent transition-all",
+              "from-background/50 absolute right-0 bottom-0 left-0 z-20 w-full bg-linear-to-t to-transparent transition-all",
               !sessionId && !municipalityCode && !partyIds?.length
                 ? "h-1/3 backdrop-blur-xs dark:h-1/2"
                 : "pointer-events-none h-0",

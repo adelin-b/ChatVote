@@ -14,7 +14,7 @@ Usage:
 import argparse
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from typing import Any
 
 # Must be set BEFORE importing firebase_admin
@@ -572,7 +572,7 @@ def main() -> int:
     missing_collections = [c for c in collections if c not in existing]
 
     if missing_collections:
-        print(f"\n  ⚠️  Collections not found in Qdrant (will be skipped):")
+        print("\n  ⚠️  Collections not found in Qdrant (will be skipped):")
         for c in missing_collections:
             print(f"    • {c}")
 

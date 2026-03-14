@@ -60,7 +60,7 @@ function ChatGroupedMessages({ message, isLastMessage, parties }: Props) {
       key={id}
       id={id}
       data-has-message-background
-      className="group relative rounded-lg bg-surface-elevated"
+      className="group bg-surface-elevated relative rounded-lg"
       plugins={[AutoHeight()]}
     >
       <CarouselContent>

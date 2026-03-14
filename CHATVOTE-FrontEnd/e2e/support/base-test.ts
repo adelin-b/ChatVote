@@ -1,5 +1,5 @@
-import { test as base, expect } from '@playwright/test';
-import type { ConsoleMessage } from '@playwright/test';
+import { type ConsoleMessage } from "@playwright/test";
+import { expect, test as base } from "@playwright/test";
 
 /**
  * Custom test fixture that collects browser console errors and warnings.
@@ -112,19 +112,22 @@ export const test = base.extend<{
     async ({ page, expectedErrors }, use) => {
       const errors: ConsoleMessage[] = [];
 
-      page.on('console', (msg) => {
-        if (msg.type() === 'error' && !isIgnoredError(msg.text(), expectedErrors)) {
+      page.on("console", (msg) => {
+        if (
+          msg.type() === "error" &&
+          !isIgnoredError(msg.text(), expectedErrors)
+        ) {
           errors.push(msg);
         }
       });
 
-      page.on('pageerror', (error) => {
+      page.on("pageerror", (error) => {
         const text = `Uncaught exception: ${error.message}`;
         if (!isIgnoredError(text, expectedErrors)) {
           errors.push({
-            type: () => 'error',
+            type: () => "error",
             text: () => text,
-            location: () => ({ url: '', lineNumber: 0, columnNumber: 0 }),
+            location: () => ({ url: "", lineNumber: 0, columnNumber: 0 }),
           } as unknown as ConsoleMessage);
         }
       });
@@ -135,7 +138,7 @@ export const test = base.extend<{
       if (errors.length > 0) {
         const summary = errors
           .map((e) => `  - [${e.type()}] ${e.text()}`)
-          .join('\n');
+          .join("\n");
         expect
           .soft(errors.length, `Browser console errors detected:\n${summary}`)
           .toBe(0);
@@ -148,8 +151,8 @@ export const test = base.extend<{
     async ({ page }, use) => {
       const warnings: ConsoleMessage[] = [];
 
-      page.on('console', (msg) => {
-        if (msg.type() === 'warning' && !isIgnoredWarning(msg.text())) {
+      page.on("console", (msg) => {
+        if (msg.type() === "warning" && !isIgnoredWarning(msg.text())) {
           warnings.push(msg);
         }
       });
@@ -160,8 +163,8 @@ export const test = base.extend<{
       if (warnings.length > 0) {
         const summary = warnings
           .map((w) => `  - [warning] ${w.text()}`)
-          .join('\n');
-        console.log(`\n⚠ Browser warnings (${warnings.length}):\n${summary}`);
+          .join("\n");
+        console.info(`\n⚠ Browser warnings (${warnings.length}):\n${summary}`);
       }
     },
     { auto: true },

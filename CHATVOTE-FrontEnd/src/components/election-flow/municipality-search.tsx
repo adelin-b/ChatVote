@@ -36,7 +36,9 @@ function filterMunicipalities(
       if (municipality.code.includes(searchLower)) {
         return true;
       }
-      return (municipality.codesPostaux ?? []).some((cp) => cp.includes(searchLower));
+      return (municipality.codesPostaux ?? []).some((cp) =>
+        cp.includes(searchLower),
+      );
     }
 
     // Search by name (substring, case insensitive)
@@ -88,7 +90,7 @@ const MunicipalitySearch = ({
     () => municipalitiesClientCache ?? [],
   );
   const [visibleCount, setVisibleCount] = useState(RESULTS_PER_PAGE);
-  const [isLoadingData, setIsLoadingData] = useState(
+  const [_isLoadingData, setIsLoadingData] = useState(
     municipalitiesClientCache === null,
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -144,7 +146,12 @@ const MunicipalitySearch = ({
     if (match) {
       onSelectMunicipality(match);
     }
-  }, [municipalityCode, municipalities, selectedMunicipality, onSelectMunicipality]);
+  }, [
+    municipalityCode,
+    municipalities,
+    selectedMunicipality,
+    onSelectMunicipality,
+  ]);
 
   // Filter municipalities locally (instant results)
   const allSuggestions = useMemo(() => {
@@ -205,7 +212,9 @@ const MunicipalitySearch = ({
   return (
     <div className="relative w-full space-y-4">
       {/* Selected municipality info */}
-      {selectedMunicipality !== null && selectedMunicipality !== undefined && selectedMunicipality.nom ? (
+      {selectedMunicipality !== null &&
+      selectedMunicipality !== undefined &&
+      selectedMunicipality.nom ? (
         <div className="mt-3 flex flex-col items-center gap-4 text-center">
           <div className="text-2xl font-medium">
             {selectedMunicipality.nom}, {selectedMunicipality.codesPostaux?.[0]}
@@ -213,7 +222,9 @@ const MunicipalitySearch = ({
           <div className="text-muted-foreground text-base">
             {selectedMunicipality.departement?.nom} •{" "}
             {selectedMunicipality.region?.nom}
-            {selectedMunicipality.population ? ` • ${selectedMunicipality.population.toLocaleString()} hab.` : ""}
+            {selectedMunicipality.population
+              ? ` • ${selectedMunicipality.population.toLocaleString()} hab.`
+              : ""}
           </div>
           <MiniDashboardCard
             communeCode={selectedMunicipality.code}
@@ -222,9 +233,7 @@ const MunicipalitySearch = ({
         </div>
       ) : (
         <>
-          <div>
-            {t("municipalityPrompt")}
-          </div>
+          <div>{t("municipalityPrompt")}</div>
           <Input
             ref={inputRef}
             type="text"
@@ -246,7 +255,7 @@ const MunicipalitySearch = ({
           {showSuggestions && visibleSuggestions.length > 0 ? (
             <div
               ref={suggestionsRef}
-              className="absolute top-28 z-50 w-full overflow-hidden rounded-3xl border border-border-strong bg-surface-input p-2 shadow-lg md:top-24"
+              className="border-border-strong bg-surface-input absolute top-28 z-50 w-full overflow-hidden rounded-3xl border p-2 shadow-lg md:top-24"
             >
               <ul className="max-h-80 space-y-1 overflow-auto">
                 {visibleSuggestions.map((municipality) => (
@@ -260,12 +269,16 @@ const MunicipalitySearch = ({
                     >
                       <div className="font-medium">{municipality.nom}</div>
                       <div className="text-muted-foreground text-xs">
-                        {(municipality.codesPostaux ?? []).slice(0, 2).join(", ")}
+                        {(municipality.codesPostaux ?? [])
+                          .slice(0, 2)
+                          .join(", ")}
                         {(municipality.codesPostaux ?? []).length > 2
                           ? ` +${(municipality.codesPostaux ?? []).length - 2}`
                           : ""}{" "}
                         • {municipality.departement?.nom}
-                        {municipality.population ? ` • ${municipality.population.toLocaleString()} hab.` : ""}
+                        {municipality.population
+                          ? ` • ${municipality.population.toLocaleString()} hab.`
+                          : ""}
                       </div>
                     </button>
                   </li>

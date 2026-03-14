@@ -38,7 +38,7 @@ export type CandidateCoverage = {
 
 export type CoverageSummary = {
   total_communes: number;
-  total_all_communes: number;  // All 35k municipalities
+  total_all_communes: number; // All 35k municipalities
   total_parties: number;
   total_candidates: number;
   total_lists: number;
@@ -49,27 +49,35 @@ export type CoverageSummary = {
 };
 
 export type ChartAggregations = {
-  funnel: { total: number; hasWebsite: number; scraped: number; indexed: number };
+  funnel: {
+    total: number;
+    hasWebsite: number;
+    scraped: number;
+    indexed: number;
+  };
   status: { noWebsite: number; hasWebsiteNotIndexed: number; indexed: number };
   partyLabels: Array<{ label: string; total: number; withWebsite: number }>;
   chunkDistribution: Array<{ label: string; count: number }>;
-  coverageByCommune: Record<string, {
-    score: number;
-    ingestionScore: number;
-    hasWebsite: number;
-    hasManifesto: number;
-    hasScraped: number;
-    hasIndexed: number;
-    total: number;
-  }>;
+  coverageByCommune: Record<
+    string,
+    {
+      score: number;
+      ingestionScore: number;
+      hasWebsite: number;
+      hasManifesto: number;
+      hasScraped: number;
+      hasIndexed: number;
+      total: number;
+    }
+  >;
 };
 
 export type CoverageResponse = {
   communes: CommuneCoverage[];
   parties: PartyCoverage[];
-  candidates: CandidateCoverage[];  // Keep type for backwards compat, will be empty array
+  candidates: CandidateCoverage[]; // Keep type for backwards compat, will be empty array
   summary: CoverageSummary;
-  charts?: ChartAggregations;  // New pre-computed chart data
+  charts?: ChartAggregations; // New pre-computed chart data
 };
 
 // ---------------------------------------------------------------------------
@@ -134,30 +142,68 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
       candidatesScrapedSnap,
       candidatesSnap,
     ] = await Promise.all([
-      db.collection("parties").select("party_id", "name", "long_name", "short_name", "election_manifesto_url").get(),
-      db.collection("municipalities").where("has_electoral_data", "==", true).select("code", "nom", "name", "population").get(),
+      db
+        .collection("parties")
+        .select(
+          "party_id",
+          "name",
+          "long_name",
+          "short_name",
+          "election_manifesto_url",
+        )
+        .get(),
+      db
+        .collection("municipalities")
+        .where("has_electoral_data", "==", true)
+        .select("code", "nom", "name", "population")
+        .get(),
       // Only 2 fields needed for per-commune question counts
-      db.collection("chat_sessions").select("municipality_code", "commune_code").get(),
-      db.collection("electoral_lists").select("commune_code", "list_count", "lists").get(),
+      db
+        .collection("chat_sessions")
+        .select("municipality_code", "commune_code")
+        .get(),
+      db
+        .collection("electoral_lists")
+        .select("commune_code", "list_count", "lists")
+        .get(),
       fetchTopicStats(),
       db.collection("municipalities").count().get(),
       // count() queries for summary stats — avoids loading all candidate docs for totals
       db.collection("candidates").count().get(),
-      db.collection("candidates").where("has_scraped", "==", true).count().get(),
+      db
+        .collection("candidates")
+        .where("has_scraped", "==", true)
+        .count()
+        .get(),
       // Full candidates query for aggregation — run in parallel instead of sequentially
-      db.collection("candidates").select(
-        "first_name", "last_name",
-        "commune_code", "municipality_code",
-        "commune_name", "municipality_name",
-        "website_url", "website",
-        "has_manifesto", "manifesto_url", "election_manifesto_url", "manifesto_pdf_path",
-        "has_scraped", "scrape_chars",
-        "list_label", "nuance_label", "nuance_code", "party_name",
-      ).get(),
+      db
+        .collection("candidates")
+        .select(
+          "first_name",
+          "last_name",
+          "commune_code",
+          "municipality_code",
+          "commune_name",
+          "municipality_name",
+          "website_url",
+          "website",
+          "has_manifesto",
+          "manifesto_url",
+          "election_manifesto_url",
+          "manifesto_pdf_path",
+          "has_scraped",
+          "scrape_chars",
+          "list_label",
+          "nuance_label",
+          "nuance_code",
+          "party_name",
+        )
+        .get(),
     ]);
 
     // candidate_chunks now comes from topic-stats (merged to eliminate redundant Qdrant scroll)
-    const candidateChunks: Record<string, number> = topicStats?.candidate_chunks ?? {};
+    const candidateChunks: Record<string, number> =
+      topicStats?.candidate_chunks ?? {};
 
     const questionsByCommune: Record<string, number> = {};
     for (const doc of sessionsSnap.docs) {
@@ -195,7 +241,7 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
     for (const doc of electoralListsSnap.docs) {
       const data = doc.data();
       const code: string = data.commune_code ?? doc.id;
-      listCountByCommune[code] = data.list_count ?? (data.lists?.length ?? 0);
+      listCountByCommune[code] = data.list_count ?? data.lists?.length ?? 0;
     }
 
     const communes: CommuneCoverage[] = municipalitiesSnap.docs.map((doc) => {
@@ -218,7 +264,9 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
     const totalCandidates = candidatesTotalSnap.data().count;
     const scrapedFromDb = candidatesScrapedSnap.data().count;
     // indexed = candidates that have at least 1 chunk in Qdrant (from backend map)
-    const indexedCandidates = Object.values(candidateChunks).filter((v) => v > 0).length;
+    const indexedCandidates = Object.values(candidateChunks).filter(
+      (v) => v > 0,
+    ).length;
     // scraped = whichever is higher: Firestore has_scraped flag or has chunks in Qdrant
     const scrapedCandidates = Math.max(scrapedFromDb, indexedCandidates);
 
@@ -241,10 +289,13 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
     let totalIndexed = 0;
     let totalNoWebsite = 0;
     let totalHasWebsiteNotIndexed = 0;
-    const partyLabelCounts: Record<string, { total: number; withWebsite: number }> = {};
+    const partyLabelCounts: Record<
+      string,
+      { total: number; withWebsite: number }
+    > = {};
     const chunkBuckets = [0, 0, 0, 0, 0, 0]; // 0, 1-10, 11-25, 26-50, 51-100, 100+
 
-    let candidates: CandidateCoverage[] = [];
+    const candidates: CandidateCoverage[] = [];
     try {
       // Populate per-commune candidate_count using the already-loaded docs
       const candidateCountByCommune: Record<string, number> = {};
@@ -252,7 +303,8 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
         const data = doc.data();
         const code: string = data.commune_code ?? data.municipality_code ?? "";
         if (code) {
-          candidateCountByCommune[code] = (candidateCountByCommune[code] ?? 0) + 1;
+          candidateCountByCommune[code] =
+            (candidateCountByCommune[code] ?? 0) + 1;
         }
       }
       for (const commune of communes) {
@@ -266,16 +318,30 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
         const chunkCount = candidateChunks[doc.id] ?? 0;
         const hasWebsite = Boolean(data.website_url || data.website);
         const hasManifesto = Boolean(
-          data.has_manifesto || data.manifesto_url || data.election_manifesto_url || data.manifesto_pdf_path,
+          data.has_manifesto ||
+          data.manifesto_url ||
+          data.election_manifesto_url ||
+          data.manifesto_pdf_path,
         );
         const hasScraped = Boolean(data.has_scraped) || chunkCount > 0;
         const hasIndexed = chunkCount > 0;
-        const partyLabel = data.list_label ?? data.nuance_label ?? data.nuance_code ?? data.party_name ?? "Unknown";
+        const partyLabel =
+          data.list_label ??
+          data.nuance_label ??
+          data.nuance_code ??
+          data.party_name ??
+          "Unknown";
 
         // Per-commune aggregates
         if (code) {
           if (!communeAgg[code]) {
-            communeAgg[code] = { total: 0, hasWebsite: 0, hasManifesto: 0, hasScraped: 0, hasIndexed: 0 };
+            communeAgg[code] = {
+              total: 0,
+              hasWebsite: 0,
+              hasManifesto: 0,
+              hasScraped: 0,
+              hasIndexed: 0,
+            };
           }
           communeAgg[code].total++;
           if (hasWebsite) communeAgg[code].hasWebsite++;
@@ -297,7 +363,8 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
         }
 
         // Party label distribution
-        if (!partyLabelCounts[partyLabel]) partyLabelCounts[partyLabel] = { total: 0, withWebsite: 0 };
+        if (!partyLabelCounts[partyLabel])
+          partyLabelCounts[partyLabel] = { total: 0, withWebsite: 0 };
         partyLabelCounts[partyLabel].total++;
         if (hasWebsite) partyLabelCounts[partyLabel].withWebsite++;
 
@@ -348,7 +415,10 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
       };
     }
 
-    const totalCandidatesLoaded = Object.values(communeAgg).reduce((s, a) => s + a.total, 0);
+    const totalCandidatesLoaded = Object.values(communeAgg).reduce(
+      (s, a) => s + a.total,
+      0,
+    );
 
     const charts: ChartAggregations = {
       funnel: {
@@ -363,7 +433,11 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
         indexed: totalIndexed,
       },
       partyLabels: Object.entries(partyLabelCounts)
-        .map(([label, v]) => ({ label, total: v.total, withWebsite: v.withWebsite }))
+        .map(([label, v]) => ({
+          label,
+          total: v.total,
+          withWebsite: v.withWebsite,
+        }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 20),
       chunkDistribution: [
@@ -378,7 +452,8 @@ export async function fetchCoverage(): Promise<CoverageResponse | null> {
     };
 
     const summary: CoverageSummary = {
-      total_communes: Object.values(communeAgg).filter(c => c.hasScraped > 0).length,
+      total_communes: Object.values(communeAgg).filter((c) => c.hasScraped > 0)
+        .length,
       total_all_communes: municipalityCountSnap.data().count,
       total_parties: parties.length,
       total_candidates: totalCandidates,

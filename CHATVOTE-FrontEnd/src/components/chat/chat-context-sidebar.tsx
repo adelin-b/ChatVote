@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { trackElectoralListSelected } from "@lib/firebase/analytics";
 import {
   type ElectoralList,
   type ElectoralListsByCommune,
 } from "@lib/election/election.types";
+import { trackElectoralListSelected } from "@lib/firebase/analytics";
 import { cn, toTitleCase } from "@lib/utils";
 import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,18 +37,14 @@ function ElectoralListCard({
       onClick={() => onSelect(list)}
     >
       {isSelected && (
-        <CheckCircle2 className="absolute top-1.5 right-1.5 size-4 text-primary" />
+        <CheckCircle2 className="text-primary absolute top-1.5 right-1.5 size-4" />
       )}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {list.head_first_name}
       </span>
-      <span className="text-sm font-bold">
-        {list.head_last_name}
-      </span>
-      {list.nuance_code && (
-        <div className="mt-0.5 h-px w-8 bg-primary/40" />
-      )}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-sm font-bold">{list.head_last_name}</span>
+      {list.nuance_code && <div className="bg-primary/40 mt-0.5 h-px w-8" />}
+      <span className="text-muted-foreground text-xs">
         {toTitleCase(list.list_label)}
       </span>
     </button>
@@ -58,9 +54,7 @@ function ElectoralListCard({
 const ChatContextSidebar = () => {
   const t = useTranslations("chat.sidebar");
   const municipalityCode = useChatStore((s) => s.municipalityCode);
-  const selectedElectoralLists = useChatStore(
-    (s) => s.selectedElectoralLists,
-  );
+  const selectedElectoralLists = useChatStore((s) => s.selectedElectoralLists);
   const toggleElectoralList = useChatStore((s) => s.toggleElectoralList);
   const setElectoralListsData = useChatStore((s) => s.setElectoralListsData);
   const [data, setData] = useState<ElectoralListsByCommune | null>(null);
@@ -113,7 +107,7 @@ const ChatContextSidebar = () => {
       });
 
     return () => controller.abort();
-  }, [municipalityCode]);
+  }, [municipalityCode, setElectoralListsData]);
 
   const handleSelectList = useCallback(
     (list: ElectoralList) => {
@@ -129,14 +123,14 @@ const ChatContextSidebar = () => {
   if (!municipalityCode) return null;
 
   return (
-    <div className="hidden w-72 flex-none flex-col border-r border-border-subtle bg-surface md:flex">
+    <div className="border-border-subtle bg-surface hidden w-72 flex-none flex-col border-r md:flex">
       <div className="flex h-full flex-col gap-3 overflow-y-auto p-3">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-medium uppercase">
             {t("lists")}
           </span>
           {data && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {data.commune_name} · {data.list_count} {t("lists")}
             </span>
           )}
@@ -144,16 +138,16 @@ const ChatContextSidebar = () => {
 
         {isLoading && (
           <div className="flex items-center justify-center py-4">
-            <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="border-primary size-5 animate-spin rounded-full border-2 border-t-transparent" />
           </div>
         )}
 
         {hasNoData && !isLoading && (
           <div className="flex flex-col gap-2 px-2 py-4 text-center">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {t("noElectoralData")}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t("noElectoralDataHint")}
             </span>
           </div>

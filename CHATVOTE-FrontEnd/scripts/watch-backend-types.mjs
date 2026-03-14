@@ -31,7 +31,10 @@ function regenerate() {
     const ms = Date.now() - start;
     console.log(`[watch-types] Regenerated in ${ms}ms`);
   } catch (err) {
-    console.error("[watch-types] Generation failed:", err.stderr?.toString() || err.message);
+    console.error(
+      "[watch-types] Generation failed:",
+      err.stderr?.toString() || err.message,
+    );
   } finally {
     isGenerating = false;
   }

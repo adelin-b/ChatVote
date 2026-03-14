@@ -1,8 +1,8 @@
+import { trackChatMessageSent } from "@lib/firebase/analytics";
 import {
   addUserMessageToChatSession,
   createChatSession,
 } from "@lib/firebase/firebase";
-import { trackChatMessageSent } from "@lib/firebase/analytics";
 import { chatViewScrollToBottom } from "@lib/scroll-utils";
 import { type ChatStoreActionHandlerFor } from "@lib/stores/chat-store.types";
 import { generateUuid } from "@lib/utils";
@@ -14,8 +14,8 @@ export const chatAddUserMessage: ChatStoreActionHandlerFor<"addUserMessage"> =
   async (userId: string, message: string, fromInitialQuestion?: boolean) => {
     const {
       isAnonymous,
-      chatId,
-      localPreliminaryChatId,
+      chatId: _chatId,
+      localPreliminaryChatId: _localPreliminaryChatId,
       socket,
       partyIds,
       initializeChatSession,
@@ -113,7 +113,9 @@ export const chatAddUserMessage: ChatStoreActionHandlerFor<"addUserMessage"> =
 
       if (!isMessageResend) {
         // Same rationale: persist without blocking the socket emit.
-        addUserMessageToChatSession(safeSessionId, message).catch(console.error);
+        addUserMessageToChatSession(safeSessionId, message).catch(
+          console.error,
+        );
       }
 
       socket.io?.addUserMessage({

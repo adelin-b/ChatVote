@@ -18,7 +18,7 @@ from typing import Optional
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.services.theme_classifier import _keyword_scores, classify_theme_keywords
+from src.services.theme_classifier import _keyword_scores
 
 
 @dataclass
@@ -207,8 +207,8 @@ def run_evaluation() -> None:
 
     print("\n" + "=" * 70)
     print(
-        f"Note: In production, LLM classifies most chunks. Keywords are a\n"
-        f"fast-path optimization only (requires 3+ hits with clear margin)."
+        "Note: In production, LLM classifies most chunks. Keywords are a\n"
+        "fast-path optimization only (requires 3+ hits with clear margin)."
     )
 
 

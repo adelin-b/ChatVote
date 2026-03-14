@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { db } from "@lib/firebase/firebase-admin";
 import { type ElectoralListsByCommune } from "@lib/election/election.types";
+import { db } from "@lib/firebase/firebase-admin";
 
 export async function GET(request: NextRequest) {
   const communeCode = request.nextUrl.searchParams.get("commune_code");
@@ -14,10 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const doc = await db
-      .collection("electoral_lists")
-      .doc(communeCode)
-      .get();
+    const doc = await db.collection("electoral_lists").doc(communeCode).get();
 
     if (!doc.exists) {
       return NextResponse.json(
@@ -28,8 +25,7 @@ export async function GET(request: NextRequest) {
 
     const data = doc.data() as ElectoralListsByCommune;
 
-    const isDev =
-      process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
+    const isDev = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
 
     return NextResponse.json(data, {
       headers: {

@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
-import Script from "next/script";
 import { Merriweather, Merriweather_Sans } from "next/font/google";
 import { headers } from "next/headers";
+import Script from "next/script";
 
 import { getLocale } from "@actions/i18n/getLocale";
 import { config } from "@config";

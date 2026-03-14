@@ -23,7 +23,7 @@ from src.services.data_pipeline.base import (
     save_checkpoint,
     should_skip,
 )
-from src.services.data_pipeline.population import get_all_communes, get_top_communes
+from src.services.data_pipeline.population import get_all_communes
 
 logger = logging.getLogger(__name__)
 

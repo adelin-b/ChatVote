@@ -31,7 +31,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 
 _env_path = PROJECT_ROOT / ".env"
 if _env_path.exists():

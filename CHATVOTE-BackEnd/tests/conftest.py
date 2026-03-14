@@ -16,7 +16,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.model_config import (
+from src.model_config import (  # noqa: E402
     GEMINI_2_FLASH,
     OLLAMA_CHAT_MODEL,
 )

@@ -25,7 +25,6 @@ import base64
 import io
 import logging
 import os
-from typing import Optional
 
 from pypdf import PdfReader
 

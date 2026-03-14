@@ -8,37 +8,37 @@ import {
 // Re-export shared enums and domain types from generated backend types.
 // These are the single source of truth — any backend change triggers tsc errors.
 export type {
-  LLMSize,
   ChatScope,
-  Vote,
   Link,
+  LLMSize,
+  Vote,
   VotingResults,
-  VotingResultsOverall,
   VotingResultsByParty,
+  VotingResultsOverall,
 } from "./generated";
 
 // Re-export generated DTO types used directly by consumers
 export type {
+  CandidateProConPerspectiveRequestDto,
+  ChatResponseCompleteDto,
   PartyResponseChunkDto,
+  ProConPerspectiveRequestDto,
   QuickRepliesAndTitleDto,
   RespondingPartiesDto,
-  ProConPerspectiveRequestDto,
-  CandidateProConPerspectiveRequestDto,
   VotingBehaviorRequestDto,
   VotingBehaviorSummaryChunkDto,
-  ChatResponseCompleteDto,
 } from "./generated";
 
-import type {
-  LLMSize,
-  ChatScope,
-  Vote,
-  PartyResponseChunkDto,
-  QuickRepliesAndTitleDto,
-  RespondingPartiesDto,
-  VotingBehaviorRequestDto,
-  VotingBehaviorSummaryChunkDto,
-  ChatResponseCompleteDto,
+import {
+  type ChatResponseCompleteDto,
+  type ChatScope,
+  type LLMSize,
+  type PartyResponseChunkDto,
+  type QuickRepliesAndTitleDto,
+  type RespondingPartiesDto,
+  type Vote,
+  type VotingBehaviorRequestDto,
+  type VotingBehaviorSummaryChunkDto,
 } from "./generated";
 
 // ============================================

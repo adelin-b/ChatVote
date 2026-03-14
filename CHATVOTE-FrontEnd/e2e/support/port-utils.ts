@@ -1,9 +1,8 @@
-import net from 'node:net';
-import fs from 'node:fs';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
-const PORT_FILE = path.resolve(__dirname, '../../.e2e-ports.json');
+const PORT_FILE = path.resolve(__dirname, "../../.e2e-ports.json");
 const BASE_PORT = 10_000;
 
 export interface E2EPorts {
@@ -18,7 +17,7 @@ function isPortAvailableSync(port: number): boolean {
   try {
     execSync(
       `node -e "const s=require('net').createServer();s.listen(${port},'127.0.0.1',()=>{s.close(()=>process.exit(0))});s.on('error',()=>process.exit(1))"`,
-      { timeout: 3000, stdio: 'ignore' },
+      { timeout: 3000, stdio: "ignore" },
     );
     return true;
   } catch {
@@ -37,7 +36,9 @@ function findAvailablePortsSync(count: number, base = BASE_PORT): number[] {
     candidate++;
   }
   if (ports.length < count) {
-    throw new Error(`Could not find ${count} available ports starting from ${base}`);
+    throw new Error(
+      `Could not find ${count} available ports starting from ${base}`,
+    );
   }
   return ports;
 }
@@ -49,7 +50,7 @@ function findAvailablePortsSync(count: number, base = BASE_PORT): number[] {
 export function getOrAllocatePorts(): E2EPorts {
   // If ports were already allocated this run, reuse them
   if (fs.existsSync(PORT_FILE)) {
-    return JSON.parse(fs.readFileSync(PORT_FILE, 'utf-8'));
+    return JSON.parse(fs.readFileSync(PORT_FILE, "utf-8"));
   }
 
   // Allocate fresh ports
@@ -61,7 +62,7 @@ export function getOrAllocatePorts(): E2EPorts {
 
 /** Read previously allocated ports (must exist). */
 export function readPorts(): E2EPorts {
-  return JSON.parse(fs.readFileSync(PORT_FILE, 'utf-8'));
+  return JSON.parse(fs.readFileSync(PORT_FILE, "utf-8"));
 }
 
 /** Clean up the port file. */

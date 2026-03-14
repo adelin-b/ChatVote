@@ -2,8 +2,6 @@
 
 import React, { useEffect } from "react";
 
-import { initAnalytics } from "@lib/firebase/analytics";
-
 import { type Auth, AuthProvider } from "@components/anonymous-auth";
 import AuthServiceWorkerProvider from "@components/providers/auth-service-worker-provider";
 import { PartiesProvider } from "@components/providers/parties-provider";
@@ -12,6 +10,7 @@ import { Toaster } from "@components/ui/sonner";
 import { TooltipProvider } from "@components/ui/tooltip";
 import { type Locale } from "@i18n/config";
 import { type Device } from "@lib/device";
+import { initAnalytics } from "@lib/firebase/analytics";
 import { type Tenant } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
 import { Analytics } from "@vercel/analytics/react";

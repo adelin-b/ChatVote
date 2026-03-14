@@ -46,6 +46,7 @@ from src.services.data_pipeline.base import (
     NodeStatus,
     put_context,
     register_node,
+    save_checkpoint,
     update_status,
 )
 
@@ -753,7 +754,6 @@ class CrawlScraperNode(DataSourceNode):
             download_pages_total = 0
             download_chars_total = 0
             subfolders: list[dict[str, Any]] = []
-            drive_ok = True
 
             async def _download_candidate(
                 cid: str, folder: dict[str, Any],
@@ -992,7 +992,7 @@ class CrawlScraperNode(DataSourceNode):
         }
 
         cfg.checkpoints["cached_at"] = datetime.now(timezone.utc).isoformat()
-        await save_checkpoint(cfg.node_id, cfg.checkpoints)
+        await save_checkpoint(cfg.node_id, cfg.checkpoints)  # noqa: F821
 
         logger.info(
             "[crawl_scraper] done — %d processed, %d with content, %d pages, %d chars",

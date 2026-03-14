@@ -13,7 +13,6 @@ Usage:
 import argparse
 import json
 import os
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -29,7 +28,6 @@ HISTORY_DIR = PROJECT_ROOT / "reports" / "history"
 def _run_deepeval_tests(test_scope: str) -> dict:
     """Run DeepEval tests and capture results programmatically."""
     from deepeval.test_case import LLMTestCase
-    from deepeval import evaluate
 
     results = {
         "timestamp": datetime.now().isoformat(),
@@ -176,8 +174,7 @@ def _collect_test_cases(scope: str) -> list[dict]:
 
         # Custom metric tests (non-should_fail only)
         from tests.eval.test_custom_metrics import (
-            NEUTRALITY_CASES, ATTRIBUTION_CASES,
-            COMPLETENESS_CASES, FRENCH_QUALITY_CASES,
+            NEUTRALITY_CASES, COMPLETENESS_CASES,
         )
         for tc in NEUTRALITY_CASES:
             if not tc.get("should_fail"):
@@ -351,11 +348,9 @@ def _generate_html(results: dict) -> str:
     CIRC = 339.29
     pass_arc = CIRC * (pass_rate / 100)
     fail_arc = CIRC * (failed / total) if total else 0
-    pass_offset = 0
     fail_offset = -pass_arc
 
     pass_color = "#22c55e" if pass_rate >= 80 else "#eab308" if pass_rate >= 50 else "#ef4444"
-    pass_color_dim = "#166534" if pass_rate >= 80 else "#713f12" if pass_rate >= 50 else "#7f1d1d"
 
     # Build insights HTML
     insight_type_styles = {
@@ -2201,7 +2196,6 @@ def _generate_unified_html(
     # ------------------------------------------------------------------ #
     #  BUILD TAB BAR HTML                                                  #
     # ------------------------------------------------------------------ #
-    tab_colors = {"eval": "#38bdf8", "goldens": "#a78bfa", "optimize": "#f97316", "history": "#06b6d4"}
     tab_bar_html = ""
     for tab_id, tab_label, tab_color in tabs:
         tab_bar_html += f"""<button class="nav-tab" data-tab="{tab_id}"

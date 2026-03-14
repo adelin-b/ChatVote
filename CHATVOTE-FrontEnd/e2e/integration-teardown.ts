@@ -1,22 +1,25 @@
 async function integrationTeardown() {
-  const backendProcess = (globalThis as any).__BACKEND_PROCESS__;
+  const g = globalThis as Record<string, unknown>;
+  const backendProcess = g.__BACKEND_PROCESS__ as { pid?: number } | undefined;
   if (backendProcess?.pid) {
     try {
-      process.kill(-backendProcess.pid, 'SIGTERM');
+      process.kill(-backendProcess.pid, "SIGTERM");
     } catch {
       // process may already be gone
     }
-    console.log('Backend stopped');
+    console.info("Backend stopped");
   }
 
-  const emulatorProcess = (globalThis as any).__EMULATOR_PROCESS__;
+  const emulatorProcess = g.__EMULATOR_PROCESS__ as
+    | { pid?: number }
+    | undefined;
   if (emulatorProcess?.pid) {
     try {
-      process.kill(-emulatorProcess.pid, 'SIGTERM');
+      process.kill(-emulatorProcess.pid, "SIGTERM");
     } catch {
       // process may already be gone
     }
-    console.log('Emulators stopped');
+    console.info("Emulators stopped");
   }
 }
 

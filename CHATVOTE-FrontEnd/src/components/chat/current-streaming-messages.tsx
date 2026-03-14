@@ -63,7 +63,7 @@ function CurrentStreamingMessages() {
       key={id}
       id={id}
       data-has-message-background
-      className="group relative rounded-lg bg-surface-elevated"
+      className="group bg-surface-elevated relative rounded-lg"
     >
       <div className="p-4">
         <CurrentStreamingMessage partyId={displayPartyId} />
@@ -74,9 +74,8 @@ function CurrentStreamingMessages() {
             <Button
               key={party.party_id}
               className={cn(
-                "relative flex size-5 items-center justify-center overflow-hidden rounded-full bg-muted transition-all duration-300 hover:bg-muted",
-                index === 0 &&
-                  "ring-2 ring-foreground/60 ring-offset-2",
+                "bg-muted hover:bg-muted relative flex size-5 items-center justify-center overflow-hidden rounded-full transition-all duration-300",
+                index === 0 && "ring-foreground/60 ring-2 ring-offset-2",
               )}
               style={{
                 background: party.background_color,

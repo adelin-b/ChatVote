@@ -48,13 +48,13 @@ export default function WarningCard({ warning, onView }: WarningCardProps) {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg border border-border-subtle p-3 ${bgClass}`}
+      className={`border-border-subtle flex items-start gap-3 rounded-lg border p-3 ${bgClass}`}
     >
       <Icon className={`mt-0.5 size-4 shrink-0 ${iconClass}`} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">{message}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-foreground text-sm">{message}</p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         {count > 0 && (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-semibold text-white ${countBgClass}`}
@@ -66,7 +66,7 @@ export default function WarningCard({ warning, onView }: WarningCardProps) {
           <button
             type="button"
             onClick={() => onView(tab_link)}
-            className="text-xs font-medium text-muted-foreground underline hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground text-xs font-medium underline"
           >
             View
           </button>

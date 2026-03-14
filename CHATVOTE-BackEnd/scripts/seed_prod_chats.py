@@ -19,7 +19,7 @@ load_env()
 if _target_env:
     os.environ["ENV"] = _target_env
 
-from src.firebase_service import db
+from src.firebase_service import db  # noqa: E402
 
 PARTY_IDS = [
     "europe-ecologie-les-verts",
@@ -238,7 +238,6 @@ FAKE_USER_IDS = [
 
 def create_timestamp(dt: datetime):
     """Create a Firestore-compatible timestamp."""
-    from google.cloud.firestore_v1 import _helpers
     return dt
 
 

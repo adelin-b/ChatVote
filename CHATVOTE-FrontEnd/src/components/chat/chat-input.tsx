@@ -1,9 +1,9 @@
 "use client";
 
 import { useAnonymousAuth } from "@components/anonymous-auth";
-import { trackQuickReplyClicked } from "@lib/firebase/analytics";
 import { useChatStore } from "@components/providers/chat-store-provider";
 import { Button } from "@components/ui/button";
+import { trackQuickReplyClicked } from "@lib/firebase/analytics";
 import { cn } from "@lib/utils";
 import { ArrowUp } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -61,10 +61,9 @@ const ChatInput = ({ disabled }: Props) => {
   return (
     <form
       onSubmit={handleSubmit}
-      aria-disabled={disabled}
       data-testid={user?.uid ? "chat-form-ready" : undefined}
       className={cn(
-        "relative w-full overflow-hidden rounded-4xl border border-border-strong bg-surface-input transition-colors focus-within:border-zinc-400 dark:focus-within:border-zinc-700",
+        "border-border-strong bg-surface-input relative w-full overflow-hidden rounded-4xl border transition-colors focus-within:border-zinc-400 dark:focus-within:border-zinc-700",
         quickReplies?.length > 0 && "rounded-2xl",
       )}
     >

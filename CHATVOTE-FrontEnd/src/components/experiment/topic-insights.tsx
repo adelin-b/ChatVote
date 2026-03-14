@@ -102,7 +102,7 @@ function TaxonomyView({
   return (
     <div className="flex flex-col gap-6">
       {/* Summary stats */}
-      <div className="flex gap-3 flex-wrap sm:flex-nowrap">
+      <div className="flex flex-wrap gap-3 sm:flex-nowrap">
         <StatCard label="Total Chunks" value={data.total_chunks} />
         <StatCard
           label="Classified"
@@ -163,7 +163,11 @@ function TaxonomyView({
         <h2 className="mb-4 text-lg font-semibold">Theme Details</h2>
         <div className="flex flex-col gap-2">
           {data.themes.map((t) => (
-            <ThemeCard key={t.theme} theme={t} totalChunks={data.classified_chunks} />
+            <ThemeCard
+              key={t.theme}
+              theme={t}
+              totalChunks={data.classified_chunks}
+            />
           ))}
         </div>
       </div>
@@ -202,8 +206,8 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="bg-surface rounded-xl flex-1 min-w-0 p-4">
-      <p className="text-2xl font-extrabold text-foreground leading-none tabular-nums">
+    <div className="bg-surface min-w-0 flex-1 rounded-xl p-4">
+      <p className="text-foreground text-2xl leading-none font-extrabold tabular-nums">
         {value.toLocaleString()}
         {sub && (
           <span className="text-muted-foreground ml-1 text-sm font-normal">
@@ -211,14 +215,20 @@ function StatCard({
           </span>
         )}
       </p>
-      <p className="mt-1 text-xs uppercase text-muted-foreground tracking-wider">
+      <p className="text-muted-foreground mt-1 text-xs tracking-wider uppercase">
         {label}
       </p>
     </div>
   );
 }
 
-function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: number }) {
+function ThemeCard({
+  theme,
+  totalChunks,
+}: {
+  theme: ThemeStat;
+  totalChunks: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const partyEntries = Object.entries(theme.by_party).sort(
     ([, a], [, b]) => b - a,
@@ -227,15 +237,15 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
   const maxPartyCount = partyEntries[0]?.[1] ?? 1;
 
   return (
-    <div className="bg-surface rounded-xl overflow-hidden">
+    <div className="bg-surface overflow-hidden rounded-xl">
       {/* Always-visible summary row */}
       <button
         type="button"
-        className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
+        className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.02]"
         onClick={() => setExpanded(!expanded)}
       >
         {/* Theme name + badge */}
-        <div className="flex items-center gap-3 w-44 shrink-0">
+        <div className="flex w-44 shrink-0 items-center gap-3">
           {expanded ? (
             <ChevronDownIcon className="text-muted-foreground size-4 shrink-0" />
           ) : (
@@ -245,7 +255,7 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
         </div>
 
         {/* Inline progress bar showing share of total */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/5">
             <div
               className="absolute inset-y-0 left-0 rounded-full"
@@ -258,27 +268,27 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 shrink-0">
-          <span className="text-sm tabular-nums font-medium w-16 text-right">
+        <div className="flex shrink-0 items-center gap-4">
+          <span className="w-16 text-right text-sm font-medium tabular-nums">
             {theme.count.toLocaleString()}
           </span>
-          <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
+          <span className="text-muted-foreground w-12 text-right text-xs tabular-nums">
             {theme.percentage}%
           </span>
         </div>
 
         {/* Top parties preview */}
-        <div className="hidden lg:flex items-center gap-1 w-48 shrink-0">
+        <div className="hidden w-48 shrink-0 items-center gap-1 lg:flex">
           {topParties.map(([party]) => (
             <span
               key={party}
-              className="truncate rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+              className="text-muted-foreground truncate rounded bg-white/5 px-1.5 py-0.5 text-[10px]"
             >
               {party}
             </span>
           ))}
           {partyEntries.length > 3 && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-muted-foreground text-[10px]">
               +{partyEntries.length - 3}
             </span>
           )}
@@ -287,18 +297,21 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
 
       {/* Expanded details */}
       {expanded && (
-        <div className="px-5 pb-5 pt-1">
+        <div className="px-5 pt-1 pb-5">
           <div className="grid gap-5 md:grid-cols-2">
             {/* Left column: Party breakdown */}
             {partyEntries.length > 0 && (
               <div>
-                <p className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
                   Party Distribution
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {partyEntries.map(([party, count]) => (
-                    <div key={party} className="flex items-center gap-2 text-xs">
-                      <span className="w-24 shrink-0 truncate text-right text-muted-foreground">
+                    <div
+                      key={party}
+                      className="flex items-center gap-2 text-xs"
+                    >
+                      <span className="text-muted-foreground w-24 shrink-0 truncate text-right">
                         {party}
                       </span>
                       <div className="relative h-5 flex-1 overflow-hidden rounded bg-white/5">
@@ -306,7 +319,8 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
                           className="absolute inset-y-0 left-0 rounded"
                           style={{
                             width: `${(count / maxPartyCount) * 100}%`,
-                            background: "linear-gradient(90deg, #381AF3, #8B5CF6)",
+                            background:
+                              "linear-gradient(90deg, #381AF3, #8B5CF6)",
                           }}
                         />
                         <span className="relative z-10 flex h-full items-center px-2 text-[11px] font-medium">
@@ -324,14 +338,17 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
               {/* Source types */}
               {Object.keys(theme.by_source).length > 0 && (
                 <div>
-                  <p className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                  <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
                     Sources
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(theme.by_source)
                       .sort(([, a], [, b]) => b - a)
                       .map(([src, count]) => (
-                        <div key={src} className="flex items-center gap-1 rounded bg-white/5 px-2 py-1">
+                        <div
+                          key={src}
+                          className="flex items-center gap-1 rounded bg-white/5 px-2 py-1"
+                        >
                           <SourceDocBadge sourceDoc={src} />
                           <span className="text-muted-foreground text-[11px] tabular-nums">
                             {count}
@@ -345,14 +362,17 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
               {/* Fiabilite */}
               {Object.keys(theme.by_fiabilite).length > 0 && (
                 <div>
-                  <p className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                  <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
                     Reliability
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(theme.by_fiabilite)
                       .sort(([a], [b]) => Number(a) - Number(b))
                       .map(([level, count]) => (
-                        <div key={level} className="flex items-center gap-1 rounded bg-white/5 px-2 py-1">
+                        <div
+                          key={level}
+                          className="flex items-center gap-1 rounded bg-white/5 px-2 py-1"
+                        >
                           <FiabiliteBadge level={Number(level)} />
                           <span className="text-muted-foreground text-[11px] tabular-nums">
                             {count}
@@ -367,8 +387,8 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
 
           {/* Sub-themes — full width below */}
           {theme.sub_themes.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <p className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase tracking-wider">
+            <div className="mt-4 border-t border-white/5 pt-4">
+              <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-wider uppercase">
                 Sub-themes
               </p>
               <div className="grid gap-1.5 sm:grid-cols-2">
@@ -376,7 +396,7 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
                   const maxSt = theme.sub_themes[0]?.count ?? 1;
                   return (
                     <div key={st.name} className="flex items-center gap-2">
-                      <span className="w-32 shrink-0 truncate text-right text-xs text-muted-foreground">
+                      <span className="text-muted-foreground w-32 shrink-0 truncate text-right text-xs">
                         {st.name}
                       </span>
                       <div className="relative h-4 flex-1 overflow-hidden rounded bg-white/5">
@@ -384,7 +404,8 @@ function ThemeCard({ theme, totalChunks }: { theme: ThemeStat; totalChunks: numb
                           className="absolute inset-y-0 left-0 rounded"
                           style={{
                             width: `${(st.count / maxSt) * 100}%`,
-                            background: "linear-gradient(90deg, #381AF3cc, #8B5CF6aa)",
+                            background:
+                              "linear-gradient(90deg, #381AF3cc, #8B5CF6aa)",
                           }}
                         />
                         <span className="relative z-10 flex h-full items-center px-1.5 text-[10px] font-medium tabular-nums">

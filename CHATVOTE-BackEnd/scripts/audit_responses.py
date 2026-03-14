@@ -22,14 +22,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.utils import load_env
 load_env()
 
-from src.chatbot_async import (
+from src.chatbot_async import (  # noqa: E402
     generate_improvement_rag_query,
     generate_streaming_chatbot_response,
-    get_rag_context,
 )
-from src.vector_store_helper import identify_relevant_docs_with_llm_based_reranking
-from src.firebase_service import aget_parties
-from src.models.general import LLMSize
+from src.vector_store_helper import identify_relevant_docs_with_llm_based_reranking  # noqa: E402
+from src.firebase_service import aget_parties  # noqa: E402
+from src.models.general import LLMSize  # noqa: E402
 
 # 10 test questions across key political domains
 TEST_QUESTIONS = [

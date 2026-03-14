@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Loader2, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
 import { Button } from "@components/ui/button";
+import { CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
 
 interface DataConsistencyTabProps {
   secret: string;
@@ -48,20 +49,16 @@ interface DataConsistencyResponse {
 
 function QualityBar({ label, pct }: { label: string; pct: number }) {
   const color =
-    pct >= 90
-      ? "bg-green-500"
-      : pct >= 60
-        ? "bg-yellow-500"
-        : "bg-red-500";
+    pct >= 90 ? "bg-green-500" : pct >= 60 ? "bg-yellow-500" : "bg-red-500";
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-xs font-medium text-foreground">
+        <span className="text-muted-foreground text-xs">{label}</span>
+        <span className="text-foreground text-xs font-medium">
           {pct.toFixed(1)}%
         </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-muted">
+      <div className="bg-muted h-2 w-full rounded-full">
         <div
           className={`h-2 rounded-full ${color}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
@@ -93,8 +90,10 @@ export default function DataConsistencyTab({
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json: DataConsistencyResponse = await res.json();
       setData(json);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch data consistency");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch data consistency",
+      );
     } finally {
       setLoading(false);
     }
@@ -107,8 +106,8 @@ export default function DataConsistencyTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">
+        <Loader2 className="text-muted-foreground size-5 animate-spin" />
+        <span className="text-muted-foreground ml-2 text-sm">
           Loading data consistency...
         </span>
       </div>
@@ -140,7 +139,8 @@ export default function DataConsistencyTab({
       orphans: data.cross_references.missing_party_ids,
     },
     {
-      label: "All candidate municipality_codes exist in Firestore municipalities",
+      label:
+        "All candidate municipality_codes exist in Firestore municipalities",
       pass: data.cross_references.all_candidate_munis_in_firestore,
       orphans: data.cross_references.missing_municipality_codes,
     },
@@ -162,13 +162,13 @@ export default function DataConsistencyTab({
     <div className="space-y-6">
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           Status:{" "}
           <span
             className={
               data.status === "consistent"
-                ? "text-green-400 font-medium"
-                : "text-yellow-400 font-medium"
+                ? "font-medium text-green-400"
+                : "font-medium text-yellow-400"
             }
           >
             {data.status}
@@ -188,36 +188,36 @@ export default function DataConsistencyTab({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Firestore */}
-        <div className="rounded-lg border border-border-subtle bg-card p-4">
-          <div className="text-sm font-semibold text-foreground mb-3">
+        <div className="border-border-subtle bg-card rounded-lg border p-4">
+          <div className="text-foreground mb-3 text-sm font-semibold">
             Firestore
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Parties</span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-muted-foreground text-xs">Parties</span>
+              <span className="text-foreground text-lg font-bold">
                 {data.firestore.parties}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Candidates</span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-muted-foreground text-xs">Candidates</span>
+              <span className="text-foreground text-lg font-bold">
                 {data.firestore.candidates}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 Municipalities
               </span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-foreground text-lg font-bold">
                 {data.firestore.municipalities}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 With website
               </span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-foreground text-lg font-bold">
                 {data.firestore.candidates_with_website}
               </span>
             </div>
@@ -225,26 +225,26 @@ export default function DataConsistencyTab({
         </div>
 
         {/* Qdrant Manifestos */}
-        <div className="rounded-lg border border-border-subtle bg-card p-4">
-          <div className="text-sm font-semibold text-foreground mb-3">
+        <div className="border-border-subtle bg-card rounded-lg border p-4">
+          <div className="text-foreground mb-3 text-sm font-semibold">
             Qdrant Manifestos
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Points</span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-muted-foreground text-xs">Points</span>
+              <span className="text-foreground text-lg font-bold">
                 {data.qdrant.manifesto_points.toLocaleString()}
               </span>
             </div>
             <div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 Namespaces ({data.qdrant.manifesto_namespaces.length})
               </span>
               <div className="mt-1 flex flex-wrap gap-1">
                 {data.qdrant.manifesto_namespaces.map((ns) => (
                   <span
                     key={ns}
-                    className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+                    className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-xs"
                   >
                     {ns}
                   </span>
@@ -255,28 +255,28 @@ export default function DataConsistencyTab({
         </div>
 
         {/* Qdrant Candidates */}
-        <div className="rounded-lg border border-border-subtle bg-card p-4">
-          <div className="text-sm font-semibold text-foreground mb-3">
+        <div className="border-border-subtle bg-card rounded-lg border p-4">
+          <div className="text-foreground mb-3 text-sm font-semibold">
             Qdrant Candidates
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Points</span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-muted-foreground text-xs">Points</span>
+              <span className="text-foreground text-lg font-bold">
                 {data.qdrant.candidate_points.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Namespaces</span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-muted-foreground text-xs">Namespaces</span>
+              <span className="text-foreground text-lg font-bold">
                 {data.qdrant.candidate_namespaces_count}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 Municipalities
               </span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-foreground text-lg font-bold">
                 {data.qdrant.candidate_municipalities.length}
               </span>
             </div>
@@ -284,21 +284,21 @@ export default function DataConsistencyTab({
         </div>
 
         {/* Cross-reference status */}
-        <div className="rounded-lg border border-border-subtle bg-card p-4">
-          <div className="text-sm font-semibold text-foreground mb-3">
+        <div className="border-border-subtle bg-card rounded-lg border p-4">
+          <div className="text-foreground mb-3 text-sm font-semibold">
             Cross-Reference
           </div>
           <div className="flex flex-col items-center justify-center py-2">
             {allCrossRefPass ? (
               <>
-                <span className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
                   All checks pass
                 </span>
                 <CheckCircle2 className="mt-2 size-8 text-green-400" />
               </>
             ) : (
               <>
-                <span className="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
                   Issues detected
                 </span>
                 <XCircle className="mt-2 size-8 text-red-400" />
@@ -311,16 +311,16 @@ export default function DataConsistencyTab({
       {/* Cross-Reference Checks */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
             Cross-Reference Checks
           </span>
-          <div className="flex-1 border-t border-border-subtle" />
+          <div className="border-border-subtle flex-1 border-t" />
         </div>
         <div className="space-y-2">
           {crossRefChecks.map((check, i) => (
             <div
               key={i}
-              className="rounded-lg border border-border-subtle bg-card p-3"
+              className="border-border-subtle bg-card rounded-lg border p-3"
             >
               <div className="flex items-center gap-2">
                 {check.pass ? (
@@ -328,20 +328,20 @@ export default function DataConsistencyTab({
                 ) : (
                   <XCircle className="size-4 shrink-0 text-red-400" />
                 )}
-                <span className="text-sm text-foreground">{check.label}</span>
+                <span className="text-foreground text-sm">{check.label}</span>
                 {check.pass ? (
-                  <span className="ml-auto bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">
+                  <span className="ml-auto rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
                     pass
                   </span>
                 ) : (
-                  <span className="ml-auto bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+                  <span className="ml-auto rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
                     fail
                   </span>
                 )}
               </div>
               {!check.pass && check.orphans.length > 0 && (
                 <div className="mt-2 ml-6">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     Missing/orphaned:
                   </span>
                   <div className="mt-1 flex flex-wrap gap-1">
@@ -364,15 +364,15 @@ export default function DataConsistencyTab({
       {/* Metadata Quality */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
             Metadata Quality
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             (sample: {data.metadata_quality.sample_size} points)
           </span>
-          <div className="flex-1 border-t border-border-subtle" />
+          <div className="border-border-subtle flex-1 border-t" />
         </div>
-        <div className="rounded-lg border border-border-subtle bg-card p-4">
+        <div className="border-border-subtle bg-card rounded-lg border p-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <QualityBar
               label="party_ids"
@@ -406,10 +406,10 @@ export default function DataConsistencyTab({
       {data.issues.length > 0 && (
         <section>
           <div className="mb-3 flex items-center gap-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
               Issues
             </span>
-            <div className="flex-1 border-t border-border-subtle" />
+            <div className="border-border-subtle flex-1 border-t" />
           </div>
           <div className="space-y-2">
             {data.issues.map((issue, i) => {
@@ -426,13 +426,10 @@ export default function DataConsistencyTab({
                     ? "bg-yellow-500/20 text-yellow-400"
                     : "bg-blue-500/20 text-blue-400";
               return (
-                <div
-                  key={i}
-                  className={`rounded-lg border p-3 ${colors}`}
-                >
+                <div key={i} className={`rounded-lg border p-3 ${colors}`}>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${badge}`}
+                      className={`rounded-full px-2 py-0.5 text-xs ${badge}`}
                     >
                       {issue.severity}
                     </span>

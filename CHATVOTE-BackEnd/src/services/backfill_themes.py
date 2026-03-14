@@ -26,7 +26,7 @@ import argparse
 import asyncio
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from qdrant_client import QdrantClient

@@ -4,24 +4,27 @@
 # src/app/api
 
 ## Purpose
+
 Next.js API Route Handlers for server-side data fetching, OG image generation, PDF proxying, and Stripe webhook processing. All routes run as Edge or Node.js server functions. Client-side code never calls these directly for real-time features — that goes through Socket.IO — but these routes handle REST-style requests and media serving.
 
 ## Key Files
-| File | Description |
-|------|-------------|
+
+| File               | Description                                                      |
+| ------------------ | ---------------------------------------------------------------- |
 | `parties/route.ts` | `GET /api/parties` — returns list of party details from Firebase |
-| `embed/` | Embed widget API routes |
-| `municipalities/` | Municipality search/lookup routes |
-| `og/` | Open Graph image generation routes |
-| `parties/` | Party data routes |
-| `pdf-proxy/` | Proxies PDF files from Firebase Storage to avoid CORS |
-| `quick/` | Quick reply suggestion routes |
-| `revalidate/` | On-demand ISR cache revalidation |
-| `[chatId]/` | Per-chat-session API routes |
+| `embed/`           | Embed widget API routes                                          |
+| `municipalities/`  | Municipality search/lookup routes                                |
+| `og/`              | Open Graph image generation routes                               |
+| `parties/`         | Party data routes                                                |
+| `pdf-proxy/`       | Proxies PDF files from Firebase Storage to avoid CORS            |
+| `quick/`           | Quick reply suggestion routes                                    |
+| `revalidate/`      | On-demand ISR cache revalidation                                 |
+| `[chatId]/`        | Per-chat-session API routes                                      |
 
 ## For AI Agents
 
 ### Working In This Directory
+
 - All files must export named HTTP method functions (`GET`, `POST`, `PUT`, `DELETE`).
 - Use `NextResponse.json()` to return JSON responses.
 - Server-only imports (`firebase-admin`, `stripe`) are safe here — these never run on the client.
@@ -29,10 +32,12 @@ Next.js API Route Handlers for server-side data fetching, OG image generation, P
 - For OG image routes, use `@vercel/og` or Next.js `ImageResponse`.
 
 ### Testing Requirements
+
 - Test API routes by hitting them with `fetch()` in Playwright E2E tests or integration tests.
 - PDF proxy and party routes should be tested against the Firebase emulator.
 
 ### Common Patterns
+
 ```typescript
 // Standard API route pattern
 import { NextResponse } from "next/server";
@@ -47,11 +52,13 @@ export async function GET() {
 ## Dependencies
 
 ### Internal
+
 - `@lib/firebase/firebase-server` — Firestore data access
 - `@lib/firebase/firebase-admin` — Admin SDK for privileged operations
 - `@lib/stripe/stripe` — Stripe server client (for payment routes)
 
 ### External
+
 - `next` Route Handlers
 - `firebase-admin`
 - `stripe`

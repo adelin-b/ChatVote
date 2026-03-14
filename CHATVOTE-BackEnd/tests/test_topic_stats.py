@@ -7,13 +7,9 @@ Run:
     poetry run pytest tests/test_topic_stats.py -v
 """
 
-import sys
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aiohttp import web
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 
 # ---------------------------------------------------------------------------

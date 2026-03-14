@@ -5,8 +5,8 @@ import React from "react";
 import Image from "next/image";
 
 import { useAnonymousAuth } from "@components/anonymous-auth";
-import { trackInitialSuggestionClicked } from "@lib/firebase/analytics";
 import { useChatStore } from "@components/providers/chat-store-provider";
+import { trackInitialSuggestionClicked } from "@lib/firebase/analytics";
 import { type ProposedQuestion } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
 import { toTitleCase } from "@lib/utils";
@@ -28,9 +28,7 @@ const GroupChatEmptyView = ({ parties, proposedQuestions }: Props) => {
   const selectedElectoralLists = useChatStore(
     (state) => state.selectedElectoralLists,
   );
-  const electoralListsData = useChatStore(
-    (state) => state.electoralListsData,
-  );
+  const electoralListsData = useChatStore((state) => state.electoralListsData);
   const selectedLists = electoralListsData.filter((l) =>
     selectedElectoralLists.includes(l.panel_number),
   );

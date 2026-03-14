@@ -36,9 +36,7 @@ const ChatGroupPartySelectContent = ({
     }
 
     if (selectedPartyIds.length >= MAX_SELECTABLE_PARTIES) {
-      toast.error(
-        t("maxPartiesError", { max: MAX_SELECTABLE_PARTIES }),
-      );
+      toast.error(t("maxPartiesError", { max: MAX_SELECTABLE_PARTIES }));
       return;
     }
 

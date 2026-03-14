@@ -5,10 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-import { ArrowLeft, MessageCircle } from "lucide-react";
-
 import IconSidebar from "@components/layout/icon-sidebar";
-
+import { Badge } from "@components/ui/badge";
+import { Button } from "@components/ui/button";
+import { Separator } from "@components/ui/separator";
+import { trackCommuneDashboardView } from "@lib/firebase/analytics";
+import { toTitleCase } from "@lib/utils";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -17,12 +20,6 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from "recharts";
-
-import { trackCommuneDashboardView } from "@lib/firebase/analytics";
-import { toTitleCase } from "@lib/utils";
-import { Badge } from "@components/ui/badge";
-import { Button } from "@components/ui/button";
-import { Separator } from "@components/ui/separator";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -137,8 +134,7 @@ function buildRadarData(
   const programNorm = normalize(programRaw);
 
   return themes.map((t, i) => ({
-    theme:
-      t.theme,
+    theme: t.theme,
     citizen: citizenNorm[i],
     program: programNorm[i],
   }));
@@ -177,9 +173,7 @@ function alignmentScore(data: RadarEntry[]): number {
 function blindSpots(data: RadarEntry[], topN = 5): string[] {
   const sorted = [...data].sort((a, b) => b.citizen - a.citizen);
   const top = sorted.slice(0, topN);
-  return top
-    .filter(({ program }) => program < 30)
-    .map(({ theme }) => theme);
+  return top.filter(({ program }) => program < 30).map(({ theme }) => theme);
 }
 
 function scoreColor(score: number): string {
@@ -208,13 +202,16 @@ function StatCard({
   accentColor: string;
 }) {
   return (
-    <div className="bg-surface border border-border-subtle rounded-xl flex-1 min-w-0 overflow-hidden">
-      <div className="h-[3px] w-full" style={{ backgroundColor: accentColor }} />
+    <div className="bg-surface border-border-subtle min-w-0 flex-1 overflow-hidden rounded-xl border">
+      <div
+        className="h-[3px] w-full"
+        style={{ backgroundColor: accentColor }}
+      />
       <div className="p-4 pt-3">
-        <p className="text-3xl font-extrabold text-foreground leading-none">
+        <p className="text-foreground text-3xl leading-none font-extrabold">
           {value}
         </p>
-        <p className="mt-1 text-xs uppercase text-muted-foreground tracking-wider">
+        <p className="text-muted-foreground mt-1 text-xs tracking-wider uppercase">
           {label}
         </p>
       </div>
@@ -224,11 +221,11 @@ function StatCard({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+    <div className="mb-4 flex items-center gap-3">
+      <span className="text-muted-foreground text-xs font-semibold tracking-widest whitespace-nowrap uppercase">
         {children}
       </span>
-      <div className="flex-1 border-t border-border-subtle" />
+      <div className="border-border-subtle flex-1 border-t" />
     </div>
   );
 }
@@ -264,13 +261,13 @@ function ThermometerBar({
 
   return (
     <div className="flex items-center gap-3 py-1.5">
-      <span className="w-5 text-right text-xs font-bold text-muted-foreground shrink-0">
+      <span className="text-muted-foreground w-5 shrink-0 text-right text-xs font-bold">
         {rank}.
       </span>
-      <span className="w-40 text-sm text-foreground truncate shrink-0">
+      <span className="text-foreground w-40 shrink-0 truncate text-sm">
         {label}
       </span>
-      <div className="flex-1 h-5 bg-border-subtle/40 rounded-full overflow-hidden">
+      <div className="bg-border-subtle/40 h-5 flex-1 overflow-hidden rounded-full">
         <div
           ref={barRef}
           className="h-full rounded-full transition-[width] duration-700 ease-out"
@@ -282,10 +279,10 @@ function ThermometerBar({
           }}
         />
       </div>
-      <span className="w-20 text-right text-xs text-muted-foreground shrink-0">
+      <span className="text-muted-foreground w-20 shrink-0 text-right text-xs">
         {count} extraits
       </span>
-      <span className="w-12 text-right text-sm font-semibold text-foreground shrink-0">
+      <span className="text-foreground w-12 shrink-0 text-right text-sm font-semibold">
         {percentage.toFixed(1)}%
       </span>
     </div>
@@ -298,10 +295,10 @@ function LegendBar({ lists }: { lists: ListInfo[] }) {
       {lists.map((list, i) => (
         <div key={list.panel_number} className="flex items-center gap-2">
           <span
-            className="inline-block w-3 h-3 rounded-sm"
+            className="inline-block h-3 w-3 rounded-sm"
             style={{ backgroundColor: listColor(i) }}
           />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {toTitleCase(list.list_label || list.list_short_label)}
           </span>
         </div>
@@ -326,24 +323,24 @@ function RadarCard({
   const blind = blindSpots(radarData);
 
   return (
-    <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden flex flex-col">
+    <div className="bg-surface border-border-subtle flex flex-col overflow-hidden rounded-xl border">
       <div className="h-[3px] w-full" style={{ backgroundColor: color }} />
-      <div className="p-4 flex flex-col gap-3 flex-1">
+      <div className="flex flex-1 flex-col gap-3 p-4">
         <div>
-          <p className="font-bold text-foreground text-sm leading-tight">
+          <p className="text-foreground text-sm leading-tight font-bold">
             {headName}
           </p>
-          <p className="text-xs text-muted-foreground tracking-wider mt-0.5 truncate">
+          <p className="text-muted-foreground mt-0.5 truncate text-xs tracking-wider">
             {toTitleCase(list.list_label)}
           </p>
           {(list.website_url || list.manifesto_url) && (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               {list.website_url && (
                 <a
                   href={list.website_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-primary/80 hover:text-primary underline underline-offset-2 truncate max-w-[140px]"
+                  className="text-primary/80 hover:text-primary max-w-[140px] truncate text-[10px] underline underline-offset-2"
                 >
                   Site web
                 </a>
@@ -353,7 +350,7 @@ function RadarCard({
                   href={list.manifesto_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-primary/80 hover:text-primary underline underline-offset-2 truncate max-w-[140px]"
+                  className="text-primary/80 hover:text-primary max-w-[140px] truncate text-[10px] underline underline-offset-2"
                 >
                   Programme
                 </a>
@@ -362,9 +359,12 @@ function RadarCard({
           )}
         </div>
 
-        <div className="w-full aspect-square">
+        <div className="aspect-square w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={radarData} margin={{ top: 20, right: 35, bottom: 20, left: 35 }}>
+            <RadarChart
+              data={radarData}
+              margin={{ top: 20, right: 35, bottom: 20, left: 35 }}
+            >
               <PolarGrid stroke="#2E275A" />
               <PolarAngleAxis
                 dataKey="theme"
@@ -397,9 +397,9 @@ function RadarCard({
         </div>
 
         <div
-          className={`border rounded-lg px-3 py-2 flex items-center justify-between ${scoreBg(score)}`}
+          className={`flex items-center justify-between rounded-lg border px-3 py-2 ${scoreBg(score)}`}
         >
-          <span className="text-xs text-muted-foreground">Alignement</span>
+          <span className="text-muted-foreground text-xs">Alignement</span>
           <span className={`text-xl font-extrabold ${scoreColor(score)}`}>
             {score}%
           </span>
@@ -407,14 +407,14 @@ function RadarCard({
 
         {blind.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1.5">
+            <p className="text-muted-foreground mb-1.5 text-[10px] tracking-wider uppercase">
               Angles morts
             </p>
             <div className="flex flex-wrap gap-1">
               {blind.map((theme) => (
                 <span
                   key={theme}
-                  className="inline-block text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 rounded px-1.5 py-0.5"
+                  className="inline-block rounded border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400"
                 >
                   {theme}
                 </span>
@@ -437,8 +437,12 @@ function CitizenRadarSection({
   if (citizenThemes.length === 0) return null;
 
   const allThemes = taxonomyThemes.map((t) => t.theme);
-  const citizenMap = Object.fromEntries(citizenThemes.map((c) => [c.theme, c.count]));
-  const programMap = Object.fromEntries(taxonomyThemes.map((t) => [t.theme, t.total_count]));
+  const citizenMap = Object.fromEntries(
+    citizenThemes.map((c) => [c.theme, c.count]),
+  );
+  const programMap = Object.fromEntries(
+    taxonomyThemes.map((t) => [t.theme, t.total_count]),
+  );
 
   const citizenValues = allThemes.map((t) => citizenMap[t] ?? 0);
   const programValues = allThemes.map((t) => programMap[t] ?? 0);
@@ -454,23 +458,48 @@ function CitizenRadarSection({
   return (
     <section>
       <SectionLabel>Radar citoyen — Préoccupations vs programmes</SectionLabel>
-      <div className="bg-surface border border-border-subtle rounded-xl p-6">
-        <div className="flex items-center gap-6 mb-4">
+      <div className="bg-surface border-border-subtle rounded-xl border p-6">
+        <div className="mb-4 flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="inline-block w-8 h-0.5 bg-primary" />
-            <span className="text-xs text-muted-foreground">Questions citoyennes</span>
+            <span className="bg-primary inline-block h-0.5 w-8" />
+            <span className="text-muted-foreground text-xs">
+              Questions citoyennes
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#a1a1aa" strokeWidth="2" strokeDasharray="4 3" /></svg>
-            <span className="text-xs text-muted-foreground">Couverture des programmes</span>
+            <svg width="28" height="10">
+              <line
+                x1="0"
+                y1="5"
+                x2="28"
+                y2="5"
+                stroke="#a1a1aa"
+                strokeWidth="2"
+                strokeDasharray="4 3"
+              />
+            </svg>
+            <span className="text-muted-foreground text-xs">
+              Couverture des programmes
+            </span>
           </div>
         </div>
-        <div className="max-w-xl mx-auto aspect-square">
+        <div className="mx-auto aspect-square max-w-xl">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={data} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+            <RadarChart
+              data={data}
+              margin={{ top: 20, right: 40, bottom: 20, left: 40 }}
+            >
               <PolarGrid stroke="#2E275A" />
-              <PolarAngleAxis dataKey="theme" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+              <PolarAngleAxis
+                dataKey="theme"
+                tick={{ fill: "#a1a1aa", fontSize: 10 }}
+              />
+              <PolarRadiusAxis
+                angle={30}
+                domain={[0, 100]}
+                tick={false}
+                axisLine={false}
+              />
               <Radar
                 name="Programmes"
                 dataKey="program"
@@ -504,8 +533,12 @@ function BlindSpotsSection({
 }) {
   if (citizenThemes.length === 0 || taxonomyThemes.length === 0) return null;
 
-  const citizenMap = Object.fromEntries(citizenThemes.map((c) => [c.theme, c.percentage]));
-  const programMap = Object.fromEntries(taxonomyThemes.map((t) => [t.theme, t.percentage]));
+  const citizenMap = Object.fromEntries(
+    citizenThemes.map((c) => [c.theme, c.percentage]),
+  );
+  const programMap = Object.fromEntries(
+    taxonomyThemes.map((t) => [t.theme, t.percentage]),
+  );
 
   // Compute gap = citizen% - program% for each theme
   const allThemes = taxonomyThemes.map((t) => t.theme);
@@ -525,26 +558,29 @@ function BlindSpotsSection({
 
   return (
     <section>
-      <SectionLabel>Angles morts — Préoccupations citoyennes sous-couvertes</SectionLabel>
-      <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden">
-        <div className="px-5 pt-4 pb-2 border-b border-border-subtle">
-          <p className="font-semibold text-foreground text-sm">
+      <SectionLabel>
+        Angles morts — Préoccupations citoyennes sous-couvertes
+      </SectionLabel>
+      <div className="bg-surface border-border-subtle overflow-hidden rounded-xl border">
+        <div className="border-border-subtle border-b px-5 pt-4 pb-2">
+          <p className="text-foreground text-sm font-semibold">
             Écart entre questions citoyennes et couverture des programmes
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Thèmes où les citoyens posent proportionnellement plus de questions que ce que les programmes couvrent
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Thèmes où les citoyens posent proportionnellement plus de questions
+            que ce que les programmes couvrent
           </p>
         </div>
-        <div className="px-5 py-4 space-y-3">
+        <div className="space-y-3 px-5 py-4">
           {gaps.map((g) => (
             <div key={g.theme} className="flex items-center gap-3">
-              <span className="w-40 text-sm text-foreground truncate shrink-0 font-medium">
+              <span className="text-foreground w-40 shrink-0 truncate text-sm font-medium">
                 {g.theme}
               </span>
-              <div className="flex-1 flex flex-col gap-1">
+              <div className="flex flex-1 flex-col gap-1">
                 {/* Citizen bar */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-3 bg-border-subtle/40 rounded-full overflow-hidden">
+                  <div className="bg-border-subtle/40 h-3 flex-1 overflow-hidden rounded-full">
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -553,13 +589,13 @@ function BlindSpotsSection({
                       }}
                     />
                   </div>
-                  <span className="w-14 text-right text-xs text-muted-foreground shrink-0">
+                  <span className="text-muted-foreground w-14 shrink-0 text-right text-xs">
                     {g.citizenPct.toFixed(1)}%
                   </span>
                 </div>
                 {/* Program bar */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-3 bg-border-subtle/40 rounded-full overflow-hidden">
+                  <div className="bg-border-subtle/40 h-3 flex-1 overflow-hidden rounded-full">
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -568,7 +604,7 @@ function BlindSpotsSection({
                       }}
                     />
                   </div>
-                  <span className="w-14 text-right text-xs text-muted-foreground shrink-0">
+                  <span className="text-muted-foreground w-14 shrink-0 text-right text-xs">
                     {g.programPct.toFixed(1)}%
                   </span>
                 </div>
@@ -585,17 +621,25 @@ function BlindSpotsSection({
             </div>
           ))}
         </div>
-        <div className="px-5 pb-4 flex items-center gap-6 text-[11px] text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-6 px-5 pb-4 text-[11px]">
           <div className="flex items-center gap-2">
-            <span className="inline-block w-5 h-2 rounded-full" style={{ background: "#381AF3" }} />
+            <span
+              className="inline-block h-2 w-5 rounded-full"
+              style={{ background: "#381AF3" }}
+            />
             Questions citoyennes
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-block w-5 h-2 rounded-full" style={{ background: "#a1a1aa" }} />
+            <span
+              className="inline-block h-2 w-5 rounded-full"
+              style={{ background: "#a1a1aa" }}
+            />
             Couverture programmes
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-block w-5 h-3 rounded bg-red-500/60 px-1 text-[10px] font-bold text-white leading-none flex items-center">+</span>
+            <span className="flex inline-block h-3 w-5 items-center rounded bg-red-500/60 px-1 text-[10px] leading-none font-bold text-white">
+              +
+            </span>
             Écart (points de %)
           </div>
         </div>
@@ -615,11 +659,16 @@ function CombinedRadarSection({
 
   return (
     <section>
-      <SectionLabel>Vue d&apos;ensemble — Couverture thématique comparée</SectionLabel>
-      <div className="bg-surface border border-border-subtle rounded-xl p-6">
-        <div className="max-w-2xl mx-auto aspect-square">
+      <SectionLabel>
+        Vue d&apos;ensemble — Couverture thématique comparée
+      </SectionLabel>
+      <div className="bg-surface border-border-subtle rounded-xl border p-6">
+        <div className="mx-auto aspect-square max-w-2xl">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={data} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+            <RadarChart
+              data={data}
+              margin={{ top: 20, right: 40, bottom: 20, left: 40 }}
+            >
               <PolarGrid stroke="#2E275A" />
               <PolarAngleAxis
                 dataKey="theme"
@@ -684,9 +733,7 @@ export default function CommuneDashboardPage() {
         setLoading(false);
       })
       .catch((err: unknown) => {
-        setError(
-          err instanceof Error ? err.message : "Erreur inconnue",
-        );
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
         setLoading(false);
       });
   };
@@ -709,11 +756,11 @@ export default function CommuneDashboardPage() {
   // ---- Loading state -------------------------------------------------------
   if (loading) {
     return (
-      <div className="flex h-screen bg-background">
+      <div className="bg-background flex h-screen">
         <IconSidebar />
-        <div className="flex-1 overflow-y-auto flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4 text-muted-foreground">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-1 items-center justify-center overflow-y-auto">
+          <div className="text-muted-foreground flex flex-col items-center gap-4">
+            <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
             <p className="text-sm">Chargement du tableau de bord…</p>
           </div>
         </div>
@@ -724,14 +771,14 @@ export default function CommuneDashboardPage() {
   // ---- Error state ---------------------------------------------------------
   if (error || !data) {
     return (
-      <div className="flex h-screen bg-background">
+      <div className="bg-background flex h-screen">
         <IconSidebar />
-        <div className="flex-1 overflow-y-auto flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+        <div className="flex flex-1 items-center justify-center overflow-y-auto">
+          <div className="flex max-w-sm flex-col items-center gap-4 text-center">
             <p className="text-destructive font-semibold">
               {error ?? "Données introuvables"}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Impossible de charger le tableau de bord pour la commune{" "}
               <span className="font-mono">{communeCode}</span>.
             </p>
@@ -747,180 +794,202 @@ export default function CommuneDashboardPage() {
   const { commune, stats, taxonomy, citizen } = data;
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="bg-background text-foreground flex h-screen">
       <IconSidebar />
       <div className="flex-1 overflow-y-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
-        {/* Back arrow */}
-        <button
-          type="button"
-          onClick={handleClose}
-          className="shrink-0 rounded-lg bg-border-subtle/40 p-2 text-muted-foreground hover:text-foreground hover:bg-border-subtle transition-colors mb-4"
-          title="Retour"
-        >
-          <ArrowLeft className="size-5" />
-        </button>
-
-        {/* Commune name & info */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-          <div>
-            <Badge className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 mb-1">
-              Commune
-            </Badge>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {commune.name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
-              {commune.postal_code && (
-                <span>CP {commune.postal_code}</span>
-              )}
-              <span>INSEE {commune.code}</span>
-              {commune.epci_nom && (
-                <>
-                  <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
-                  <span className="truncate max-w-[18rem]">{commune.epci_nom}</span>
-                </>
-              )}
-              <Separator orientation="vertical" className="h-3 bg-border-subtle hidden sm:block" />
-              <span>
-                {commune.list_count} liste{commune.list_count !== 1 ? "s" : ""}
-              </span>
-              <span>·</span>
-              <span>
-                {stats.total_questions} question{stats.total_questions !== 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-          <Link
-            href={`/chat?municipality_code=${commune.code}`}
-            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+        <div className="mx-auto max-w-7xl px-4 pt-5 pb-2 sm:px-6">
+          {/* Back arrow */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="bg-border-subtle/40 text-muted-foreground hover:text-foreground hover:bg-border-subtle mb-4 shrink-0 rounded-lg p-2 transition-colors"
+            title="Retour"
           >
-            <MessageCircle className="size-4" />
-            Poser une question
-          </Link>
-        </div>
-      </div>
+            <ArrowLeft className="size-5" />
+          </button>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
-        {/* ---------------------------------------------------------------- */}
-        {/* Stats row                                                         */}
-        {/* ---------------------------------------------------------------- */}
-        <div className="flex gap-3 flex-wrap sm:flex-nowrap">
-          <StatCard
-            value={stats.total_questions}
-            label="Questions citoyennes"
-            accentColor="#7C3AED"
-          />
-          <StatCard
-            value={stats.total_lists}
-            label="Listes en compétition"
-            accentColor="#A78BFA"
-          />
-          <StatCard
-            value={stats.themes_detected}
-            label="Thèmes détectés"
-            accentColor="#818CF8"
-          />
-          <StatCard
-            value={stats.total_chunks}
-            label="Extraits de programme"
-            accentColor="#94A3B8"
-          />
-        </div>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Thermometre citoyen                                               */}
-        {/* ---------------------------------------------------------------- */}
-        <section>
-          <SectionLabel>Couverture thématique — Répartition des programmes</SectionLabel>
-
-          {taxonomy.themes.length === 0 ? (
-            <div className="bg-surface border border-border-subtle rounded-xl p-6 text-center text-muted-foreground text-sm">
-              Pas assez de données pour l&apos;analyse thématique
-            </div>
-          ) : (
-            <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden">
-              <div className="px-5 pt-4 pb-2 border-b border-border-subtle flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-foreground text-sm">
-                    Thèmes les plus couverts dans les programmes
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Classification fixe · {stats.total_chunks} extraits analysés · {taxonomy.themes.length} thèmes
-                  </p>
-                </div>
-              </div>
-              <div className="px-5 py-4 space-y-1">
-                {(() => {
-                  const maxPct = taxonomy.themes[0]?.percentage ?? 1;
-                  return taxonomy.themes.map((theme, i) => (
-                    <ThermometerBar
-                      key={theme.theme}
-                      rank={i + 1}
-                      label={theme.theme}
-                      count={theme.total_count}
-                      percentage={theme.percentage}
-                      barWidth={(theme.percentage / maxPct) * 100}
-                      isTop3={i < 3}
+          {/* Commune name & info */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Badge className="bg-primary/20 text-primary border-primary/30 mb-1 border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
+                Commune
+              </Badge>
+              <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                {commune.name}
+              </h1>
+              <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                {commune.postal_code && <span>CP {commune.postal_code}</span>}
+                <span>INSEE {commune.code}</span>
+                {commune.epci_nom && (
+                  <>
+                    <Separator
+                      orientation="vertical"
+                      className="bg-border-subtle hidden h-3 sm:block"
                     />
-                  ));
-                })()}
+                    <span className="max-w-[18rem] truncate">
+                      {commune.epci_nom}
+                    </span>
+                  </>
+                )}
+                <Separator
+                  orientation="vertical"
+                  className="bg-border-subtle hidden h-3 sm:block"
+                />
+                <span>
+                  {commune.list_count} liste
+                  {commune.list_count !== 1 ? "s" : ""}
+                </span>
+                <span>·</span>
+                <span>
+                  {stats.total_questions} question
+                  {stats.total_questions !== 1 ? "s" : ""}
+                </span>
               </div>
             </div>
-          )}
-        </section>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Legend                                                            */}
-        {/* ---------------------------------------------------------------- */}
-        {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
-          <div className="bg-surface border border-border-subtle rounded-xl px-5 py-3">
-            <LegendBar lists={commune.lists} />
+            <Link
+              href={`/chat?municipality_code=${commune.code}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+            >
+              <MessageCircle className="size-4" />
+              Poser une question
+            </Link>
           </div>
-        )}
+        </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Citizen radar                                                     */}
-        {/* ---------------------------------------------------------------- */}
-        {citizen && citizen.themes.length > 0 && taxonomy.themes.length > 0 && (
-          <CitizenRadarSection citizenThemes={citizen.themes} taxonomyThemes={taxonomy.themes} />
-        )}
+        <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6">
+          {/* ---------------------------------------------------------------- */}
+          {/* Stats row                                                         */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="flex flex-wrap gap-3 sm:flex-nowrap">
+            <StatCard
+              value={stats.total_questions}
+              label="Questions citoyennes"
+              accentColor="#7C3AED"
+            />
+            <StatCard
+              value={stats.total_lists}
+              label="Listes en compétition"
+              accentColor="#A78BFA"
+            />
+            <StatCard
+              value={stats.themes_detected}
+              label="Thèmes détectés"
+              accentColor="#818CF8"
+            />
+            <StatCard
+              value={stats.total_chunks}
+              label="Extraits de programme"
+              accentColor="#94A3B8"
+            />
+          </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Blind spots                                                       */}
-        {/* ---------------------------------------------------------------- */}
-        {citizen && citizen.themes.length > 0 && taxonomy.themes.length > 0 && (
-          <BlindSpotsSection citizenThemes={citizen.themes} taxonomyThemes={taxonomy.themes} />
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Combined radar                                                    */}
-        {/* ---------------------------------------------------------------- */}
-        {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
-          <CombinedRadarSection themes={taxonomy.themes} lists={commune.lists} />
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Radar grid                                                        */}
-        {/* ---------------------------------------------------------------- */}
-        {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
+          {/* ---------------------------------------------------------------- */}
+          {/* Thermometre citoyen                                               */}
+          {/* ---------------------------------------------------------------- */}
           <section>
             <SectionLabel>
-              Couverture thématique par liste
+              Couverture thématique — Répartition des programmes
             </SectionLabel>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {commune.lists.map((list, i) => (
-                <RadarCard
-                  key={list.panel_number}
-                  list={list}
-                  listIndex={i}
-                  themes={taxonomy.themes}
-                />
-              ))}
-            </div>
+
+            {taxonomy.themes.length === 0 ? (
+              <div className="bg-surface border-border-subtle text-muted-foreground rounded-xl border p-6 text-center text-sm">
+                Pas assez de données pour l&apos;analyse thématique
+              </div>
+            ) : (
+              <div className="bg-surface border-border-subtle overflow-hidden rounded-xl border">
+                <div className="border-border-subtle flex items-start justify-between gap-2 border-b px-5 pt-4 pb-2">
+                  <div>
+                    <p className="text-foreground text-sm font-semibold">
+                      Thèmes les plus couverts dans les programmes
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      Classification fixe · {stats.total_chunks} extraits
+                      analysés · {taxonomy.themes.length} thèmes
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-1 px-5 py-4">
+                  {(() => {
+                    const maxPct = taxonomy.themes[0]?.percentage ?? 1;
+                    return taxonomy.themes.map((theme, i) => (
+                      <ThermometerBar
+                        key={theme.theme}
+                        rank={i + 1}
+                        label={theme.theme}
+                        count={theme.total_count}
+                        percentage={theme.percentage}
+                        barWidth={(theme.percentage / maxPct) * 100}
+                        isTop3={i < 3}
+                      />
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
           </section>
-        )}
-      </div>
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Legend                                                            */}
+          {/* ---------------------------------------------------------------- */}
+          {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
+            <div className="bg-surface border-border-subtle rounded-xl border px-5 py-3">
+              <LegendBar lists={commune.lists} />
+            </div>
+          )}
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Citizen radar                                                     */}
+          {/* ---------------------------------------------------------------- */}
+          {citizen &&
+            citizen.themes.length > 0 &&
+            taxonomy.themes.length > 0 && (
+              <CitizenRadarSection
+                citizenThemes={citizen.themes}
+                taxonomyThemes={taxonomy.themes}
+              />
+            )}
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Blind spots                                                       */}
+          {/* ---------------------------------------------------------------- */}
+          {citizen &&
+            citizen.themes.length > 0 &&
+            taxonomy.themes.length > 0 && (
+              <BlindSpotsSection
+                citizenThemes={citizen.themes}
+                taxonomyThemes={taxonomy.themes}
+              />
+            )}
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Combined radar                                                    */}
+          {/* ---------------------------------------------------------------- */}
+          {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
+            <CombinedRadarSection
+              themes={taxonomy.themes}
+              lists={commune.lists}
+            />
+          )}
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Radar grid                                                        */}
+          {/* ---------------------------------------------------------------- */}
+          {taxonomy.themes.length > 0 && commune.lists.length > 0 && (
+            <section>
+              <SectionLabel>Couverture thématique par liste</SectionLabel>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {commune.lists.map((list, i) => (
+                  <RadarCard
+                    key={list.panel_number}
+                    list={list}
+                    listIndex={i}
+                    themes={taxonomy.themes}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -27,16 +27,16 @@ function ChatSingleMessageActions({
   partyId,
   candidateId,
 }: Props) {
-  const isLoadingProConPerspective = useChatStore(
+  const _isLoadingProConPerspective = useChatStore(
     (state) => state.loading.proConPerspective === message.id,
   );
-  const isLoadingVotingBehaviorSummary = useChatStore(
+  const _isLoadingVotingBehaviorSummary = useChatStore(
     (state) => state.loading.votingBehaviorSummary === message.id,
   );
 
   if (!showMessageActions) return null;
 
-  const isAssistantMessage = partyId === ASSISTANT_ID;
+  const _isAssistantMessage = partyId === ASSISTANT_ID;
 
   // TODO: Re-enable when pro/con evaluation feature is ready
   // const showProConButton =

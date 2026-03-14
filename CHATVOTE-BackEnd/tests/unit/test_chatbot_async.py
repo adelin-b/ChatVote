@@ -93,12 +93,12 @@ from src.models.general import LLM, LLMSize  # noqa: E402
 from src.models.party import Party  # noqa: E402
 from src.models.candidate import Candidate  # noqa: E402
 from src.models.assistant import ASSISTANT_ID, CHATVOTE_ASSISTANT  # noqa: E402
-from src.models.vote import (
+from src.models.vote import (  # noqa: E402
     Vote,
     VotingResults,
     VotingResultsOverall,
     VotingResultsByParty,
-)  # noqa: E402
+)
 from src.models.chat import Message, Role  # noqa: E402
 from src.models.structured_outputs import (  # noqa: E402
     RerankingOutput,

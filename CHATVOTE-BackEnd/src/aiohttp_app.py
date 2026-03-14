@@ -389,7 +389,6 @@ async def admin_migrate_manifesto_namespaces(request):
 
     # --- Step 2: Invalidate namespace cache ---
     if not dry_run:
-        from src.vector_store_helper import _manifesto_namespaces
         import src.vector_store_helper as _vsh
         _vsh._manifesto_namespaces = None
         report["cache_invalidated"] = True

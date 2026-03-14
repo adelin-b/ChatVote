@@ -1,15 +1,25 @@
 "use client";
 
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+
 import dynamic from "next/dynamic";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_SOCKET_URL ||
   "http://localhost:8080";
 
-const TABS = ["overview", "pipeline", "coverage", "charts", "chats", "multi-query", "consistency", "crawler"] as const;
+const TABS = [
+  "overview",
+  "pipeline",
+  "coverage",
+  "charts",
+  "chats",
+  "multi-query",
+  "consistency",
+  "crawler",
+] as const;
 type TabId = (typeof TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
@@ -61,7 +71,9 @@ export default function AdminDashboard() {
   const initialTab: TabId =
     rawTab && TABS.includes(rawTab) ? rawTab : "overview";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-  const [activatedTabs, setActivatedTabs] = useState<Set<TabId>>(new Set([initialTab]));
+  const [activatedTabs, setActivatedTabs] = useState<Set<TabId>>(
+    new Set([initialTab]),
+  );
   const [warningCounts, setWarningCounts] = useState({
     critical: 0,
     warning: 0,
@@ -69,7 +81,9 @@ export default function AdminDashboard() {
   });
   const [timeRange, setTimeRange] = useState(24); // hours
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean | null>(null);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean | null>(
+    null,
+  );
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   // Validate secret on mount
@@ -87,20 +101,30 @@ export default function AdminDashboard() {
       headers: { "X-Admin-Secret": secret },
     })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data) setMaintenanceEnabled(Boolean(data.enabled)); })
+      .then((data) => {
+        if (data) setMaintenanceEnabled(Boolean(data.enabled));
+      })
       .catch(() => {});
   }, [secret]);
 
   const toggleMaintenance = useCallback(async () => {
     const next = !maintenanceEnabled;
-    if (next && !window.confirm("Activer le mode maintenance ? Les utilisateurs verront une page de maintenance.")) {
+    if (
+      next &&
+      !window.confirm(
+        "Activer le mode maintenance ? Les utilisateurs verront une page de maintenance.",
+      )
+    ) {
       return;
     }
     setMaintenanceLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/v1/admin/maintenance`, {
         method: "PUT",
-        headers: { "X-Admin-Secret": secret, "Content-Type": "application/json" },
+        headers: {
+          "X-Admin-Secret": secret,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ enabled: next, message: "" }),
       });
       if (res.ok) {
@@ -131,25 +155,28 @@ export default function AdminDashboard() {
 
   if (authorized === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground text-sm">Loading...</div>
       </div>
     );
   }
 
   if (!authorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-sm text-red-500">Unauthorized</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-auto" style={{ height: "100vh" }}>
+    <div
+      className="bg-background min-h-screen overflow-auto"
+      style={{ height: "100vh" }}
+    >
       {/* Header */}
-      <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Admin Dashboard</h1>
+      <div className="bg-card flex items-center justify-between border-b px-6 py-4">
+        <h1 className="text-foreground text-xl font-bold">Admin Dashboard</h1>
         <div className="flex items-center gap-4">
           {/* Maintenance toggle */}
           {maintenanceEnabled !== null && (
@@ -157,7 +184,11 @@ export default function AdminDashboard() {
               type="button"
               onClick={toggleMaintenance}
               disabled={maintenanceLoading}
-              title={maintenanceEnabled ? "Désactiver la maintenance" : "Activer la maintenance"}
+              title={
+                maintenanceEnabled
+                  ? "Désactiver la maintenance"
+                  : "Activer la maintenance"
+              }
               className={`flex items-center gap-2 rounded border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
                 maintenanceEnabled
                   ? "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
@@ -175,7 +206,7 @@ export default function AdminDashboard() {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
-            className="rounded border border-border-subtle px-3 py-1.5 text-sm bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="border-border-subtle bg-card text-foreground focus:ring-ring rounded border px-3 py-1.5 text-sm focus:ring-1 focus:outline-none"
           >
             <option value={1}>Last 1h</option>
             <option value={24}>Last 24h</option>
@@ -187,16 +218,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tab bar */}
-      <div className="border-b bg-card px-6 flex gap-0">
+      <div className="bg-card flex gap-0 border-b px-6">
         {TABS.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => switchTab(tab)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === tab
                 ? "border-blue-600 text-blue-400"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground border-transparent"
             }`}
           >
             {TAB_LABELS[tab]}
@@ -213,7 +244,7 @@ export default function AdminDashboard() {
       <div className="p-6">
         <Suspense
           fallback={
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center text-sm">
               Loading...
             </div>
           }
@@ -230,7 +261,11 @@ export default function AdminDashboard() {
           )}
           {activatedTabs.has("pipeline") && (
             <div className={activeTab !== "pipeline" ? "hidden" : undefined}>
-              <PipelineTab secret={secret} apiUrl={API_URL} active={activeTab === "pipeline"} />
+              <PipelineTab
+                secret={secret}
+                apiUrl={API_URL}
+                active={activeTab === "pipeline"}
+              />
             </div>
           )}
           {activatedTabs.has("coverage") && (
@@ -265,7 +300,11 @@ export default function AdminDashboard() {
           )}
           {activatedTabs.has("crawler") && (
             <div className={activeTab !== "crawler" ? "hidden" : undefined}>
-              <CrawlerTab secret={secret} apiUrl={API_URL} active={activeTab === "crawler"} />
+              <CrawlerTab
+                secret={secret}
+                apiUrl={API_URL}
+                active={activeTab === "crawler"}
+              />
             </div>
           )}
         </Suspense>

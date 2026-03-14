@@ -37,7 +37,8 @@ export const hydrateChatSession: ChatStoreActionHandlerFor<
     const hasActiveSession =
       currentChatId !== undefined && get().messages.length > 0;
     const changedPage =
-      (chatId !== currentChatId && !(chatId === undefined && hasActiveSession)) ||
+      (chatId !== currentChatId &&
+        !(chatId === undefined && hasActiveSession)) ||
       !areSetsEqual(partyIds, currentPartyIds);
 
     // Determine scope based on municipality code presence

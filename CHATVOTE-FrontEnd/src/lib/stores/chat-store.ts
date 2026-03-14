@@ -22,10 +22,6 @@ import { mergeStreamingChunkPayloadForMessage } from "./actions/merge-streaming-
 import { newChat } from "./actions/new-chat";
 import { resetStreamingMessage } from "./actions/reset-streaming-message";
 import { selectRespondingParties } from "./actions/select-responding-parties";
-import {
-  loadUserDemographics,
-  setUserDemographic,
-} from "./actions/user-demographics";
 import { setChatId } from "./actions/set-chat-id";
 import { setChatSessionIsPublic } from "./actions/set-chat-session-is-public";
 import { setInput } from "./actions/set-input";
@@ -39,6 +35,10 @@ import { setSocketError } from "./actions/set-socket-error";
 import { startTimeoutForStreamingMessages } from "./actions/start-timeout-for-streaming-messages";
 import { streamingMessageSourcesReady } from "./actions/streaming-message-sources-ready";
 import { updateQuickRepliesAndTitleForCurrentStreamingMessage } from "./actions/update-quick-replies-and-title-for-current-streaming-message";
+import {
+  loadUserDemographics,
+  setUserDemographic,
+} from "./actions/user-demographics";
 import { type ChatStore, type ChatStoreState } from "./chat-store.types";
 
 export const SURVEY_BANNER_MIN_MESSAGE_COUNT = 8;
@@ -131,8 +131,7 @@ export function createChatStore(initialState?: Partial<ChatStore>) {
         setPartyIds: setPartyIds(get, set),
         setSelectedElectoralLists: (panelNumbers: number[]) =>
           set({ selectedElectoralLists: panelNumbers }),
-        setElectoralListsData: (lists) =>
-          set({ electoralListsData: lists }),
+        setElectoralListsData: (lists) => set({ electoralListsData: lists }),
         toggleElectoralList: (panelNumber: number) =>
           set((state) => {
             const idx = state.selectedElectoralLists.indexOf(panelNumber);

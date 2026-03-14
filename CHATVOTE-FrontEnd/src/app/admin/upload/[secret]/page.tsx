@@ -1,18 +1,25 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  type DragEvent,
   type ChangeEvent,
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 
-import { UploadCloud, FileText, RefreshCw, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useParams } from "next/navigation";
 
 import { Button } from "@components/ui/button";
+import {
+  CheckCircle2,
+  FileText,
+  Loader2,
+  RefreshCw,
+  UploadCloud,
+  XCircle,
+} from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,7 +41,12 @@ interface JobStatus {
   filename: string;
   status: JobStage;
   progress: number;
-  assigned_to?: { target_name: string; target_id: string; target_type: string; confidence: number } | null;
+  assigned_to?: {
+    target_name: string;
+    target_id: string;
+    target_type: string;
+    confidence: number;
+  } | null;
   collection?: string;
   chunks_indexed?: number;
   error?: string;
@@ -49,10 +61,7 @@ const API_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL ||
   "http://localhost:8080";
 
-const ACCEPTED_TYPES = [
-  "application/pdf",
-  "text/plain",
-];
+const ACCEPTED_TYPES = ["application/pdf", "text/plain"];
 const ACCEPTED_EXTENSIONS = [".pdf", ".txt"];
 
 const POLL_INTERVAL_MS = 2000;
@@ -166,7 +175,9 @@ export default function AdminUploadPage() {
     async (files: File[]) => {
       const valid = files.filter(isValidFile);
       if (valid.length === 0) {
-        setUploadError("No valid files selected. Only PDF and TXT are accepted.");
+        setUploadError(
+          "No valid files selected. Only PDF and TXT are accepted.",
+        );
         return;
       }
 
@@ -289,7 +300,7 @@ export default function AdminUploadPage() {
 
   if (notFound) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="bg-background flex h-screen items-center justify-center">
         <p className="text-muted-foreground text-lg">Page not found.</p>
       </div>
     );
@@ -304,12 +315,12 @@ export default function AdminUploadPage() {
       {/* noindex */}
       <meta name="robots" content="noindex, nofollow" />
 
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
-        <div className="mx-auto w-full max-w-3xl px-4 py-10 space-y-8">
+      <div className="bg-background text-foreground flex min-h-screen flex-col">
+        <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-10">
           {/* Header */}
           <div>
             <h1 className="text-2xl font-bold">Document Upload</h1>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-muted-foreground mt-1 text-sm">
               Admin &mdash; drag &amp; drop PDF or TXT files to index into the
               RAG vector store.
             </p>
@@ -322,32 +333,30 @@ export default function AdminUploadPage() {
             onDragOver={onDragOver}
             onDrop={onDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`
-              flex cursor-pointer flex-col items-center justify-center gap-3
-              rounded-xl border-2 border-dashed p-12 transition-colors
-              ${
-                isDragging
-                  ? "border-primary bg-primary/5"
-                  : "border-border-subtle hover:border-primary/50 hover:bg-surface/50"
-              }
-            `}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-12 transition-colors ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-border-subtle hover:border-primary/50 hover:bg-surface/50"
+            } `}
           >
             <UploadCloud
               className={`size-10 ${isDragging ? "text-primary" : "text-muted-foreground"}`}
             />
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-muted-foreground text-center text-sm">
               {isDragging ? (
-                <span className="font-semibold text-primary">Drop files here</span>
+                <span className="text-primary font-semibold">
+                  Drop files here
+                </span>
               ) : (
                 <>
                   Drop files here or{" "}
-                  <span className="font-semibold text-primary underline underline-offset-2">
+                  <span className="text-primary font-semibold underline underline-offset-2">
                     click to browse
                   </span>
                 </>
               )}
             </p>
-            <p className="text-xs text-muted-foreground/70">PDF, TXT</p>
+            <p className="text-muted-foreground/70 text-xs">PDF, TXT</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -360,14 +369,14 @@ export default function AdminUploadPage() {
 
           {/* Upload error */}
           {uploadError && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm">
               {uploadError}
             </div>
           )}
 
           {/* Uploading spinner */}
           {isUploading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Loader2 className="size-4 animate-spin" />
               Uploading files...
             </div>
@@ -378,15 +387,15 @@ export default function AdminUploadPage() {
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">Upload Queue</h2>
 
-              <div className="overflow-hidden rounded-xl border border-border-subtle">
+              <div className="border-border-subtle overflow-hidden rounded-xl border">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border-subtle bg-surface text-left text-xs uppercase text-muted-foreground tracking-wider">
+                    <tr className="border-border-subtle bg-surface text-muted-foreground border-b text-left text-xs tracking-wider uppercase">
                       <th className="px-4 py-2.5">File</th>
                       <th className="px-4 py-2.5">Assigned To</th>
                       <th className="px-4 py-2.5">Status</th>
                       <th className="px-4 py-2.5 text-right">Chunks</th>
-                      <th className="px-4 py-2.5 w-10" />
+                      <th className="w-10 px-4 py-2.5" />
                     </tr>
                   </thead>
                   <tbody>
@@ -413,30 +422,33 @@ export default function AdminUploadPage() {
 // ---------------------------------------------------------------------------
 
 function JobRow({ job, onRetry }: { job: JobStatus; onRetry: () => void }) {
-  const progress = job.status === "error" ? 0 : (job.progress ?? stageProgress(job.status));
+  const progress =
+    job.status === "error" ? 0 : (job.progress ?? stageProgress(job.status));
   const isDone = job.status === "done";
   const isError = job.status === "error";
 
   return (
-    <tr className="border-b border-border-subtle last:border-b-0">
+    <tr className="border-border-subtle border-b last:border-b-0">
       {/* Filename */}
       <td className="px-4 py-3 font-medium">
         <div className="flex items-center gap-2">
-          <FileText className="size-4 shrink-0 text-muted-foreground" />
-          <span className="truncate max-w-[180px]" title={job.filename}>
+          <FileText className="text-muted-foreground size-4 shrink-0" />
+          <span className="max-w-[180px] truncate" title={job.filename}>
             {job.filename}
           </span>
         </div>
       </td>
 
       {/* Assigned to */}
-      <td className="px-4 py-3 text-muted-foreground">
+      <td className="text-muted-foreground px-4 py-3">
         {job.assigned_to ? (
-          <span title={`${job.assigned_to.target_type}: ${job.assigned_to.target_id} (${Math.round(job.assigned_to.confidence * 100)}%)`}>
+          <span
+            title={`${job.assigned_to.target_type}: ${job.assigned_to.target_id} (${Math.round(job.assigned_to.confidence * 100)}%)`}
+          >
             {job.assigned_to.target_name}
           </span>
         ) : (
-          <span className="italic text-muted-foreground/50">detecting...</span>
+          <span className="text-muted-foreground/50 italic">detecting...</span>
         )}
       </td>
 
@@ -445,9 +457,9 @@ function JobRow({ job, onRetry }: { job: JobStatus; onRetry: () => void }) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1.5 text-xs">
             {isDone && <CheckCircle2 className="size-3.5 text-green-500" />}
-            {isError && <XCircle className="size-3.5 text-destructive" />}
+            {isError && <XCircle className="text-destructive size-3.5" />}
             {!isDone && !isError && (
-              <Loader2 className="size-3.5 animate-spin text-primary" />
+              <Loader2 className="text-primary size-3.5 animate-spin" />
             )}
             <span
               className={
@@ -464,9 +476,9 @@ function JobRow({ job, onRetry }: { job: JobStatus; onRetry: () => void }) {
 
           {/* Progress bar */}
           {!isDone && !isError && (
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-border-subtle">
+            <div className="bg-border-subtle h-1.5 w-full overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
+                className="bg-primary h-full rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -480,7 +492,7 @@ function JobRow({ job, onRetry }: { job: JobStatus; onRetry: () => void }) {
       </td>
 
       {/* Chunks indexed */}
-      <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+      <td className="text-muted-foreground px-4 py-3 text-right tabular-nums">
         {job.chunks_indexed != null ? job.chunks_indexed : "-"}
       </td>
 

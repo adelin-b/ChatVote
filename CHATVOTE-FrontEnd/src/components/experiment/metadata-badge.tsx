@@ -4,10 +4,23 @@ import { Badge } from "@components/ui/badge";
 import { cn } from "@lib/utils";
 
 const FIABILITE_CONFIG: Record<number, { label: string; color: string }> = {
-  1: { label: "Government", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
-  2: { label: "Official", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
-  3: { label: "Press", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
-  4: { label: "Social Media", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+  1: {
+    label: "Government",
+    color:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  },
+  2: {
+    label: "Official",
+    color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  },
+  3: {
+    label: "Press",
+    color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  },
+  4: {
+    label: "Social Media",
+    color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  },
 };
 
 export function FiabiliteBadge({ level }: { level?: number }) {

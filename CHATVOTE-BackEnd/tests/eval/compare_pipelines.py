@@ -13,12 +13,9 @@ Usage:
     python -m tests.eval.compare_pipelines
 """
 
-import io
-import os
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any
 
 # ---------------------------------------------------------------------------
 # Setup: ensure project root is on sys.path and mock heavy imports
@@ -27,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Mock Firebase and Qdrant before importing any src modules
-import unittest.mock as _mock
+import unittest.mock as _mock  # noqa: E402
 
 # Lightweight stubs so src.firebase_service and src.vector_store_helper
 # can be imported without real connections.
@@ -59,25 +56,23 @@ sys.modules.setdefault("qdrant_client", _mock.MagicMock())
 sys.modules.setdefault("qdrant_client.models", _qdrant_models)
 
 # Now safe to import src modules
-from src.models.party import Party
-from src.models.candidate import Candidate
-from src.models.chunk_metadata import ChunkMetadata, Fiabilite
+from src.models.party import Party  # noqa: E402
+from src.models.candidate import Candidate  # noqa: E402
+from src.models.chunk_metadata import Fiabilite  # noqa: E402
 
 # Legacy modules
-from src.services.manifesto_indexer import (
+from src.services.manifesto_indexer import (  # noqa: E402
     create_documents_from_pages as legacy_create_docs_from_pages,
     extract_pages_from_pdf as legacy_extract_pages,
-    text_splitter as legacy_text_splitter,
     CHUNK_SIZE as LEGACY_CHUNK_SIZE,
     CHUNK_OVERLAP as LEGACY_CHUNK_OVERLAP,
 )
-from src.services.candidate_indexer import (
+from src.services.candidate_indexer import (  # noqa: E402
     create_documents_from_scraped_website as legacy_create_docs_from_website,
-    text_splitter as legacy_candidate_splitter,
 )
 
 # New unified modules
-from src.services.chunking import (
+from src.services.chunking import (  # noqa: E402
     create_documents_from_pages as new_create_docs_from_pages,
     create_documents_from_text as new_create_docs_from_text,
     text_splitter as new_text_splitter,
@@ -85,11 +80,11 @@ from src.services.chunking import (
     CHUNK_OVERLAP as NEW_CHUNK_OVERLAP,
     MIN_CHUNK_LENGTH,
 )
-from src.services.pdf_extract import (
+from src.services.pdf_extract import (  # noqa: E402
     extract_pages as new_extract_pages,
     extract_text as new_extract_text,
 )
-from src.services.theme_classifier import classify_theme, ThemeResult
+from src.services.theme_classifier import classify_theme  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +372,7 @@ def compare_metadata():
     new_cand_docs = new_create_docs_from_text(
         text,
         namespace=candidate.candidate_id,
-        source_document=f"candidate_website_html",
+        source_document="candidate_website_html",
         party_ids=candidate.party_ids or [],
         candidate_ids=[candidate.candidate_id],
         candidate_name=candidate.full_name,
@@ -444,7 +439,7 @@ def compare_theme_classification():
 
     coverage_pct = classified_count / len(all_chunks) * 100 if all_chunks else 0
     print(f"  Keyword classifier coverage: {classified_count}/{len(all_chunks)} ({coverage_pct:.1f}%)")
-    print(f"\n  Theme distribution:")
+    print("\n  Theme distribution:")
     for theme, count in sorted(theme_distribution.items(), key=lambda x: -x[1]):
         print(f"    {theme}: {count}")
 
@@ -514,7 +509,7 @@ def compare_pdf_extraction():
         legacy_flat = "\n\n".join(t for _, t in legacy_pages)
         new_flat = new_extract_text(pdf_bytes)
         if legacy_flat == new_flat:
-            print(f"    [OK] Flat text extraction identical")
+            print("    [OK] Flat text extraction identical")
         else:
             print(f"    [DIFF] Flat text differs (legacy={len(legacy_flat)}, new={len(new_flat)})")
 
@@ -539,15 +534,15 @@ def compare_document_upload_path():
     print(f"  New (chunking):           {len(new_chunks)} chunks")
 
     if len(legacy_chunks) == len(new_chunks):
-        print(f"  [OK] Chunk count matches")
+        print("  [OK] Chunk count matches")
         all_match = all(lc == nc for lc, nc in zip(legacy_chunks, new_chunks))
         if all_match:
-            print(f"  [OK] All chunk contents are identical")
+            print("  [OK] All chunk contents are identical")
         else:
             diffs = sum(1 for lc, nc in zip(legacy_chunks, new_chunks) if lc != nc)
             print(f"  [DIFF] {diffs} chunks differ in content")
     else:
-        print(f"  [DIFF] Chunk count differs")
+        print("  [DIFF] Chunk count differs")
 
 
 def summary():

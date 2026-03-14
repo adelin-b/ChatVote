@@ -80,7 +80,7 @@ def qdrant_retriever():
 
     # Verify the vector store is accessible
     try:
-        vs = get_qdrant_vector_store()
+        get_qdrant_vector_store()
     except Exception as e:
         pytest.skip(f"Vector store not available: {e}")
 

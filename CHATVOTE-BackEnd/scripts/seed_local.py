@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Load .env first so its values take priority over defaults below
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 _env_path = PROJECT_ROOT / ".env"
 if _env_path.exists():
     load_dotenv(_env_path, override=False)
@@ -365,7 +365,7 @@ def seed_crawled_vectors():
             municipality_code = cand_info.get("municipality_code", "")
             municipality_name = cand_info.get("municipality_name", "")
             party_ids = cand_info.get("party_ids", [])
-            party_ids_str = ",".join(party_ids) if isinstance(party_ids, list) else str(party_ids)
+            ",".join(party_ids) if isinstance(party_ids, list) else str(party_ids)
 
             # Markdown files live in markdown/ subdirectory (from crawler output)
             md_dir = cand_dir / "markdown"

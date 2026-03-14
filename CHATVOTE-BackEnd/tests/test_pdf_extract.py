@@ -30,11 +30,9 @@ def _make_pdf(*page_texts: str) -> bytes:
         page = writer.pages[-1]
         # Inject text via a simple content stream
         from pypdf.generic import (
-            ArrayObject,
             DecodedStreamObject,
             DictionaryObject,
             NameObject,
-            NumberObject,
         )
 
         font_dict = DictionaryObject(
@@ -151,7 +149,7 @@ class TestExtractTextFromTxtBytes:
         # latin-1 accepts all byte values, so the raise path is only hit
         # if both decodings somehow fail. We test it by wrapping the function
         # with a patched decode loop that always raises.
-        original_fn = extract_text_from_txt_bytes.__wrapped__ if hasattr(extract_text_from_txt_bytes, "__wrapped__") else None
+        extract_text_from_txt_bytes.__wrapped__ if hasattr(extract_text_from_txt_bytes, "__wrapped__") else None
 
         # Directly test the raise path: create a subclass whose decode always fails
         class BadBytes(bytes):

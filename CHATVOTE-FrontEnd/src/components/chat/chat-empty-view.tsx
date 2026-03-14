@@ -1,8 +1,8 @@
 "use client";
 
 import { useAnonymousAuth } from "@components/anonymous-auth";
-import { trackInitialSuggestionClicked } from "@lib/firebase/analytics";
 import { useChatStore } from "@components/providers/chat-store-provider";
+import { trackInitialSuggestionClicked } from "@lib/firebase/analytics";
 import { type ProposedQuestion } from "@lib/firebase/firebase.types";
 import { type PartyDetails } from "@lib/party-details";
 import { useTranslations } from "next-intl";
@@ -50,7 +50,8 @@ const ChatEmptyView = ({
       {/* Description as another assistant bubble */}
       {!!municipalityCode && (
         <div className="flex max-w-2xl items-start gap-3">
-          <div className="size-10 shrink-0" /> {/* spacer to align with icon above */}
+          <div className="size-10 shrink-0" />{" "}
+          {/* spacer to align with icon above */}
           <div className="text-foreground text-sm">
             {party ? (
               <p>{t("partyDescription", { party: party.name })}</p>

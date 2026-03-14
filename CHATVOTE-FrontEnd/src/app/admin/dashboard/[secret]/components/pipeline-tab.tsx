@@ -1,26 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-
-import {
-  Play,
-  RotateCcw,
-  Trash2,
-  ChevronDown,
-  ChevronRight,
-  Settings,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Circle,
-  Square,
-  Eye,
-  X,
-  Zap,
-} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@components/ui/button";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  Loader2,
+  Play,
+  RotateCcw,
+  Settings,
+  Square,
+  Trash2,
+  X,
+  XCircle,
+  Zap,
+} from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,11 +33,52 @@ interface NodeConfig {
   last_duration_s: number | null;
   last_error: string | null;
   counts: Record<string, number | string>;
-  settings: Record<string, any>;
-  checkpoints: Record<string, any>;
+  settings: Record<string, unknown>;
+  checkpoints: Record<string, unknown>;
 }
 
 type NodesMap = Record<string, NodeConfig>;
+
+interface K8sPod {
+  name: string;
+  phase: string;
+  ready: boolean;
+  restarts: number;
+}
+
+interface K8sCronJob {
+  name: string;
+  schedule: string;
+  suspend: boolean;
+  active_jobs: number;
+}
+
+interface K8sJob {
+  name: string;
+  active: number;
+  succeeded: number;
+}
+
+interface K8sStatefulSet {
+  name: string;
+  ready: number;
+  replicas: number;
+}
+
+interface K8sStatus {
+  available: boolean;
+  in_cluster?: boolean;
+  pods?: K8sPod[];
+  cronjobs?: K8sCronJob[];
+  jobs?: K8sJob[];
+  statefulsets?: K8sStatefulSet[];
+}
+
+interface PreviewData {
+  samples?: Record<string, unknown>[];
+  error?: string;
+  count?: number;
+}
 
 // ---------------------------------------------------------------------------
 // Props
@@ -84,8 +123,17 @@ const NODE_INPUTS: Record<string, string[]> = {
   candidatures: ["data.gouv.fr CSV (887K+ rows)"],
   websites: ["Google Sheets API"],
   pourquituvotes: ["pourquituvotes.fr JSON API"],
-  professions: ["Candidatures (panneau numbers)", "programme-candidats.interieur.gouv.fr"],
-  seed: ["Population", "Candidatures", "Websites", "PourQuiTuVotes", "Professions"],
+  professions: [
+    "Candidatures (panneau numbers)",
+    "programme-candidats.interieur.gouv.fr",
+  ],
+  seed: [
+    "Population",
+    "Candidatures",
+    "Websites",
+    "PourQuiTuVotes",
+    "Professions",
+  ],
   scraper: ["Seed (candidates with websites)"],
   crawl_scraper: ["Seed (candidates with websites)"],
   indexer: ["Scraper / Crawl Scraper content", "Party manifesto PDFs"],
@@ -93,7 +141,10 @@ const NODE_INPUTS: Record<string, string[]> = {
 
 /** Output descriptions for each pipeline node — what data it produces */
 const NODE_OUTPUTS: Record<string, string[]> = {
-  population: ["Top N communes list (INSEE codes)", "All 35k communes → Autocomplete"],
+  population: [
+    "Top N communes list (INSEE codes)",
+    "All 35k communes → Autocomplete",
+  ],
   candidatures: ["Candidate lists per commune", "Party labels → Chat sidebar"],
   websites: ["Campaign website URLs"],
   pourquituvotes: ["Programme URLs from pourquituvotes.fr"],
@@ -211,12 +262,12 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`focus-visible:ring-ring relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
         checked ? "bg-emerald-500" : "bg-purple-500"
       }`}
     >
       <span
-        className={`pointer-events-none block size-3.5 rounded-full bg-card shadow-sm ring-0 transition-transform duration-200 ${
+        className={`bg-card pointer-events-none block size-3.5 rounded-full shadow-sm ring-0 transition-transform duration-200 ${
           checked ? "translate-x-[18px]" : "translate-x-[3px]"
         }`}
       />
@@ -249,12 +300,12 @@ function NodeCard({
   onStop: () => void;
   onTriggerCrawl?: () => void;
   onToggleEnabled: (enabled: boolean) => void;
-  onUpdateSettings: (settings: Record<string, any>) => void;
+  onUpdateSettings: (settings: Record<string, unknown>) => void;
   onPreview: () => void;
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [errorOpen, setErrorOpen] = useState(false);
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(
+  const [localSettings, setLocalSettings] = useState<Record<string, unknown>>(
     node.settings,
   );
   const [settingsDirty, setSettingsDirty] = useState(false);
@@ -281,11 +332,12 @@ function NodeCard({
 
   return (
     <div
-      className={`relative flex h-full w-full flex-col rounded-lg border border-border-subtle bg-card shadow-sm transition-shadow hover:shadow-md ${
+      className={`border-border-subtle bg-card relative flex h-full w-full flex-col rounded-lg border shadow-sm transition-shadow hover:shadow-md ${
         isRunning
           ? "border-amber-500/30"
           : node.status === "error"
-            ? (node.last_error?.includes("Stopped by admin") || node.last_error?.includes("Cancelled by admin"))
+            ? node.last_error?.includes("Stopped by admin") ||
+              node.last_error?.includes("Cancelled by admin")
               ? "border-amber-500/30"
               : "border-red-500/30"
             : node.status === "success"
@@ -294,9 +346,9 @@ function NodeCard({
       }`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-3">
+      <div className="border-border-subtle flex items-center gap-2 border-b px-4 py-3">
         {statusDot(node.status)}
-        <h3 className="flex-1 text-sm font-semibold text-foreground tracking-tight">
+        <h3 className="text-foreground flex-1 text-sm font-semibold tracking-tight">
           {node.label}
         </h3>
         <Toggle
@@ -322,7 +374,7 @@ function NodeCard({
 
       {/* Description */}
       {NODE_DESCRIPTIONS[node.node_id] && (
-        <p className="px-4 pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground px-4 pt-1.5 text-[11px] leading-relaxed">
           {NODE_DESCRIPTIONS[node.node_id]}
         </p>
       )}
@@ -330,7 +382,7 @@ function NodeCard({
       {/* Body */}
       <div className="flex flex-col gap-3 px-4 py-3">
         {/* Timestamp + duration */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
           <span>{formatTimestamp(node.last_run_at)}</span>
           <span className="font-mono">
             {formatDuration(node.last_duration_s)}
@@ -342,14 +394,14 @@ function NodeCard({
           <div className="flex items-center gap-1.5 text-[11px]">
             {node.checkpoints?.cached_at ? (
               <>
-                <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
                 <span className="text-emerald-600 dark:text-emerald-400">
-                  Cached {formatTimestamp(node.checkpoints.cached_at)}
+                  Cached {formatTimestamp(node.checkpoints.cached_at as string)}
                 </span>
               </>
             ) : (
               <>
-                <span className="size-1.5 rounded-full bg-muted-foreground shrink-0" />
+                <span className="bg-muted-foreground size-1.5 shrink-0 rounded-full" />
                 <span className="text-muted-foreground">No cached data</span>
               </>
             )}
@@ -449,13 +501,13 @@ function NodeCard({
 
                 {total > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-elevated">
+                    <div className="bg-surface-elevated h-2.5 flex-1 overflow-hidden rounded-full">
                       <div
                         className="h-full rounded-full bg-amber-400 transition-all duration-700 ease-out"
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
-                    <span className="min-w-[3ch] text-right text-xs font-bold text-foreground">
+                    <span className="text-foreground min-w-[3ch] text-right text-xs font-bold">
                       {pct}%
                     </span>
                   </div>
@@ -465,7 +517,7 @@ function NodeCard({
                   {total > 0 && (
                     <>
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="text-right font-mono font-medium text-foreground">
+                      <span className="text-foreground text-right font-mono font-medium">
                         {done} / {total}
                       </span>
                     </>
@@ -476,7 +528,7 @@ function NodeCard({
                       <span className="text-muted-foreground">
                         {key.replace(/_/g, " ")}
                       </span>
-                      <span className="text-right font-mono font-medium text-foreground">
+                      <span className="text-foreground text-right font-mono font-medium">
                         {key === "total_chars"
                           ? fmtChars(Number(val))
                           : String(val)}
@@ -487,7 +539,7 @@ function NodeCard({
                   {rate !== null && (
                     <>
                       <span className="text-muted-foreground">Speed</span>
-                      <span className="text-right font-mono font-medium text-foreground">
+                      <span className="text-foreground text-right font-mono font-medium">
                         {rate}/s
                       </span>
                     </>
@@ -496,7 +548,7 @@ function NodeCard({
                   {elapsed > 0 && (
                     <>
                       <span className="text-muted-foreground">Elapsed</span>
-                      <span className="text-right font-mono font-medium text-foreground">
+                      <span className="text-foreground text-right font-mono font-medium">
                         {fmtTime(elapsed)}
                       </span>
                     </>
@@ -513,8 +565,8 @@ function NodeCard({
                 </div>
 
                 {lastResults.length > 0 && (
-                  <div className="flex flex-col gap-1 border-t border-border-subtle pt-2">
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                  <div className="border-border-subtle flex flex-col gap-1 border-t pt-2">
+                    <span className="text-muted-foreground text-[10px] font-medium">
                       Recent
                     </span>
                     {lastResults.map((r, i) => (
@@ -527,11 +579,11 @@ function NodeCard({
                         ) : (
                           <XCircle className="size-3 shrink-0 text-red-400" />
                         )}
-                        <span className="truncate font-medium text-foreground">
+                        <span className="text-foreground truncate font-medium">
                           {r.name}
                         </span>
                         {r.ok ? (
-                          <span className="ml-auto shrink-0 font-mono text-muted-foreground">
+                          <span className="text-muted-foreground ml-auto shrink-0 font-mono">
                             {r.pages}p &middot;{" "}
                             {r.chars !== undefined
                               ? r.chars >= 1_000
@@ -558,10 +610,10 @@ function NodeCard({
             {countsEntries.map(([key, val]) => (
               <span
                 key={key}
-                className="inline-flex items-center rounded-full bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                className="bg-surface-elevated text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
               >
                 {key.replace(/_/g, " ")}:&nbsp;
-                <span className="font-semibold text-foreground">
+                <span className="text-foreground font-semibold">
                   {String(val)}
                 </span>
               </span>
@@ -570,37 +622,44 @@ function NodeCard({
         )}
 
         {/* Error */}
-        {node.status === "error" && node.last_error && (() => {
-          const isAdminStop = node.last_error.includes("Stopped by admin") || node.last_error.includes("Cancelled by admin");
-          return (
-            <div className={`rounded-md p-2 ${isAdminStop ? "bg-amber-500/10" : "bg-red-500/10"}`}>
-              <button
-                type="button"
-                onClick={() => setErrorOpen(!errorOpen)}
-                className={`flex w-full items-center gap-1 text-left text-xs font-medium ${isAdminStop ? "text-amber-400" : "text-red-400"}`}
+        {node.status === "error" &&
+          node.last_error &&
+          (() => {
+            const isAdminStop =
+              node.last_error.includes("Stopped by admin") ||
+              node.last_error.includes("Cancelled by admin");
+            return (
+              <div
+                className={`rounded-md p-2 ${isAdminStop ? "bg-amber-500/10" : "bg-red-500/10"}`}
               >
-                {isAdminStop ? (
-                  <Square className="size-3.5 shrink-0" />
-                ) : (
-                  <AlertTriangle className="size-3.5 shrink-0" />
+                <button
+                  type="button"
+                  onClick={() => setErrorOpen(!errorOpen)}
+                  className={`flex w-full items-center gap-1 text-left text-xs font-medium ${isAdminStop ? "text-amber-400" : "text-red-400"}`}
+                >
+                  {isAdminStop ? (
+                    <Square className="size-3.5 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="size-3.5 shrink-0" />
+                  )}
+                  <span className="flex-1 truncate">
+                    {node.last_error.split("\n")[0]}
+                  </span>
+                  {!isAdminStop &&
+                    (errorOpen ? (
+                      <ChevronDown className="size-3.5 shrink-0" />
+                    ) : (
+                      <ChevronRight className="size-3.5 shrink-0" />
+                    ))}
+                </button>
+                {errorOpen && !isAdminStop && (
+                  <pre className="mt-2 max-h-40 overflow-auto text-[11px] leading-relaxed whitespace-pre-wrap text-red-400">
+                    {node.last_error}
+                  </pre>
                 )}
-                <span className="flex-1 truncate">
-                  {node.last_error.split("\n")[0]}
-                </span>
-                {!isAdminStop && (errorOpen ? (
-                  <ChevronDown className="size-3.5 shrink-0" />
-                ) : (
-                  <ChevronRight className="size-3.5 shrink-0" />
-                ))}
-              </button>
-              {errorOpen && !isAdminStop && (
-                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-red-400">
-                  {node.last_error}
-                </pre>
-              )}
-            </div>
-          );
-        })()}
+              </div>
+            );
+          })()}
 
         {/* Actions */}
         <div className="flex items-center gap-2">
@@ -610,7 +669,7 @@ function NodeCard({
                 size="sm"
                 variant="outline"
                 onClick={onStop}
-                className="h-7 gap-1.5 px-2.5 text-xs border-red-500/30 text-red-400 hover:bg-red-500/100/10"
+                className="hover:bg-red-500/100/10 h-7 gap-1.5 border-red-500/30 px-2.5 text-xs text-red-400"
               >
                 <Square className="size-3" />
                 Stop
@@ -620,7 +679,7 @@ function NodeCard({
                   size="sm"
                   variant="outline"
                   onClick={onTriggerCrawl}
-                  className="h-7 gap-1.5 px-2.5 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/100/10"
+                  className="hover:bg-amber-500/100/10 h-7 gap-1.5 border-amber-500/30 px-2.5 text-xs text-amber-400"
                 >
                   <Zap className="size-3" />
                   Trigger Scrape
@@ -655,7 +714,7 @@ function NodeCard({
               size="sm"
               variant="ghost"
               onClick={onPreview}
-              className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+              className="text-muted-foreground h-7 gap-1 px-2 text-xs"
               title="Preview data"
             >
               <Eye className="size-3" />
@@ -665,7 +724,7 @@ function NodeCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+                className="text-muted-foreground h-7 gap-1 px-2 text-xs"
               >
                 <Settings className="size-3" />
                 {settingsOpen ? (
@@ -680,17 +739,17 @@ function NodeCard({
 
         {/* Settings panel */}
         {settingsOpen && settingsKeys.length > 0 && (
-          <div className="flex flex-col gap-2 rounded-md bg-background p-3">
+          <div className="bg-background flex flex-col gap-2 rounded-md p-3">
             {settingsKeys.map((key) => (
               <label key={key} className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-muted-foreground">
+                <span className="text-muted-foreground text-[11px] font-medium">
                   {key.replace(/_/g, " ")}
                 </span>
                 {SETTING_OPTIONS[key] ? (
                   <select
                     value={String(localSettings[key] ?? "")}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-border-subtle bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
+                    className="border-border-subtle bg-card text-foreground focus:border-border-strong focus:ring-ring rounded-md border px-2 py-1.5 text-xs outline-none focus:ring-1"
                   >
                     {SETTING_OPTIONS[key].map((opt) => (
                       <option key={opt} value={opt}>
@@ -702,7 +761,7 @@ function NodeCard({
                   <select
                     value={String(localSettings[key])}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-border-subtle bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
+                    className="border-border-subtle bg-card text-foreground focus:border-border-strong focus:ring-ring rounded-md border px-2 py-1.5 text-xs outline-none focus:ring-1"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
@@ -712,7 +771,7 @@ function NodeCard({
                     type="text"
                     value={String(localSettings[key] ?? "")}
                     onChange={(e) => handleSettingChange(key, e.target.value)}
-                    className="rounded-md border border-border-subtle bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring"
+                    className="border-border-subtle bg-card text-foreground focus:border-border-strong focus:ring-ring rounded-md border px-2 py-1 text-xs outline-none focus:ring-1"
                   />
                 )}
               </label>
@@ -733,18 +792,19 @@ function NodeCard({
         <div className="flex-1" />
 
         {/* Output tags at bottom */}
-        {NODE_OUTPUTS[node.node_id] && NODE_OUTPUTS[node.node_id].length > 0 && (
-          <div className="flex flex-wrap gap-1 border-t border-border-subtle pt-2">
-            {NODE_OUTPUTS[node.node_id].map((output, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-400"
-              >
-                → {output}
-              </span>
-            ))}
-          </div>
-        )}
+        {NODE_OUTPUTS[node.node_id] &&
+          NODE_OUTPUTS[node.node_id].length > 0 && (
+            <div className="border-border-subtle flex flex-wrap gap-1 border-t pt-2">
+              {NODE_OUTPUTS[node.node_id].map((output, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-400"
+                >
+                  → {output}
+                </span>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );
@@ -754,7 +814,11 @@ function NodeCard({
 // Pipeline Tab Component
 // ---------------------------------------------------------------------------
 
-export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps) {
+export default function PipelineTab({
+  secret,
+  apiUrl,
+  active,
+}: PipelineTabProps) {
   const [nodes, setNodes] = useState<NodesMap>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -762,14 +826,24 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [arrowPositions, setArrowPositions] = useState<
-    Record<string, { cx: number; cy: number; bottom: number; top: number; left: number; right: number }>
+    Record<
+      string,
+      {
+        cx: number;
+        cy: number;
+        bottom: number;
+        top: number;
+        left: number;
+        right: number;
+      }
+    >
   >({});
   const [previewNode, setPreviewNode] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [communesToScrap, setCommunesToScrap] = useState<number>(287);
   const [execMode, setExecMode] = useState<"in-process" | "k8s">("in-process");
-  const [k8sStatus, setK8sStatus] = useState<any>(null);
+  const [k8sStatus, setK8sStatus] = useState<K8sStatus | null>(null);
 
   // ---- API helpers ----
 
@@ -793,19 +867,19 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       const done = Object.values(data).filter((n) => n.status === "success");
       const errored = Object.values(data).filter((n) => n.status === "error");
       if (running.length > 0) {
-        console.log(
+        console.info(
           `%c[Pipeline] Running: ${running.map((n) => `${n.label} ${JSON.stringify(n.counts)}`).join(" | ")}`,
           "color: #f59e0b; font-weight: bold",
         );
       }
       if (done.length > 0) {
-        console.log(
+        console.info(
           `%c[Pipeline] Done: ${done.map((n) => n.label).join(", ")}`,
           "color: #10b981",
         );
       }
       if (errored.length > 0) {
-        console.log(
+        console.info(
           `%c[Pipeline] Errors: ${errored.map((n) => `${n.label}: ${n.last_error?.slice(0, 80)}`).join(" | ")}`,
           "color: #ef4444; font-weight: bold",
         );
@@ -817,8 +891,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         setCommunesToScrap(Number(popSettings.communes_to_scrap) || 287);
       }
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch status");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to fetch status");
     } finally {
       setLoading(false);
     }
@@ -826,10 +900,13 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
   const fetchK8sStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${apiUrl}/api/v1/admin/data-sources/k8s-status`, {
-        headers: headers(),
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/v1/admin/data-sources/k8s-status`,
+        {
+          headers: headers(),
+          cache: "no-store",
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         setK8sStatus(data);
@@ -848,15 +925,19 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           body: JSON.stringify({ force, mode: execMode }),
         });
         await fetchStatus();
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
     [headers, fetchStatus, apiUrl, execMode],
   );
 
   const updateConfig = useCallback(
-    async (nodeId: string, enabled: boolean, settings: Record<string, any>) => {
+    async (
+      nodeId: string,
+      enabled: boolean,
+      settings: Record<string, unknown>,
+    ) => {
       try {
         await fetch(`${apiUrl}/api/v1/admin/data-sources/config/${nodeId}`, {
           method: "PUT",
@@ -864,8 +945,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           body: JSON.stringify({ enabled, settings }),
         });
         await fetchStatus();
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
     [headers, fetchStatus, apiUrl],
@@ -879,31 +960,28 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       });
       setBustCacheConfirm(false);
       await fetchStatus();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   }, [headers, fetchStatus, apiUrl]);
 
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
   const clearAll = useCallback(async () => {
     try {
-      console.log(
+      console.info(
         "%c[Pipeline] CLEARING ALL DATA (Firestore + Qdrant + caches)",
         "color: #ef4444; font-weight: bold; font-size: 14px",
       );
-      const res = await fetch(
-        `${apiUrl}/api/v1/admin/data-sources/clear-all`,
-        {
-          method: "POST",
-          headers: headers(),
-        },
-      );
+      const res = await fetch(`${apiUrl}/api/v1/admin/data-sources/clear-all`, {
+        method: "POST",
+        headers: headers(),
+      });
       const data = await res.json();
-      console.log("%c[Pipeline] Clear result:", "color: #ef4444", data);
+      console.info("%c[Pipeline] Clear result:", "color: #ef4444", data);
       setClearAllConfirm(false);
       await fetchStatus();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   }, [headers, fetchStatus, apiUrl]);
 
@@ -928,7 +1006,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       try {
         // Save communes_to_scrap to population node before running
         await saveCommunesToScrap(communesToScrap);
-        console.log(
+        console.info(
           `%c[Pipeline] Starting run-all (force=${force}, communes_to_scrap=${communesToScrap})`,
           "color: #6366f1; font-weight: bold",
         );
@@ -938,8 +1016,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           body: JSON.stringify({ force }),
         });
         await fetchStatus();
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
     [headers, fetchStatus, apiUrl, communesToScrap, saveCommunesToScrap],
@@ -953,8 +1031,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           headers: headers(),
         });
         await fetchStatus();
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
     [headers, fetchStatus, apiUrl],
@@ -962,16 +1040,19 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
   const triggerCrawl = useCallback(async () => {
     try {
-      const res = await fetch(`${apiUrl}/api/v1/admin/data-sources/trigger-crawl`, {
-        method: "POST",
-        headers: headers(),
-      });
+      const res = await fetch(
+        `${apiUrl}/api/v1/admin/data-sources/trigger-crawl`,
+        {
+          method: "POST",
+          headers: headers(),
+        },
+      );
       const data = await res.json();
       if (data.error) {
         setError(`Trigger failed: ${data.error}`);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   }, [headers, apiUrl]);
 
@@ -982,8 +1063,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         headers: headers(),
       });
       await fetchStatus();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   }, [headers, fetchStatus, apiUrl]);
 
@@ -1000,8 +1081,10 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
         setPreviewData(data);
-      } catch (err: any) {
-        setPreviewData({ error: err.message });
+      } catch (err: unknown) {
+        setPreviewData({
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
       } finally {
         setPreviewLoading(false);
       }
@@ -1043,7 +1126,14 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
     const rect = container.getBoundingClientRect();
     const pos: Record<
       string,
-      { cx: number; cy: number; bottom: number; top: number; left: number; right: number }
+      {
+        cx: number;
+        cy: number;
+        bottom: number;
+        top: number;
+        left: number;
+        right: number;
+      }
     > = {};
 
     for (const item of DAG_ROWS) {
@@ -1094,7 +1184,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         className="flex flex-col gap-1 rounded-lg border border-dashed border-indigo-500/30 bg-indigo-500/5 px-3 py-2.5"
       >
         <h3 className="text-xs font-semibold text-indigo-400">{info.label}</h3>
-        <p className="text-[10px] leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground text-[10px] leading-relaxed">
           {info.description}
         </p>
       </div>
@@ -1112,7 +1202,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       return (
         <div
           data-node-id={nodeId}
-          className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-background text-xs text-muted-foreground"
+          className="border-border-subtle bg-background text-muted-foreground flex h-32 items-center justify-center rounded-lg border border-dashed text-xs"
         >
           {nodeId} (not configured)
         </div>
@@ -1143,7 +1233,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground size-6 animate-spin" />
       </div>
     );
   }
@@ -1171,7 +1261,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       <div className="mb-3 flex items-center gap-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 px-4 py-3">
         <label
           htmlFor="communes-to-scrap"
-          className="text-sm font-semibold text-foreground whitespace-nowrap"
+          className="text-foreground text-sm font-semibold whitespace-nowrap"
         >
           Communes to scrap
         </label>
@@ -1185,9 +1275,9 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
             setCommunesToScrap(Math.max(1, parseInt(e.target.value) || 1))
           }
           onBlur={() => saveCommunesToScrap(communesToScrap)}
-          className="w-20 rounded-md border border-border-subtle bg-card px-2.5 py-1.5 text-sm font-mono font-semibold text-foreground outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="border-border-subtle bg-card text-foreground w-20 rounded-md border px-2.5 py-1.5 font-mono text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
         />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           Top communes by population
         </span>
 
@@ -1195,7 +1285,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
         {bustCacheConfirm ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-red-400 font-medium">
+            <span className="text-xs font-medium text-red-400">
               Reset all checkpoints?
             </span>
             <Button
@@ -1229,7 +1319,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
         {clearAllConfirm ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-red-400 font-bold">
+            <span className="text-xs font-bold text-red-400">
               DELETE all data?
             </span>
             <Button
@@ -1254,7 +1344,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
             size="sm"
             variant="outline"
             onClick={() => setClearAllConfirm(true)}
-            className="h-7 gap-1.5 text-xs text-red-400 hover:text-red-400 border-red-500/30"
+            className="h-7 gap-1.5 border-red-500/30 text-xs text-red-400 hover:text-red-400"
           >
             <Trash2 className="size-3" />
             Clear All
@@ -1273,11 +1363,13 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       </div>
 
       {/* Execution mode + K8s status */}
-      <div className="mb-3 flex items-start gap-4 rounded-lg border border-border-subtle bg-card px-4 py-3">
+      <div className="border-border-subtle bg-card mb-3 flex items-start gap-4 rounded-lg border px-4 py-3">
         {/* Mode toggle */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-medium text-muted-foreground">Execution mode</span>
-          <div className="flex items-center gap-1 rounded-md bg-background p-0.5">
+          <span className="text-muted-foreground text-[11px] font-medium">
+            Execution mode
+          </span>
+          <div className="bg-background flex items-center gap-1 rounded-md p-0.5">
             <button
               type="button"
               onClick={() => setExecMode("in-process")}
@@ -1301,7 +1393,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
               K8s Workers
             </button>
           </div>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-muted-foreground text-[10px]">
             {execMode === "in-process"
               ? "Nodes run inside backend process (local/dev)"
               : "Heavy nodes spawn as K8s Jobs on pool-pipeline"}
@@ -1311,15 +1403,17 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
         {/* K8s cluster status */}
         {k8sStatus && (
           <div className="flex flex-1 flex-col gap-1.5">
-            <span className="text-[11px] font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-[11px] font-medium">
               K8s Cluster
               {k8sStatus.in_cluster ? (
                 <span className="ml-1.5 inline-flex items-center gap-1 text-emerald-400">
-                  <span className="size-1.5 rounded-full bg-emerald-500" /> Connected
+                  <span className="size-1.5 rounded-full bg-emerald-500" />{" "}
+                  Connected
                 </span>
               ) : (
-                <span className="ml-1.5 inline-flex items-center gap-1 text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-muted-foreground" /> Not in cluster
+                <span className="text-muted-foreground ml-1.5 inline-flex items-center gap-1">
+                  <span className="bg-muted-foreground size-1.5 rounded-full" />{" "}
+                  Not in cluster
                 </span>
               )}
             </span>
@@ -1328,17 +1422,29 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
               <div className="grid grid-cols-3 gap-3 text-[11px]">
                 {/* Pods */}
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     Pods ({k8sStatus.pods?.length ?? 0})
                   </span>
-                  {k8sStatus.pods?.map((pod: any) => (
-                    <div key={pod.name} className="flex items-center gap-1 text-[10px]">
-                      <span className={`size-1.5 rounded-full ${
-                        pod.phase === "Running" && pod.ready ? "bg-emerald-500" :
-                        pod.phase === "Running" ? "bg-amber-400" :
-                        pod.phase === "Succeeded" ? "bg-blue-400" : "bg-red-500"
-                      }`} />
-                      <span className="truncate text-muted-foreground" title={pod.name}>
+                  {k8sStatus.pods?.map((pod: K8sPod) => (
+                    <div
+                      key={pod.name}
+                      className="flex items-center gap-1 text-[10px]"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          pod.phase === "Running" && pod.ready
+                            ? "bg-emerald-500"
+                            : pod.phase === "Running"
+                              ? "bg-amber-400"
+                              : pod.phase === "Succeeded"
+                                ? "bg-blue-400"
+                                : "bg-red-500"
+                        }`}
+                      />
+                      <span
+                        className="text-muted-foreground truncate"
+                        title={pod.name}
+                      >
                         {pod.name?.replace("chatvote-", "").slice(0, 30)}
                       </span>
                       {pod.restarts > 0 && (
@@ -1350,19 +1456,30 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
                 {/* CronJobs */}
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     CronJobs ({k8sStatus.cronjobs?.length ?? 0})
                   </span>
-                  {k8sStatus.cronjobs?.map((cj: any) => (
-                    <div key={cj.name} className="flex items-center gap-1 text-[10px]">
-                      <span className={`size-1.5 rounded-full ${
-                        cj.suspend ? "bg-muted-foreground" :
-                        cj.active_jobs > 0 ? "bg-amber-400" : "bg-emerald-500"
-                      }`} />
-                      <span className="truncate text-muted-foreground" title={cj.name}>
+                  {k8sStatus.cronjobs?.map((cj: K8sCronJob) => (
+                    <div
+                      key={cj.name}
+                      className="flex items-center gap-1 text-[10px]"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          cj.suspend
+                            ? "bg-muted-foreground"
+                            : cj.active_jobs > 0
+                              ? "bg-amber-400"
+                              : "bg-emerald-500"
+                        }`}
+                      />
+                      <span
+                        className="text-muted-foreground truncate"
+                        title={cj.name}
+                      >
                         {cj.name}
                       </span>
-                      <span className="ml-auto shrink-0 font-mono text-muted-foreground">
+                      <span className="text-muted-foreground ml-auto shrink-0 font-mono">
                         {cj.suspend ? "suspended" : cj.schedule}
                       </span>
                     </div>
@@ -1371,28 +1488,45 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
 
                 {/* Jobs + StatefulSets */}
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     Jobs ({k8sStatus.jobs?.length ?? 0})
                   </span>
-                  {k8sStatus.jobs?.slice(0, 5).map((job: any) => (
-                    <div key={job.name} className="flex items-center gap-1 text-[10px]">
-                      <span className={`size-1.5 rounded-full ${
-                        job.active > 0 ? "bg-amber-400" :
-                        job.succeeded > 0 ? "bg-emerald-500" : "bg-red-500"
-                      }`} />
-                      <span className="truncate text-muted-foreground" title={job.name}>
+                  {k8sStatus.jobs?.slice(0, 5).map((job: K8sJob) => (
+                    <div
+                      key={job.name}
+                      className="flex items-center gap-1 text-[10px]"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          job.active > 0
+                            ? "bg-amber-400"
+                            : job.succeeded > 0
+                              ? "bg-emerald-500"
+                              : "bg-red-500"
+                        }`}
+                      />
+                      <span
+                        className="text-muted-foreground truncate"
+                        title={job.name}
+                      >
                         {job.name?.slice(0, 30)}
                       </span>
                     </div>
                   ))}
-                  {k8sStatus.statefulsets?.map((sts: any) => (
-                    <div key={sts.name} className="flex items-center gap-1 text-[10px]">
-                      <span className={`size-1.5 rounded-full ${
-                        sts.ready === sts.replicas && sts.replicas > 0
-                          ? "bg-emerald-500" : "bg-amber-400"
-                      }`} />
+                  {k8sStatus.statefulsets?.map((sts: K8sStatefulSet) => (
+                    <div
+                      key={sts.name}
+                      className="flex items-center gap-1 text-[10px]"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          sts.ready === sts.replicas && sts.replicas > 0
+                            ? "bg-emerald-500"
+                            : "bg-amber-400"
+                        }`}
+                      />
                       <span className="text-muted-foreground">{sts.name}</span>
-                      <span className="ml-auto font-mono text-muted-foreground">
+                      <span className="text-muted-foreground ml-auto font-mono">
                         {sts.ready}/{sts.replicas}
                       </span>
                     </div>
@@ -1405,13 +1539,13 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       </div>
 
       {/* Toolbar: Run/Stop */}
-      <div className="mb-4 flex items-center gap-2 rounded-lg border border-border-subtle bg-card px-4 py-3">
+      <div className="border-border-subtle bg-card mb-4 flex items-center gap-2 rounded-lg border px-4 py-3">
         {anyRunning ? (
           <Button
             size="sm"
             variant="outline"
             onClick={stopAll}
-            className="h-8 gap-1.5 text-xs border-red-500/30 text-red-400 hover:bg-red-500/100/10"
+            className="hover:bg-red-500/100/10 h-8 gap-1.5 border-red-500/30 text-xs text-red-400"
           >
             <Square className="size-3.5" />
             Stop All
@@ -1557,7 +1691,7 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
       </div>
 
       {/* Footer summary */}
-      <div className="mt-8 flex items-center justify-between rounded-lg border border-border-subtle bg-card px-4 py-3 text-xs text-muted-foreground">
+      <div className="border-border-subtle bg-card text-muted-foreground mt-8 flex items-center justify-between rounded-lg border px-4 py-3 text-xs">
         <span>
           {Object.values(nodes).filter((n) => n.enabled).length} /{" "}
           {Object.values(nodes).length} nodes enabled
@@ -1579,18 +1713,18 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
           onClick={() => setPreviewNode(null)}
         >
           <div
-            className="relative mx-4 flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border border-border-subtle bg-card shadow-2xl"
+            className="border-border-subtle bg-card relative mx-4 flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-border-subtle px-5 py-3">
-              <h2 className="text-sm font-semibold text-foreground">
-                <Eye className="mr-2 inline-block size-4 text-muted-foreground" />
+            <div className="border-border-subtle flex items-center justify-between border-b px-5 py-3">
+              <h2 className="text-foreground text-sm font-semibold">
+                <Eye className="text-muted-foreground mr-2 inline-block size-4" />
                 {nodes[previewNode]?.label ?? previewNode} — Data Preview
               </h2>
               <button
                 type="button"
                 onClick={() => setPreviewNode(null)}
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+                className="text-muted-foreground hover:bg-surface-elevated hover:text-foreground rounded-md p-1 transition-colors"
               >
                 <X className="size-4" />
               </button>
@@ -1599,8 +1733,8 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
             <div className="flex-1 overflow-auto p-5">
               {previewLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
-                  <span className="ml-2 text-sm text-muted-foreground">
+                  <Loader2 className="text-muted-foreground size-5 animate-spin" />
+                  <span className="text-muted-foreground ml-2 text-sm">
                     Loading preview...
                   </span>
                 </div>
@@ -1609,28 +1743,30 @@ export default function PipelineTab({ secret, apiUrl, active }: PipelineTabProps
                   {previewData.error}
                 </div>
               ) : previewData?.samples?.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground py-12 text-center text-sm">
                   No data available. Run this node first.
                 </div>
               ) : previewData?.samples ? (
                 <div className="flex flex-col gap-3">
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Showing {previewData.samples.length} sample
                     {previewData.samples.length !== 1 ? "s" : ""}
                   </p>
-                  {previewData.samples.map((item: any, i: number) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-border-subtle bg-background p-3"
-                    >
-                      <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-foreground">
-                        {JSON.stringify(item, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                  {previewData.samples.map(
+                    (item: Record<string, unknown>, i: number) => (
+                      <div
+                        key={i}
+                        className="border-border-subtle bg-background rounded-lg border p-3"
+                      >
+                        <pre className="text-foreground max-h-48 overflow-auto text-[11px] leading-relaxed whitespace-pre-wrap">
+                          {JSON.stringify(item, null, 2)}
+                        </pre>
+                      </div>
+                    ),
+                  )}
                 </div>
               ) : (
-                <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-background p-4 text-[11px] leading-relaxed text-foreground">
+                <pre className="bg-background text-foreground max-h-96 overflow-auto rounded-lg p-4 text-[11px] leading-relaxed whitespace-pre-wrap">
                   {JSON.stringify(previewData, null, 2)}
                 </pre>
               )}

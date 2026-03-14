@@ -11,7 +11,6 @@ Usage:
 """
 
 import argparse
-import asyncio
 import json
 import os
 import sys
@@ -70,7 +69,7 @@ def _load_goldens() -> list:
 
     if not goldens:
         print("ERROR: No golden test cases found.")
-        print(f"Run 'poetry run python scripts/generate_goldens.py' first,")
+        print("Run 'poetry run python scripts/generate_goldens.py' first,")
         print(f"or check {GOLDENS_PATH}")
         sys.exit(1)
 
@@ -100,10 +99,10 @@ def optimize_response_prompt(goldens: list, model, iterations: int = 3):
     from deepeval.prompt import Prompt
     from deepeval.optimizer import PromptOptimizer
     from deepeval.optimizer.algorithms import GEPA
-    from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
+    from deepeval.metrics import AnswerRelevancyMetric
     from deepeval.dataset import Golden
 
-    prompts = _get_current_prompts()
+    _get_current_prompts()
 
     # Create a simplified version of the response prompt for optimization
     # We optimize the guidelines section since that's the instruction part

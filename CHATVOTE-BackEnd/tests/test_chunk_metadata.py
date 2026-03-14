@@ -1,4 +1,3 @@
-import pytest
 from src.models.chunk_metadata import ChunkMetadata, Fiabilite
 
 

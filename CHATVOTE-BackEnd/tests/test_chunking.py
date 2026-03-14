@@ -5,7 +5,7 @@ the legacy duplicated chunking code.
 """
 
 import pytest
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock
 
 from langchain_core.documents import Document
 

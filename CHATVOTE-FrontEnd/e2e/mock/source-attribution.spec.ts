@@ -1,10 +1,14 @@
-import { test, expect } from '../support/base-test';
-import { setupChat, sendMessage, waitForResponseComplete } from '../support/test-helpers';
+import { expect, test } from "../support/base-test";
+import {
+  sendMessage,
+  setupChat,
+  waitForResponseComplete,
+} from "../support/test-helpers";
 
-test.describe('Source Attribution', () => {
-  test('Response contains source information', async ({ page }) => {
+test.describe("Source Attribution", () => {
+  test("Response contains source information", async ({ page }) => {
     await setupChat(page);
-    await sendMessage(page, 'Education policy?');
+    await sendMessage(page, "Education policy?");
     await waitForResponseComplete(page);
     // Sources should be present somewhere in the response area
     // The mock server sends sources with title 'Source Document'

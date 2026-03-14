@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-import { cn } from "@lib/utils";
-
-import { useChatStore } from "../providers/chat-store-provider";
 import {
   trackDemographicAnswered,
   trackDemographicSkipped,
 } from "@lib/firebase/analytics";
-import type { UserDemographics } from "@lib/firebase/user-profile";
+import { type UserDemographics } from "@lib/firebase/user-profile";
+import { cn } from "@lib/utils";
+
+import { useChatStore } from "../providers/chat-store-provider";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,7 +40,8 @@ const DEMOGRAPHIC_QUESTIONS: DemographicQuestion[] = [
   },
   {
     field: "age_range",
-    label: "Pour mieux comprendre votre situation, quelle est votre tranche d'âge ?",
+    label:
+      "Pour mieux comprendre votre situation, quelle est votre tranche d'âge ?",
     options: [
       { value: "18-25", label: "18-25" },
       { value: "26-35", label: "26-35" },
@@ -125,7 +126,7 @@ export default function DemographicBubble({ question, messageNumber }: Props) {
   if (answered) {
     return (
       <div className="flex justify-center py-1">
-        <span className="text-xs text-muted-foreground">Merci !</span>
+        <span className="text-muted-foreground text-xs">Merci !</span>
       </div>
     );
   }
@@ -179,8 +180,8 @@ export default function DemographicBubble({ question, messageNumber }: Props) {
 
   return (
     <div className="flex justify-center py-2">
-      <div className="max-w-md rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
-        <p className="mb-3 text-center text-sm text-foreground">
+      <div className="border-primary/20 bg-primary/5 max-w-md rounded-xl border px-4 py-3">
+        <p className="text-foreground mb-3 text-center text-sm">
           {question.label}
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -193,7 +194,7 @@ export default function DemographicBubble({ question, messageNumber }: Props) {
                 "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
                 question.multiSelect && selectedTopics.includes(option.value)
                   ? "border-primary bg-primary text-white"
-                  : "border-primary/30 bg-transparent text-foreground hover:border-primary hover:bg-primary/10",
+                  : "border-primary/30 text-foreground hover:border-primary hover:bg-primary/10 bg-transparent",
               )}
             >
               {option.label}
@@ -205,7 +206,7 @@ export default function DemographicBubble({ question, messageNumber }: Props) {
             <button
               type="button"
               onClick={handleValidateTopics}
-              className="rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/80"
+              className="bg-primary hover:bg-primary/80 rounded-full px-4 py-1.5 text-xs font-medium text-white transition-colors"
             >
               Valider
             </button>
@@ -215,7 +216,7 @@ export default function DemographicBubble({ question, messageNumber }: Props) {
           <button
             type="button"
             onClick={handleSkip}
-            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+            className="text-muted-foreground text-xs underline-offset-2 hover:underline"
           >
             Passer
           </button>

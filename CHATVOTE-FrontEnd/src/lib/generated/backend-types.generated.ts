@@ -316,7 +316,9 @@ export interface ServerToClientEvents {
   quick_replies_and_title_ready: (data: QuickRepliesAndTitleDto) => void;
   chat_response_complete: (data: ChatResponseCompleteDto) => void;
   pro_con_perspective_complete: (data: ProConPerspectiveDto) => void;
-  candidate_pro_con_perspective_complete: (data: CandidateProConPerspectiveDto) => void;
+  candidate_pro_con_perspective_complete: (
+    data: CandidateProConPerspectiveDto,
+  ) => void;
   responding_parties_selected: (data: RespondingPartiesDto) => void;
   voting_behavior_result: (data: VotingBehaviorVoteDto) => void;
   voting_behavior_summary_chunk: (data: VotingBehaviorSummaryChunkDto) => void;
@@ -328,6 +330,8 @@ export interface ClientToServerEvents {
   chat_session_init: (data: InitChatSessionDto) => void;
   chat_answer_request: (data: ChatUserMessageDto) => void;
   pro_con_perspective_request: (data: ProConPerspectiveRequestDto) => void;
-  candidate_pro_con_perspective_request: (data: CandidateProConPerspectiveRequestDto) => void;
+  candidate_pro_con_perspective_request: (
+    data: CandidateProConPerspectiveRequestDto,
+  ) => void;
   voting_behavior_request: (data: VotingBehaviorRequestDto) => void;
 }

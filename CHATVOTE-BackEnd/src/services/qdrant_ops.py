@@ -23,7 +23,10 @@ Usage:
 """
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from langchain_qdrant import QdrantVectorStore
 
 from qdrant_client.models import (
     Distance,
@@ -39,8 +42,6 @@ from src.vector_store_helper import (
     qdrant_client,
     embed,
     EMBEDDING_DIM,
-    PARTY_INDEX_NAME,
-    CANDIDATES_INDEX_NAME,
 )
 
 logger = logging.getLogger(__name__)
@@ -232,7 +233,7 @@ def get_indexed_namespaces(collection_name: str) -> dict[str, int]:
         return {}
 
 
-def get_vector_store(collection_name: str) -> "QdrantVectorStore":
+def get_vector_store(collection_name: str) -> "QdrantVectorStore":  # noqa: F821
     """Get a LangChain QdrantVectorStore for a collection.
 
     Ensures the collection exists before returning.

@@ -1,5 +1,12 @@
+import {
+  type Analytics,
+  getAnalytics,
+  isSupported,
+  logEvent,
+  setUserId,
+  setUserProperties,
+} from "firebase/analytics";
 import { getApp } from "firebase/app";
-import { getAnalytics, isSupported, logEvent, setUserId, setUserProperties, type Analytics } from "firebase/analytics";
 
 let analyticsInstance: Analytics | null = null;
 
@@ -100,9 +107,7 @@ export function trackDemographicSkipped(params: {
   });
 }
 
-export function trackSuggestionClicked(params: {
-  question_id: string;
-}): void {
+export function trackSuggestionClicked(params: { question_id: string }): void {
   trackEvent("suggestion_clicked", { question_id: params.question_id });
 }
 
@@ -131,7 +136,9 @@ export function setAnalyticsUserId(userId: string): void {
   setUserId(analyticsInstance, userId);
 }
 
-export function setAnalyticsUserProperties(properties: Record<string, string>): void {
+export function setAnalyticsUserProperties(
+  properties: Record<string, string>,
+): void {
   if (!analyticsInstance) return;
   setUserProperties(analyticsInstance, properties);
 }

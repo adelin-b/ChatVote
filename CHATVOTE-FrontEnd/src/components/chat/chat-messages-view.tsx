@@ -150,10 +150,7 @@ function ChatMessagesView({
           // Show demographic question after assistant response to specific user message counts
           const demographicQuestion =
             demographicsLoaded && m.role !== "user"
-              ? getNextDemographicQuestion(
-                  userMessageCount,
-                  userDemographics,
-                )
+              ? getNextDemographicQuestion(userMessageCount, userDemographics)
               : null;
 
           return (

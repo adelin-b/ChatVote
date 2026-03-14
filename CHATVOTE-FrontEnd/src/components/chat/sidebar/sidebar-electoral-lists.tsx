@@ -36,18 +36,14 @@ function ElectoralListCard({
       onClick={() => onSelect(list)}
     >
       {isSelected && (
-        <CheckCircle2 className="absolute top-1.5 right-1.5 size-4 text-primary" />
+        <CheckCircle2 className="text-primary absolute top-1.5 right-1.5 size-4" />
       )}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {list.head_first_name}
       </span>
-      <span className="text-sm font-bold">
-        {list.head_last_name}
-      </span>
-      {list.nuance_code && (
-        <div className="mt-0.5 h-px w-8 bg-primary/40" />
-      )}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-sm font-bold">{list.head_last_name}</span>
+      {list.nuance_code && <div className="bg-primary/40 mt-0.5 h-px w-8" />}
+      <span className="text-muted-foreground text-xs">
         {toTitleCase(list.list_label)}
       </span>
     </button>
@@ -121,11 +117,11 @@ const SidebarElectoralLists = () => {
   return (
     <div className="flex flex-col gap-2 px-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground uppercase">
+        <span className="text-muted-foreground text-xs font-medium uppercase">
           {t("lists")}
         </span>
         {data && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {data.commune_name} · {data.list_count} {t("lists")}
           </span>
         )}
@@ -133,16 +129,16 @@ const SidebarElectoralLists = () => {
 
       {isLoading && (
         <div className="flex items-center justify-center py-4">
-          <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="border-primary size-5 animate-spin rounded-full border-2 border-t-transparent" />
         </div>
       )}
 
       {hasNoData && !isLoading && (
         <div className="flex flex-col gap-2 px-2 py-4 text-center">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {t("noElectoralData")}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {t("noElectoralDataHint")}
           </span>
         </div>

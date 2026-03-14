@@ -84,7 +84,7 @@ const SidebarProvider = React.forwardRef<
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       return setOpen((open) => !open);
-    }, [isMobile, setOpen, setOpen]);
+    }, [setOpen]);
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
@@ -161,13 +161,18 @@ const Sidebar = React.forwardRef<
       collapsible = "offcanvas",
       className,
       children,
-      mobileVisuallyHiddenTitle,
-      mobileVisuallyHiddenDescription,
+      mobileVisuallyHiddenTitle: _mobileVisuallyHiddenTitle,
+      mobileVisuallyHiddenDescription: _mobileVisuallyHiddenDescription,
       ...props
     },
     ref,
   ) => {
-    const { isMobile, state, setOpen, toggleSidebar } = useSidebar();
+    const {
+      isMobile: _isMobile,
+      state,
+      setOpen: _setOpen,
+      toggleSidebar,
+    } = useSidebar();
 
     if (collapsible === "none") {
       return (
@@ -195,7 +200,7 @@ const Sidebar = React.forwardRef<
         <div
           ref={ref}
           className={cn(
-            "flex-col overflow-hidden border-r border-border-subtle bg-surface duration-200",
+            "border-border-subtle bg-surface flex-col overflow-hidden border-r duration-200",
             // Expanded state
             state === "expanded" ? "w-full md:w-95" : "w-0",
             className,
@@ -215,9 +220,7 @@ const Sidebar = React.forwardRef<
         </div>
         {state === "expanded" ? (
           <div
-            className={
-              "flex-1 cursor-pointer bg-surface/20 backdrop-blur-sm"
-            }
+            className={"bg-surface/20 flex-1 cursor-pointer backdrop-blur-sm"}
             onClick={toggleSidebar}
           />
         ) : null}

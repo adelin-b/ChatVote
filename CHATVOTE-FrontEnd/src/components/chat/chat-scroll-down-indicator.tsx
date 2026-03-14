@@ -83,7 +83,7 @@ function ChatScrollDownIndicator() {
       {hasNewMessage && isVisible && (
         <button
           onClick={handleClick}
-          className="text-muted-foreground pointer-events-auto animate-in fade-in slide-in-from-bottom-1 cursor-pointer text-xs font-medium"
+          className="text-muted-foreground animate-in fade-in slide-in-from-bottom-1 pointer-events-auto cursor-pointer text-xs font-medium"
         >
           New message
         </button>

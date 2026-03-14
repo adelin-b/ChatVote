@@ -182,7 +182,7 @@ async def run_e2e_test() -> bool:
         state["errors"].append("session_init_timeout: no chat_session_initialized after 2s")
 
     # Step 2 — send the question
-    print(f"\nEmitting chat_answer_request ...")
+    print("\nEmitting chat_answer_request ...")
     print(f"  question: {QUESTION!r}")
     await sio.emit(
         "chat_answer_request",

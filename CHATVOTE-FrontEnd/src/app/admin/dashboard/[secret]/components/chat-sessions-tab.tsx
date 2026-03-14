@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Fragment } from "react";
-import { Loader2, RefreshCw, ChevronDown, ChevronRight, ThumbsDown } from "lucide-react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+
 import { Button } from "@components/ui/button";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  RefreshCw,
+  ThumbsDown,
+} from "lucide-react";
+
 import ChatDetailPanel from "./chat-detail-panel";
 
 // ---------------------------------------------------------------------------
@@ -61,12 +69,14 @@ function shouldFlagRow(session: ChatSession): boolean {
 
 function StatusDot({ status }: { status?: string }) {
   if (status === "success")
-    return <span className="size-2.5 rounded-full bg-green-500 shrink-0" />;
+    return <span className="size-2.5 shrink-0 rounded-full bg-green-500" />;
   if (status === "error")
-    return <span className="size-2.5 rounded-full bg-red-500/100 shrink-0" />;
+    return <span className="size-2.5 shrink-0 rounded-full bg-red-500/100" />;
   if (status === "partial")
-    return <span className="size-2.5 rounded-full bg-yellow-500/100 shrink-0" />;
-  return <span className="size-2.5 rounded-full bg-gray-300 shrink-0" />;
+    return (
+      <span className="size-2.5 shrink-0 rounded-full bg-yellow-500/100" />
+    );
+  return <span className="size-2.5 shrink-0 rounded-full bg-gray-300" />;
 }
 
 function formatTime(ts?: string): string {
@@ -142,8 +152,10 @@ export default function ChatSessionsTab({
         setHasMore(data.has_more);
         setNextCursor(data.next_cursor ?? null);
         setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch sessions");
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch sessions",
+        );
       } finally {
         setLoading(false);
       }
@@ -192,7 +204,7 @@ export default function ChatSessionsTab({
         <div className="flex items-center gap-2">
           <label
             htmlFor="status-filter"
-            className="text-xs font-medium text-muted-foreground"
+            className="text-muted-foreground text-xs font-medium"
           >
             Status:
           </label>
@@ -200,7 +212,7 @@ export default function ChatSessionsTab({
             id="status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded border border-border-subtle bg-card px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="border-border-subtle bg-card text-foreground focus:ring-ring rounded border px-2.5 py-1.5 text-xs focus:ring-1 focus:outline-none"
           >
             <option value="all">All</option>
             <option value="success">Success</option>
@@ -212,10 +224,11 @@ export default function ChatSessionsTab({
 
         <div className="ml-auto flex items-center gap-2">
           {loading && (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 className="text-muted-foreground size-4 animate-spin" />
           )}
-          <span className="text-xs text-muted-foreground">
-            {displayedSessions.length} session{displayedSessions.length !== 1 ? "s" : ""}
+          <span className="text-muted-foreground text-xs">
+            {displayedSessions.length} session
+            {displayedSessions.length !== 1 ? "s" : ""}
           </span>
           <Button
             size="sm"
@@ -238,42 +251,42 @@ export default function ChatSessionsTab({
 
       {/* Table */}
       {!loading && displayedSessions.length === 0 && !error && (
-        <div className="rounded-xl border border-border-subtle bg-card py-16 text-center text-sm text-muted-foreground">
+        <div className="border-border-subtle bg-card text-muted-foreground rounded-xl border py-16 text-center text-sm">
           No chat sessions found.
         </div>
       )}
 
       {displayedSessions.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
+        <div className="border-border-subtle bg-card overflow-hidden rounded-xl border">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-subtle text-left bg-background">
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-8" />
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-border-subtle bg-background border-b text-left">
+                  <th className="text-muted-foreground w-8 px-4 py-3 text-xs font-semibold tracking-wider uppercase" />
+                  <th className="text-muted-foreground px-4 py-3 text-xs font-semibold tracking-wider uppercase">
                     Timestamp
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-3 text-xs font-semibold tracking-wider uppercase">
                     Session ID
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-3 text-xs font-semibold tracking-wider uppercase">
                     Commune
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
+                  <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold tracking-wider uppercase">
                     Sources
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
+                  <th className="text-muted-foreground px-4 py-3 text-center text-xs font-semibold tracking-wider uppercase">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
+                  <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold tracking-wider uppercase">
                     Resp. time
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="text-muted-foreground px-4 py-3 text-xs font-semibold tracking-wider uppercase">
                     Model
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border-subtle">
+              <tbody className="divide-border-subtle divide-y">
                 {displayedSessions.map((session) => (
                   <Fragment key={session.session_id}>
                     <tr
@@ -284,55 +297,55 @@ export default function ChatSessionsTab({
                       }`}
                       onClick={() => toggleExpand(session.session_id)}
                     >
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="text-muted-foreground px-4 py-3">
                         {expandedSession === session.session_id ? (
                           <ChevronDown className="size-3.5" />
                         ) : (
                           <ChevronRight className="size-3.5" />
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                      <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap">
                         {formatTime(session.updated_at ?? session.created_at)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-muted-foreground">
+                        <span className="text-muted-foreground font-mono text-xs">
                           {session.session_id.slice(0, 12)}…
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                      <td className="text-muted-foreground px-4 py-3 text-xs">
                         {session.municipality_name ?? "—"}
                         {session.municipality_code && (
-                          <span className="ml-1 font-mono text-[10px] text-muted-foreground">
+                          <span className="text-muted-foreground ml-1 font-mono text-[10px]">
                             {session.municipality_code}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums">
+                      <td className="text-muted-foreground px-4 py-3 text-right text-xs tabular-nums">
                         {session.debug?.source_count ?? "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <div className="flex flex-wrap items-center justify-center gap-1.5">
                           <StatusDot status={session.debug?.status} />
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             {session.debug?.status ?? "—"}
                           </span>
                           {session.debug?.source_count === 0 && (
-                            <span className="text-[10px] font-medium text-red-400 bg-red-500/15 rounded px-1 py-0.5">
+                            <span className="rounded bg-red-500/15 px-1 py-0.5 text-[10px] font-medium text-red-400">
                               0 src
                             </span>
                           )}
                           {session.has_negative_feedback && (
-                            <span className="flex items-center gap-0.5 text-[10px] font-medium text-red-400 bg-red-500/15 rounded px-1 py-0.5">
+                            <span className="flex items-center gap-0.5 rounded bg-red-500/15 px-1 py-0.5 text-[10px] font-medium text-red-400">
                               <ThumbsDown className="size-2.5" />
                               dislike
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                      <td className="text-muted-foreground px-4 py-3 text-right text-xs whitespace-nowrap tabular-nums">
                         {formatMs(session.debug?.response_time_ms)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono truncate max-w-[120px]">
+                      <td className="text-muted-foreground max-w-[120px] truncate px-4 py-3 font-mono text-xs">
                         {session.debug?.model_used ?? "—"}
                       </td>
                     </tr>
@@ -357,7 +370,7 @@ export default function ChatSessionsTab({
 
           {/* Load more */}
           {hasMore && (
-            <div className="border-t border-border-subtle px-4 py-3 text-center">
+            <div className="border-border-subtle border-t px-4 py-3 text-center">
               <Button
                 size="sm"
                 variant="outline"

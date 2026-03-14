@@ -11,8 +11,6 @@ Usage:
 
 import asyncio
 import logging
-import os
-import re
 import sys
 import tempfile
 from pathlib import Path
@@ -57,7 +55,7 @@ async def main():
     # We need communes_to_scrap high enough to include all missing communes
     # The API returns ~35k communes sorted by population desc
     # Set to 500 to be safe (covers all communes with >15k population)
-    from src.services.data_pipeline.base import load_config, NodeConfig
+    from src.services.data_pipeline.base import load_config
     from src.services.data_pipeline.population import PopulationNode
     from src.services.data_pipeline.candidatures import CandidaturesNode
     from src.services.data_pipeline.seed import SeedNode

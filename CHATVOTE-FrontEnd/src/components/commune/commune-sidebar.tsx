@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 
 import Link from "next/link";
 
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 export function CommuneSidebar({ currentCode }: { currentCode?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ code: string; nom: string; codesPostaux?: string[] }>>([]);
+  const [results, setResults] = useState<
+    Array<{ code: string; nom: string; codesPostaux?: string[] }>
+  >([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -22,16 +24,24 @@ export function CommuneSidebar({ currentCode }: { currentCode?: string }) {
       try {
         const res = await fetch(`/api/municipalities`);
         if (res.ok) {
-          const data = await res.json() as Array<{ code: string; nom: string; codesPostaux?: string[] }>;
+          const data = (await res.json()) as Array<{
+            code: string;
+            nom: string;
+            codesPostaux?: string[];
+          }>;
           const q = query.toLowerCase();
-          const filtered = (Array.isArray(data) ? data : []).filter(
-            (m) =>
-              m.nom?.toLowerCase().includes(q) ||
-              m.codesPostaux?.some((cp) => cp.startsWith(q))
-          ).slice(0, 20);
+          const filtered = (Array.isArray(data) ? data : [])
+            .filter(
+              (m) =>
+                m.nom?.toLowerCase().includes(q) ||
+                m.codesPostaux?.some((cp) => cp.startsWith(q)),
+            )
+            .slice(0, 20);
           setResults(filtered);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       setSearching(false);
     }, 300);
     return () => clearTimeout(timeout);
@@ -43,45 +53,53 @@ export function CommuneSidebar({ currentCode }: { currentCode?: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-surface border border-border-subtle rounded-r-lg p-2 hover:bg-border-subtle/40 transition-colors"
+        className="bg-surface border-border-subtle hover:bg-border-subtle/40 fixed top-1/2 left-0 z-30 -translate-y-1/2 rounded-r-lg border p-2 transition-colors"
       >
-        {open ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+        {open ? (
+          <ChevronLeft className="size-4" />
+        ) : (
+          <ChevronRight className="size-4" />
+        )}
       </button>
 
       {/* Sidebar panel */}
       {open && (
-        <div className="fixed left-0 top-0 bottom-0 z-20 w-72 bg-surface border-r border-border-subtle flex flex-col shadow-xl">
-          <div className="p-3 border-b border-border-subtle">
+        <div className="bg-surface border-border-subtle fixed top-0 bottom-0 left-0 z-20 flex w-72 flex-col border-r shadow-xl">
+          <div className="border-border-subtle border-b p-3">
             <Link
               href="/chat"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-border-subtle/40 transition-colors"
+              className="text-muted-foreground hover:text-foreground hover:bg-border-subtle/40 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
             >
               <ArrowLeft className="size-4" />
               Retour au chat
             </Link>
           </div>
-          <div className="p-4 border-b border-border-subtle">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+          <div className="border-border-subtle border-b p-4">
+            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-widest uppercase">
               Communes
             </p>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher une commune…"
-                className="w-full bg-border-subtle/40 border border-border-subtle rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                className="bg-border-subtle/40 border-border-subtle text-foreground placeholder:text-muted-foreground focus:border-primary w-full rounded-lg border py-2 pr-3 pl-9 text-sm focus:outline-none"
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
             {searching && (
-              <p className="text-xs text-muted-foreground text-center py-4">Recherche…</p>
+              <p className="text-muted-foreground py-4 text-center text-xs">
+                Recherche…
+              </p>
             )}
             {!searching && query.length >= 2 && results.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">Aucun résultat</p>
+              <p className="text-muted-foreground py-4 text-center text-xs">
+                Aucun résultat
+              </p>
             )}
             {results.map((r) => (
               <Link
@@ -102,7 +120,7 @@ export function CommuneSidebar({ currentCode }: { currentCode?: string }) {
               </Link>
             ))}
             {query.length < 2 && (
-              <p className="text-xs text-muted-foreground text-center py-4">
+              <p className="text-muted-foreground py-4 text-center text-xs">
                 Tapez au moins 2 caractères
               </p>
             )}

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Loader2, RefreshCw, ShieldOff } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
 import { Button } from "@components/ui/button";
+import { Loader2, RefreshCw, ShieldOff } from "lucide-react";
+
 import WarningCard, { type Warning } from "./warning-card";
 
 interface OverviewTabProps {
@@ -49,8 +51,10 @@ export default function OverviewTab({
       } else {
         setRateLimitMsg(`Error: ${data.message || res.status}`);
       }
-    } catch (err: any) {
-      setRateLimitMsg(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      setRateLimitMsg(
+        `Error: ${err instanceof Error ? err.message : String(err)}`,
+      );
     } finally {
       setResettingRateLimit(false);
       setTimeout(() => setRateLimitMsg(null), 5000);
@@ -73,8 +77,8 @@ export default function OverviewTab({
       const data: WarningsResponse = await res.json();
       setWarnings(data);
       onWarningCounts(data.counts);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch warnings");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to fetch warnings");
     } finally {
       setLoading(false);
     }
@@ -94,8 +98,10 @@ export default function OverviewTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading warnings...</span>
+        <Loader2 className="text-muted-foreground size-5 animate-spin" />
+        <span className="text-muted-foreground ml-2 text-sm">
+          Loading warnings...
+        </span>
       </div>
     );
   }
@@ -140,15 +146,14 @@ export default function OverviewTab({
                 {warnings.counts.warning} warning
               </span>
             )}
-          {warnings?.counts.info !== undefined &&
-            warnings.counts.info > 0 && (
-              <span className="flex items-center gap-1.5 rounded-full bg-blue-500/15 px-3 py-1 text-sm font-medium text-blue-400">
-                <span className="size-2 rounded-full bg-blue-500/100" />
-                {warnings.counts.info} info
-              </span>
-            )}
+          {warnings?.counts.info !== undefined && warnings.counts.info > 0 && (
+            <span className="flex items-center gap-1.5 rounded-full bg-blue-500/15 px-3 py-1 text-sm font-medium text-blue-400">
+              <span className="size-2 rounded-full bg-blue-500/100" />
+              {warnings.counts.info} info
+            </span>
+          )}
           {totalWarnings === 0 && (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               No warnings — all systems healthy
             </span>
           )}
@@ -165,8 +170,8 @@ export default function OverviewTab({
       </div>
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-muted/30 px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="border-border-subtle bg-muted/30 flex items-center gap-3 rounded-lg border px-4 py-3">
+        <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
           Quick Actions
         </span>
         <Button
@@ -195,13 +200,15 @@ export default function OverviewTab({
       {/* Data Completeness */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
             Data Completeness
           </span>
-          <div className="flex-1 border-t border-border-subtle" />
+          <div className="border-border-subtle flex-1 border-t" />
         </div>
         {warnings?.data.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
+          <p className="text-muted-foreground text-sm italic">
+            No issues detected.
+          </p>
         ) : (
           <div className="space-y-2">
             {warnings?.data.map((w, i) => (
@@ -214,13 +221,15 @@ export default function OverviewTab({
       {/* Operational */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
             Operational
           </span>
-          <div className="flex-1 border-t border-border-subtle" />
+          <div className="border-border-subtle flex-1 border-t" />
         </div>
         {warnings?.ops.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
+          <p className="text-muted-foreground text-sm italic">
+            No issues detected.
+          </p>
         ) : (
           <div className="space-y-2">
             {warnings?.ops.map((w, i) => (
@@ -233,13 +242,15 @@ export default function OverviewTab({
       {/* Chat Quality */}
       <section>
         <div className="mb-3 flex items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
             Chat Quality
           </span>
-          <div className="flex-1 border-t border-border-subtle" />
+          <div className="border-border-subtle flex-1 border-t" />
         </div>
         {warnings?.chat.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No issues detected.</p>
+          <p className="text-muted-foreground text-sm italic">
+            No issues detected.
+          </p>
         ) : (
           <div className="space-y-2">
             {warnings?.chat.map((w, i) => (

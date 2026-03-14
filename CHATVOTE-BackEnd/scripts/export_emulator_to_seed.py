@@ -21,7 +21,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 _env_path = PROJECT_ROOT / ".env"
 if _env_path.exists():
     load_dotenv(_env_path, override=False)
@@ -29,9 +29,8 @@ if _env_path.exists():
 os.environ.setdefault("ENV", "local")
 os.environ.setdefault("FIRESTORE_EMULATOR_HOST", "localhost:8081")
 
-import firebase_admin
-from firebase_admin import firestore
-from google.cloud.firestore_v1.base_document import DocumentSnapshot
+import firebase_admin  # noqa: E402
+from firebase_admin import firestore  # noqa: E402
 
 FIREBASE_DATA_DIR = PROJECT_ROOT / "firebase" / "firestore_data" / "dev"
 
@@ -56,7 +55,6 @@ KNOWN_SUBCOLLECTIONS = {
 def convert_value(val):
     """Convert Firestore types to JSON-serializable types."""
     from google.cloud.firestore_v1 import DocumentReference
-    from google.protobuf.timestamp_pb2 import Timestamp
     import datetime
 
     if val is None:

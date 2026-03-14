@@ -17,7 +17,7 @@ load_env()
 if _target_env:
     os.environ["ENV"] = _target_env
 
-from src.firebase_service import db
+from src.firebase_service import db  # noqa: E402
 
 COLLECTION = "proposed_questions"
 JSON_FILE = Path(__file__).parent.parent / "firebase" / "firestore_data" / "dev" / "proposed_questions.json"

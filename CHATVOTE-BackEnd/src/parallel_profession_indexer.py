@@ -136,7 +136,7 @@ async def _enqueue_from_firestore(
 
     all_candidates: list[dict[str, Any]] = []
     for doc in docs:
-        data = doc.to_dict() or {}
+        doc.to_dict() or {}
         candidate_id = doc.id
         parts = candidate_id.split("-")
         if len(parts) < 3:

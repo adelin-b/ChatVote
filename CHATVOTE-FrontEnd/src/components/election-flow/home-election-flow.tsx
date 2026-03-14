@@ -104,31 +104,34 @@ const HomeElectionFlow = ({ className }: Props) => {
   const [isLoadingParties, setIsLoadingParties] = useState(false);
 
   // Handle scope selection
-  const handleScopeChange = useCallback(async (value: Scope) => {
-    setScope(value);
+  const handleScopeChange = useCallback(
+    async (value: Scope) => {
+      setScope(value);
 
-    if (value === "national") {
-      // National scope - load parties and stay on scope step
-      setCurrentStep("scope");
-      setIsLoadingParties(true);
-      try {
-        const partiesData = await getParties();
-        setParties(partiesData.slice(0, MAX_PARTIES_DISPLAY));
-      } catch (_) {
-        toast.error(t("errorLoadingParties"));
-        setParties([]);
-      } finally {
-        setIsLoadingParties(false);
+      if (value === "national") {
+        // National scope - load parties and stay on scope step
+        setCurrentStep("scope");
+        setIsLoadingParties(true);
+        try {
+          const partiesData = await getParties();
+          setParties(partiesData.slice(0, MAX_PARTIES_DISPLAY));
+        } catch {
+          toast.error(t("errorLoadingParties"));
+          setParties([]);
+        } finally {
+          setIsLoadingParties(false);
+        }
+      } else {
+        // Local scope - go to municipality search
+        setCurrentStep("municipality");
       }
-    } else {
-      // Local scope - go to municipality search
-      setCurrentStep("municipality");
-    }
 
-    // Reset state
-    setSelectedMunicipality(null);
-    setCandidates([]);
-  }, []);
+      // Reset state
+      setSelectedMunicipality(null);
+      setCandidates([]);
+    },
+    [t],
+  );
 
   // Handle municipality selection
   const handleSelectMunicipality = useCallback(
@@ -152,11 +155,11 @@ const HomeElectionFlow = ({ className }: Props) => {
         setIsLoadingCandidates(false);
       }
     },
-    [],
+    [t],
   );
 
   // Handle municipality clear
-  const handleClearMunicipality = useCallback(() => {
+  const _handleClearMunicipality = useCallback(() => {
     setSelectedMunicipality(null);
     setCandidates([]);
     setCurrentStep("municipality");

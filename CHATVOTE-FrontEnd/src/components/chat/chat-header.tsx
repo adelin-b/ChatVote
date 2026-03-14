@@ -28,14 +28,14 @@ function ChatHeader() {
         {displayBanner === true && (
           <div
             className={
-              "flex w-full flex-col items-center justify-between gap-4 bg-primary px-4 py-3 text-primary-foreground md:flex-row"
+              "bg-primary text-primary-foreground flex w-full flex-col items-center justify-between gap-4 px-4 py-3 md:flex-row"
             }
           >
             <div className={"flex justify-between gap-3 md:gap-0"}>
               <div className={"text-sm"}>
                 ChatVote est une initiative associative open source et
-                souveraine - la fiabilité de l'information fournie est notre
-                priorité. Version 1.0.
+                souveraine - la fiabilité de l&apos;information fournie est
+                notre priorité. Version 1.0
               </div>
               <Button
                 variant="ghost"

@@ -83,12 +83,12 @@ export const AccordionItem: React.FC<ItemProps> = (props) => {
           onClick={toggle}
           className="relative flex w-full cursor-pointer items-center justify-between px-4 py-5 text-left"
         >
-          <span className="text-sm leading-6 font-medium text-foreground">
+          <span className="text-foreground text-sm leading-6 font-medium">
             {title}
           </span>
           <ChevronDown
             className={cn(
-              "size-6 text-foreground transition-all duration-300 ease-in-out",
+              "text-foreground size-6 transition-all duration-300 ease-in-out",
               isOpen === true && "rotate-180",
             )}
           />
@@ -103,7 +103,7 @@ export const AccordionItem: React.FC<ItemProps> = (props) => {
             transition={{ duration: 0.4, type: "spring", bounce: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-4 pt-0 text-sm leading-5 font-normal text-foreground">
+            <div className="text-foreground p-4 pt-0 text-sm leading-5 font-normal">
               {children}
             </div>
           </motion.div>

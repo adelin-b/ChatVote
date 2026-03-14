@@ -15,7 +15,6 @@ import asyncio
 import logging
 import os
 import sys
-from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials, storage

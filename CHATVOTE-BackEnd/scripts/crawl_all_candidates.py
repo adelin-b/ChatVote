@@ -15,14 +15,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from src.utils import load_env
 load_env()
 
-from src.services.candidate_indexer import (
+from src.services.candidate_indexer import (  # noqa: E402
     index_candidate_website,
     CANDIDATES_INDEX_NAME,
 )
-from src.services.candidate_website_scraper import CandidateWebsiteScraper
-from src.firebase_service import aget_candidates_with_website
-from src.vector_store_helper import qdrant_client
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+from src.services.candidate_website_scraper import CandidateWebsiteScraper  # noqa: E402
+from src.firebase_service import aget_candidates_with_website  # noqa: E402
+from src.vector_store_helper import qdrant_client  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,

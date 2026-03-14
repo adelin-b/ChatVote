@@ -5,9 +5,13 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { toTitleCase } from "@lib/utils";
-
-import { ArrowRight, BarChart3, Layers, MessageCircle, Users } from "lucide-react";
-
+import {
+  ArrowRight,
+  BarChart3,
+  Layers,
+  MessageCircle,
+  Users,
+} from "lucide-react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -81,7 +85,7 @@ function listColor(i: number) {
   return LIST_COLORS[i % LIST_COLORS.length];
 }
 
-function normalize(values: number[]): number[] {
+function _normalize(values: number[]): number[] {
   const max = Math.max(...values, 1);
   return values.map((v) => Math.round((v / max) * 100));
 }
@@ -161,12 +165,12 @@ export default function MiniDashboardCard({ communeCode, communeName }: Props) {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="w-full max-w-sm animate-pulse rounded-2xl border border-border-subtle bg-surface p-4">
+      <div className="border-border-subtle bg-surface w-full max-w-sm animate-pulse rounded-2xl border p-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-border-subtle/60" />
+          <div className="bg-border-subtle/60 h-10 w-10 rounded-xl" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 w-24 rounded bg-border-subtle/60" />
-            <div className="h-2 w-16 rounded bg-border-subtle/40" />
+            <div className="bg-border-subtle/60 h-3 w-24 rounded" />
+            <div className="bg-border-subtle/40 h-2 w-16 rounded" />
           </div>
         </div>
       </div>
@@ -187,27 +191,27 @@ export default function MiniDashboardCard({ communeCode, communeName }: Props) {
       href={`/commune/${communeCode}`}
       className="group block w-full max-w-sm"
     >
-      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+      <div className="border-border-subtle bg-surface hover:border-primary/40 hover:shadow-primary/5 relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-lg">
         {/* Top accent bar */}
-        <div className="h-[3px] w-full bg-gradient-to-r from-primary via-violet-500 to-indigo-400" />
+        <div className="from-primary h-[3px] w-full bg-gradient-to-r via-violet-500 to-indigo-400" />
 
         <div className="p-4">
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-                <BarChart3 className="size-4 text-primary" />
+              <div className="bg-primary/10 flex size-9 items-center justify-center rounded-xl">
+                <BarChart3 className="text-primary size-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground leading-tight">
+                <p className="text-foreground text-sm leading-tight font-semibold">
                   {communeName}
                 </p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-muted-foreground text-[11px]">
                   Tableau de bord
                 </p>
               </div>
             </div>
-            <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100">
               <ArrowRight className="size-3.5" />
             </div>
           </div>
@@ -216,30 +220,26 @@ export default function MiniDashboardCard({ communeCode, communeName }: Props) {
           <div className="mb-3 flex gap-2">
             <div className="flex flex-1 items-center gap-1.5 rounded-lg bg-violet-500/10 px-2.5 py-1.5">
               <MessageCircle className="size-3 text-violet-400" />
-              <span className="text-xs font-bold text-foreground">
+              <span className="text-foreground text-xs font-bold">
                 {stats.total_questions}
               </span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-muted-foreground text-[10px]">
                 questions
               </span>
             </div>
             <div className="flex flex-1 items-center gap-1.5 rounded-lg bg-indigo-500/10 px-2.5 py-1.5">
               <Users className="size-3 text-indigo-400" />
-              <span className="text-xs font-bold text-foreground">
+              <span className="text-foreground text-xs font-bold">
                 {stats.total_lists}
               </span>
-              <span className="text-[10px] text-muted-foreground">
-                listes
-              </span>
+              <span className="text-muted-foreground text-[10px]">listes</span>
             </div>
             <div className="flex flex-1 items-center gap-1.5 rounded-lg bg-purple-500/10 px-2.5 py-1.5">
               <Layers className="size-3 text-purple-400" />
-              <span className="text-xs font-bold text-foreground">
+              <span className="text-foreground text-xs font-bold">
                 {stats.themes_detected}
               </span>
-              <span className="text-[10px] text-muted-foreground">
-                thèmes
-              </span>
+              <span className="text-muted-foreground text-[10px]">thèmes</span>
             </div>
           </div>
 
@@ -276,26 +276,26 @@ export default function MiniDashboardCard({ communeCode, communeName }: Props) {
 
             {/* Top themes */}
             <div className="flex flex-1 flex-col gap-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wider uppercase">
                 Thèmes principaux
               </p>
               {topThemes.map((theme, i) => {
                 const maxPct = topThemes[0]?.percentage ?? 1;
                 return (
                   <div key={theme.theme} className="flex items-center gap-2">
-                    <span className="w-4 text-right text-[10px] font-bold text-muted-foreground">
+                    <span className="text-muted-foreground w-4 text-right text-[10px] font-bold">
                       {i + 1}.
                     </span>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[11px] text-foreground truncate max-w-[120px]">
+                      <div className="mb-0.5 flex items-center justify-between">
+                        <span className="text-foreground max-w-[120px] truncate text-[11px]">
                           {theme.theme}
                         </span>
-                        <span className="text-[10px] font-semibold text-muted-foreground ml-1">
+                        <span className="text-muted-foreground ml-1 text-[10px] font-semibold">
                           {theme.percentage.toFixed(0)}%
                         </span>
                       </div>
-                      <div className="h-1 w-full rounded-full bg-border-subtle/40 overflow-hidden">
+                      <div className="bg-border-subtle/40 h-1 w-full overflow-hidden rounded-full">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -317,7 +317,7 @@ export default function MiniDashboardCard({ communeCode, communeName }: Props) {
           </div>
 
           {/* CTA footer */}
-          <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-primary/5 py-1.5 text-xs font-medium text-primary transition-colors group-hover:bg-primary/10">
+          <div className="bg-primary/5 text-primary group-hover:bg-primary/10 mt-3 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors">
             <BarChart3 className="size-3" />
             Voir le tableau de bord complet
             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />

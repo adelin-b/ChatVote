@@ -15,12 +15,9 @@ Usage:
     python -m pytest tests/eval/test_pipeline_comparison.py -v
 """
 
-import io
-import os
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any
 from unittest import mock
 
 import pytest
@@ -55,20 +52,20 @@ sys.modules.setdefault("qdrant_client", mock.MagicMock())
 sys.modules.setdefault("qdrant_client.models", mock.MagicMock())
 
 # Now import src modules
-from src.models.party import Party
-from src.models.candidate import Candidate
-from src.models.chunk_metadata import ChunkMetadata, Fiabilite, THEME_TAXONOMY
+from src.models.party import Party  # noqa: E402
+from src.models.candidate import Candidate  # noqa: E402
+from src.models.chunk_metadata import ChunkMetadata, Fiabilite, THEME_TAXONOMY  # noqa: E402
 
-from src.services.manifesto_indexer import (
+from src.services.manifesto_indexer import (  # noqa: E402
     create_documents_from_pages as legacy_create_docs_from_pages,
     extract_pages_from_pdf as legacy_extract_pages,
     CHUNK_SIZE as LEGACY_CHUNK_SIZE,
     CHUNK_OVERLAP as LEGACY_CHUNK_OVERLAP,
 )
-from src.services.candidate_indexer import (
+from src.services.candidate_indexer import (  # noqa: E402
     create_documents_from_scraped_website as legacy_create_docs_from_website,
 )
-from src.services.chunking import (
+from src.services.chunking import (  # noqa: E402
     create_documents_from_pages as new_create_docs_from_pages,
     create_documents_from_text as new_create_docs_from_text,
     text_splitter as new_text_splitter,
@@ -76,11 +73,11 @@ from src.services.chunking import (
     CHUNK_OVERLAP as NEW_CHUNK_OVERLAP,
     MIN_CHUNK_LENGTH,
 )
-from src.services.pdf_extract import (
+from src.services.pdf_extract import (  # noqa: E402
     extract_pages as new_extract_pages,
     extract_text as new_extract_text,
 )
-from src.services.theme_classifier import classify_theme_keywords as classify_theme, ThemeResult
+from src.services.theme_classifier import classify_theme_keywords as classify_theme  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

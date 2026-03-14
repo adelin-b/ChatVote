@@ -9,8 +9,7 @@ for mod in [
     if mod not in sys.modules:
         sys.modules[mod] = MagicMock()
 
-import pytest
-from src.models.candidate import Candidate
+from src.models.candidate import Candidate  # noqa: E402
 
 
 def _make_candidate():

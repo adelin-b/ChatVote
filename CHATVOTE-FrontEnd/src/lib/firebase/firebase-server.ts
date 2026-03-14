@@ -123,7 +123,7 @@ async function getPartiesImpl() {
       .get();
 
     return snapshot.docs.map((doc) => serialize(doc.data())) as PartyDetails[];
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -293,10 +293,7 @@ export const getHomeInputProposedQuestions = cache(
 );
 
 export async function getSystemStatus() {
-  const docSnap = await db
-    .collection("system_status")
-    .doc("llm_status")
-    .get();
+  const docSnap = await db.collection("system_status").doc("llm_status").get();
 
   return {
     is_at_rate_limit: docSnap.data()?.is_at_rate_limit ?? false,

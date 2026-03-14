@@ -26,7 +26,7 @@ _vsh_patch = patch.dict(
 _vsh_patch.start()
 
 # Now safe to import
-from src.services.qdrant_ops import (
+from src.services.qdrant_ops import (  # noqa: E402
     ensure_collection,
     delete_by_namespace,
     count_by_namespace,
@@ -34,7 +34,6 @@ from src.services.qdrant_ops import (
     get_vector_store,
     _ensured_collections,
 )
-from qdrant_client.models import PayloadSchemaType
 
 
 # ── fixtures ─────────────────────────────────────────────────────────────────

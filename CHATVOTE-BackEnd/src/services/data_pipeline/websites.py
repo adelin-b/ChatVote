@@ -5,7 +5,6 @@ Fallback: local xlsx file via WEBSITES_XLSX_PATH env var.
 """
 from __future__ import annotations
 
-import io
 import json
 import logging
 import os

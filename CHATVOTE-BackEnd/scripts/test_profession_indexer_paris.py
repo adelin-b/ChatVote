@@ -159,7 +159,7 @@ async def step3_verify(results: dict[str, int]) -> None:
         if sample_points:
             meta = sample_points[0].payload.get("metadata", {})
             content = sample_points[0].payload.get("page_content", "")[:200]
-            logger.info(f"  Sample chunk metadata:")
+            logger.info("  Sample chunk metadata:")
             logger.info(f"    namespace: {meta.get('namespace')}")
             logger.info(f"    source_document: {meta.get('source_document')}")
             logger.info(f"    fiabilite: {meta.get('fiabilite')}")
@@ -191,7 +191,7 @@ async def main():
     # Summary
     total = sum(results.values())
     successful = sum(1 for v in results.values() if v > 0)
-    logger.info(f"\n=== Summary ===")
+    logger.info("\n=== Summary ===")
     logger.info(f"Candidates: {successful}/{len(results)} indexed successfully")
     logger.info(f"Total chunks: {total}")
     for cid, count in sorted(results.items()):

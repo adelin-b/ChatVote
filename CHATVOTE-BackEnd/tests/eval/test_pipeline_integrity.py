@@ -26,12 +26,10 @@ Usage:
     poetry run pytest tests/eval/test_pipeline_integrity.py -s  # Ollama judge
 """
 
-import asyncio
 import io
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from deepeval import assert_test
@@ -808,10 +806,10 @@ class TestMetadataCorrectness:
         docs = _simulate_candidate_pipeline(sample)
         for doc in docs:
             assert doc.metadata.get("municipality_code") == sample["municipality_code"], (
-                f"Missing municipality_code in candidate chunk"
+                "Missing municipality_code in candidate chunk"
             )
             assert doc.metadata.get("municipality_name") == sample["municipality_name"], (
-                f"Missing municipality_name in candidate chunk"
+                "Missing municipality_name in candidate chunk"
             )
 
     def test_chunk_index_sequential(self):

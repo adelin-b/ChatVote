@@ -392,7 +392,7 @@ def generate_goldens(
     ollama_model = os.environ.get("OLLAMA_MODEL", "qwen3:32b")
 
     if provider == "gemini":
-        print(f"Using Gemini for golden generation")
+        print("Using Gemini for golden generation")
     else:
         print(f"Using Ollama at {ollama_url} with model {ollama_model}")
         _check_ollama(ollama_url)

@@ -1,23 +1,41 @@
-import { doc, getDoc, getFirestore, setDoc, Timestamp } from "firebase/firestore";
-import { initializeApp, getApps } from "firebase/app";
+import { getApps, initializeApp } from "firebase/app";
+import {
+  doc,
+  getDoc,
+  getFirestore,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
+
 import { firebaseConfig } from "./firebase-config";
 
 export type UserDemographics = {
   gender?: "female" | "male" | "other";
   age_range?: "18-25" | "26-35" | "36-50" | "51-65" | "65+";
-  occupation?: "student" | "employee" | "self_employed" | "retired" | "job_seeker" | "other";
+  occupation?:
+    | "student"
+    | "employee"
+    | "self_employed"
+    | "retired"
+    | "job_seeker"
+    | "other";
   concern_topics?: string[];
   updated_at?: Date;
 };
 
 function getDb() {
-  const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+  const app =
+    getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
   return getFirestore(app);
 }
 
-export async function getUserDemographics(userId: string): Promise<UserDemographics | null> {
+export async function getUserDemographics(
+  userId: string,
+): Promise<UserDemographics | null> {
   const db = getDb();
-  const snapshot = await getDoc(doc(db, "users", userId, "profile", "demographics"));
+  const snapshot = await getDoc(
+    doc(db, "users", userId, "profile", "demographics"),
+  );
 
   if (!snapshot.exists()) {
     return null;

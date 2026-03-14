@@ -1,4 +1,4 @@
-import { isNearBottom, chatViewScrollToBottom } from "@lib/scroll-utils";
+import { chatViewScrollToBottom, isNearBottom } from "@lib/scroll-utils";
 import { type ChatStoreActionHandlerFor } from "@lib/stores/chat-store.types";
 import { generateUuid } from "@lib/utils";
 

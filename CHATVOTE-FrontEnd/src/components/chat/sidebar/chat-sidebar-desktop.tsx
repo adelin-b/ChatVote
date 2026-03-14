@@ -12,7 +12,13 @@ import { Button } from "@components/ui/button";
 import { SidebarTrigger, useSidebar } from "@components/ui/sidebar";
 import { type Auth } from "@lib/types/auth";
 import { cn } from "@lib/utils";
-import { BarChart3, Heart, MessageSquareWarning, User, UserCheck } from "lucide-react";
+import {
+  BarChart3,
+  Heart,
+  MessageSquareWarning,
+  User,
+  UserCheck,
+} from "lucide-react";
 
 type Props = {
   auth: Auth;
@@ -25,7 +31,7 @@ const ChatSidebarDesktop = ({ auth }: Props) => {
   if (state === "expanded") return null;
 
   return (
-    <div className="hidden h-screen w-16 flex-none flex-col items-center gap-12 overflow-hidden border-r border-border-subtle bg-surface px-2 py-4 md:flex">
+    <div className="border-border-subtle bg-surface hidden h-screen w-16 flex-none flex-col items-center gap-12 overflow-hidden border-r px-2 py-4 md:flex">
       <div className={"flex flex-col items-center"}>
         <Link href="https://tndm.fr" className="flex items-center">
           <Image

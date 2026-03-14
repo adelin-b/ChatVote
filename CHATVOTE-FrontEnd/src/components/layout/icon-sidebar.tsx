@@ -1,21 +1,29 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { BarChart3, Heart, MessageCircle, MessageSquareWarning, User, UserCheck } from "lucide-react";
-import { Button } from "@components/ui/button";
+import Link from "next/link";
+
+import { useAuth } from "@components/anonymous-auth";
 import LoginButton from "@components/auth/login-button";
 import DonationDialog from "@components/donation-dialog";
 import FeedbackDialog from "@components/feedback-dialog";
-import { useAuth } from "@components/anonymous-auth";
+import { Button } from "@components/ui/button";
 import { cn } from "@lib/utils";
+import {
+  BarChart3,
+  Heart,
+  MessageCircle,
+  MessageSquareWarning,
+  User,
+  UserCheck,
+} from "lucide-react";
 
 export default function IconSidebar() {
   const auth = useAuth();
   const isAuthenticated = auth.session !== null && !auth.session.isAnonymous;
 
   return (
-    <div className="hidden h-screen w-16 flex-none flex-col items-center gap-12 overflow-hidden border-r border-border-subtle bg-surface px-2 py-4 md:flex">
+    <div className="border-border-subtle bg-surface hidden h-screen w-16 flex-none flex-col items-center gap-12 overflow-hidden border-r px-2 py-4 md:flex">
       <div className="flex flex-col items-center">
         <Link href="https://tndm.fr" className="flex items-center">
           <Image

@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Loader2, X, ChevronDown, ChevronRight, ExternalLink, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  ThumbsDown,
+  ThumbsUp,
+  X,
+} from "lucide-react";
 
 interface ChatDetailPanelProps {
   sessionId: string;
@@ -130,8 +139,11 @@ export default function ChatDetailPanel({
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data: SessionDetail = await res.json();
         if (!cancelled) setDetail(data);
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || "Failed to load session");
+      } catch (err: unknown) {
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load session",
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -167,19 +179,21 @@ export default function ChatDetailPanel({
   }
 
   return (
-    <div className="border-t border-border-subtle bg-background">
+    <div className="border-border-subtle bg-background border-t">
       {/* Panel header */}
-      <div className="flex items-center justify-between border-b border-border-subtle bg-card px-5 py-3">
+      <div className="border-border-subtle bg-card flex items-center justify-between border-b px-5 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-foreground text-sm font-semibold">
             Session Detail
           </h3>
-          <span className="font-mono text-xs text-muted-foreground">{sessionId}</span>
+          <span className="text-muted-foreground font-mono text-xs">
+            {sessionId}
+          </span>
           <a
             href={chatUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded bg-blue-500/15 px-2 py-0.5 text-[11px] font-medium text-blue-400 hover:bg-blue-500/25 transition-colors"
+            className="flex items-center gap-1 rounded bg-blue-500/15 px-2 py-0.5 text-[11px] font-medium text-blue-400 transition-colors hover:bg-blue-500/25"
           >
             <ExternalLink className="size-3" />
             Open chat
@@ -188,7 +202,7 @@ export default function ChatDetailPanel({
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-1 text-muted-foreground hover:bg-surface-elevated hover:text-foreground transition-colors"
+          className="text-muted-foreground hover:bg-surface-elevated hover:text-foreground rounded p-1 transition-colors"
         >
           <X className="size-4" />
         </button>
@@ -198,8 +212,10 @@ export default function ChatDetailPanel({
       <div className="p-5">
         {loading && (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+            <Loader2 className="text-muted-foreground size-5 animate-spin" />
+            <span className="text-muted-foreground ml-2 text-sm">
+              Loading...
+            </span>
           </div>
         )}
 
@@ -212,22 +228,24 @@ export default function ChatDetailPanel({
         {detail && !loading && (
           <div className="space-y-5">
             {/* Metadata row */}
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex flex-wrap gap-4 text-xs">
               {detail.municipality_name && (
                 <span>
-                  <span className="font-medium text-foreground">Commune:</span>{" "}
+                  <span className="text-foreground font-medium">Commune:</span>{" "}
                   {detail.municipality_name}{" "}
                   {detail.municipality_code && (
-                    <span className="font-mono">{detail.municipality_code}</span>
+                    <span className="font-mono">
+                      {detail.municipality_code}
+                    </span>
                   )}
                 </span>
               )}
               <span>
-                <span className="font-medium text-foreground">Created:</span>{" "}
+                <span className="text-foreground font-medium">Created:</span>{" "}
                 {formatTime(detail.created_at)}
               </span>
               <span>
-                <span className="font-medium text-foreground">Updated:</span>{" "}
+                <span className="text-foreground font-medium">Updated:</span>{" "}
                 {formatTime(detail.updated_at)}
               </span>
             </div>
@@ -254,18 +272,18 @@ export default function ChatDetailPanel({
                   </span>
                 )}
                 {detail.debug.response_time_ms !== undefined && (
-                  <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span className="bg-surface-elevated text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
                     {detail.debug.response_time_ms}ms
                   </span>
                 )}
                 {detail.debug.source_count !== undefined && (
-                  <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span className="bg-surface-elevated text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
                     {detail.debug.source_count} sources
                   </span>
                 )}
                 {detail.debug.total_tokens !== undefined &&
                   detail.debug.total_tokens > 0 && (
-                    <span className="rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="bg-surface-elevated text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
                       {detail.debug.total_tokens} tokens
                     </span>
                   )}
@@ -282,7 +300,7 @@ export default function ChatDetailPanel({
                   {detail.debug.error_messages.map((msg, i) => (
                     <pre
                       key={i}
-                      className="overflow-x-auto whitespace-pre-wrap text-[11px] leading-relaxed text-red-400"
+                      className="overflow-x-auto text-[11px] leading-relaxed whitespace-pre-wrap text-red-400"
                     >
                       {msg}
                     </pre>
@@ -292,18 +310,18 @@ export default function ChatDetailPanel({
 
             {/* Messages */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                 Messages ({flatMessages.length})
               </p>
               {flatMessages.length === 0 && (
-                <p className="text-sm text-muted-foreground italic">
+                <p className="text-muted-foreground text-sm italic">
                   No messages in this session.
                 </p>
               )}
               {flatMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`rounded-lg border border-border-subtle p-3 ${
+                  className={`border-border-subtle rounded-lg border p-3 ${
                     msg.role === "user"
                       ? "border-blue-500/30 bg-blue-500/10"
                       : "border-border-subtle bg-card"
@@ -312,7 +330,7 @@ export default function ChatDetailPanel({
                   <div className="mb-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] font-bold uppercase tracking-wider ${
+                        className={`text-[10px] font-bold tracking-wider uppercase ${
                           msg.role === "user"
                             ? "text-blue-400"
                             : "text-muted-foreground"
@@ -336,16 +354,18 @@ export default function ChatDetailPanel({
                           <ThumbsDown className="size-2.5" />
                           dislike
                           {msg.feedback.detail && (
-                            <span className="ml-1 text-red-300">— {msg.feedback.detail}</span>
+                            <span className="ml-1 text-red-300">
+                              — {msg.feedback.detail}
+                            </span>
                           )}
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground text-[10px]">
                       {formatTime(msg.created_at)}
                     </span>
                   </div>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
                     {msg.content}
                   </p>
 
@@ -355,7 +375,7 @@ export default function ChatDetailPanel({
                       <button
                         type="button"
                         onClick={() => toggleSources(msg.id)}
-                        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] transition-colors"
                       >
                         {expandedSources.has(msg.id) ? (
                           <ChevronDown className="size-3" />
@@ -370,20 +390,20 @@ export default function ChatDetailPanel({
                           {msg.sources.map((src, i) => (
                             <div
                               key={i}
-                              className="rounded border border-border-subtle bg-background px-2.5 py-1.5"
+                              className="border-border-subtle bg-background rounded border px-2.5 py-1.5"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-mono text-[10px] text-muted-foreground">
+                                <span className="text-muted-foreground font-mono text-[10px]">
                                   {src.id}
                                 </span>
                                 {src.score !== undefined && (
-                                  <span className="text-[10px] text-muted-foreground">
+                                  <span className="text-muted-foreground text-[10px]">
                                     score: {src.score.toFixed(3)}
                                   </span>
                                 )}
                               </div>
                               {src.text && (
-                                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed line-clamp-3">
+                                <p className="text-muted-foreground mt-1 line-clamp-3 text-[11px] leading-relaxed">
                                   {src.text}
                                 </p>
                               )}

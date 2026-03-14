@@ -23,8 +23,7 @@ function getAdminApp(): FirebaseApp {
   if (useEmulators) {
     process.env.FIRESTORE_EMULATOR_HOST ??= "localhost:8081";
     return initializeAdminApp({
-      projectId:
-        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "chat-vote-dev",
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "chat-vote-dev",
     });
   }
 
@@ -67,13 +66,13 @@ async function loadMunicipalities(): Promise<Municipality[]> {
   const app = getAdminApp();
   const db = getFirestore(app);
 
-  console.log(
+  console.info(
     `[municipalities] Fetching from Firestore (emulator=${process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true"}, host=${process.env.FIRESTORE_EMULATOR_HOST ?? "production"})`,
   );
 
   const snapshot = await db.collection("municipalities").get();
 
-  console.log(`[municipalities] Fetched ${snapshot.docs.length} documents`);
+  console.info(`[municipalities] Fetched ${snapshot.docs.length} documents`);
 
   const municipalities = snapshot.docs.map(
     (docSnap) => docSnap.data() as Municipality,
@@ -92,8 +91,7 @@ export async function GET() {
   try {
     const municipalities = await loadMunicipalities();
 
-    const isDev =
-      process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
+    const isDev = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true";
 
     return NextResponse.json(municipalities, {
       headers: {

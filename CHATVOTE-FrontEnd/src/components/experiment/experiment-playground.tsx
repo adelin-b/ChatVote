@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 
+import Link from "next/link";
+
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -14,15 +16,14 @@ import {
 } from "@components/ui/select";
 import { Separator } from "@components/ui/separator";
 import {
-  SearchIcon,
-  Loader2Icon,
-  FlaskConicalIcon,
-  ExternalLinkIcon,
-  FileTextIcon,
   BarChart3Icon,
   DatabaseIcon,
+  ExternalLinkIcon,
+  FileTextIcon,
+  FlaskConicalIcon,
+  Loader2Icon,
+  SearchIcon,
 } from "lucide-react";
-import Link from "next/link";
 
 import {
   FiabiliteBadge,
@@ -62,8 +63,11 @@ export default function ExperimentPlayground() {
   const [loading, setLoading] = useState(false);
 
   // Side-by-side: filtered results and unfiltered results
-  const [filteredResults, setFilteredResults] = useState<SearchResponse | null>(null);
-  const [unfilteredResults, setUnfilteredResults] = useState<SearchResponse | null>(null);
+  const [filteredResults, setFilteredResults] = useState<SearchResponse | null>(
+    null,
+  );
+  const [unfilteredResults, setUnfilteredResults] =
+    useState<SearchResponse | null>(null);
 
   useEffect(() => {
     fetch("/api/experiment/schema")
@@ -116,7 +120,8 @@ export default function ExperimentPlayground() {
           <div>
             <h1 className="text-2xl font-bold">Chunk Metadata Explorer</h1>
             <p className="text-muted-foreground text-sm">
-              Search the vector store with metadata filters. Compare filtered vs unfiltered retrieval.
+              Search the vector store with metadata filters. Compare filtered vs
+              unfiltered retrieval.
             </p>
           </div>
         </div>
@@ -298,7 +303,13 @@ function ResultPanel({
   );
 }
 
-function ResultCard({ result, index }: { result: SearchResult; index: number }) {
+function ResultCard({
+  result,
+  index,
+}: {
+  result: SearchResult;
+  index: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const m = result.metadata;
 
@@ -310,14 +321,17 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
   const subTheme = m.sub_theme as string | undefined;
   const candidateName = m.candidate_name as string | undefined;
   const municipalityName = m.municipality_name as string | undefined;
-  const municipalityPostalCode = m.municipality_postal_code as string | undefined;
+  const municipalityPostalCode = m.municipality_postal_code as
+    | string
+    | undefined;
   const nuancePolitique = m.nuance_politique as string | undefined;
   const electionYear = m.election_year as number | undefined;
   const epciNom = m.epci_nom as string | undefined;
   const isTeteDeListe = m.is_tete_de_liste as boolean | undefined;
   const isIncumbent = m.is_incumbent as boolean | undefined;
 
-  const sourceLabel = partyName || candidateName || namespace || "Unknown source";
+  const sourceLabel =
+    partyName || candidateName || namespace || "Unknown source";
   const communeDisplay = municipalityName
     ? municipalityPostalCode
       ? `${municipalityName} (${municipalityPostalCode})`
@@ -341,7 +355,7 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
         {subTheme && <ThemeBadge theme={subTheme} />}
         <SourceDocBadge sourceDoc={m.source_document as string} />
         {nuancePolitique && (
-          <Badge variant="outline" className="text-[10px] font-mono">
+          <Badge variant="outline" className="font-mono text-[10px]">
             {nuancePolitique}
           </Badge>
         )}
@@ -351,12 +365,12 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
       <div className="bg-muted/40 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded px-2 py-1.5 text-xs">
         <span className="font-semibold">{sourceLabel}</span>
         {isTeteDeListe && (
-          <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
             Tête de liste
           </span>
         )}
         {isIncumbent && (
-          <span className="text-amber-600 dark:text-amber-400 text-[10px] font-medium">
+          <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
             Sortant
           </span>
         )}
@@ -376,14 +390,16 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
           <span className="text-muted-foreground text-[10px]">{epciNom}</span>
         )}
         {electionYear && (
-          <span className="text-muted-foreground text-[10px]">{electionYear}</span>
+          <span className="text-muted-foreground text-[10px]">
+            {electionYear}
+          </span>
         )}
         {url && (
           <a
             href={page != null ? `${url}#page=${page}` : url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-0.5"
+            className="flex items-center gap-0.5 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             onClick={(e) => e.stopPropagation()}
           >
             <ExternalLinkIcon className="size-3" />
@@ -394,13 +410,16 @@ function ResultCard({ result, index }: { result: SearchResult; index: number }) 
 
       {/* Content preview */}
       <p className="text-sm leading-relaxed">
-        {expanded ? result.content : result.content.slice(0, 200) + (result.content.length > 200 ? "..." : "")}
+        {expanded
+          ? result.content
+          : result.content.slice(0, 200) +
+            (result.content.length > 200 ? "..." : "")}
       </p>
 
       {/* Full metadata (expanded) */}
       {expanded && (
         <div className="bg-muted/30 mt-2 rounded border p-2">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider">
+          <p className="mb-1 text-[10px] font-semibold tracking-wider uppercase">
             All Metadata
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">

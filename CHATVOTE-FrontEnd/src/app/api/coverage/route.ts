@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server";
 
 import {
-  fetchCoverage,
-  type CommuneCoverage,
-  type PartyCoverage,
   type CandidateCoverage,
-  type CoverageSummary,
-  type CoverageResponse,
   type ChartAggregations,
+  type CommuneCoverage,
+  type CoverageResponse,
+  type CoverageSummary,
+  fetchCoverage,
+  type PartyCoverage,
 } from "../../experiment/coverage/coverage-data";
 
 // Re-export types so existing consumers that import from this route module still work
-export type { CommuneCoverage, PartyCoverage, CandidateCoverage, CoverageSummary, CoverageResponse, ChartAggregations };
+export type {
+  CandidateCoverage,
+  ChartAggregations,
+  CommuneCoverage,
+  CoverageResponse,
+  CoverageSummary,
+  PartyCoverage,
+};
 
 // Always fetch fresh data — admin dashboard needs real-time accuracy
 export const dynamic = "force-dynamic";
