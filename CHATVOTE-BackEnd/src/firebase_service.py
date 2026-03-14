@@ -147,14 +147,18 @@ async def awrite_llm_status(is_at_rate_limit: bool) -> None:
 
 async def aget_candidates() -> List[Candidate]:
     """Get all candidates from Firestore (cached). Skips malformed documents."""
+    import asyncio
+
     async def _fetch() -> List[Candidate]:
-        result = []
-        async for doc in async_db.collection("candidates").stream():
-            try:
-                result.append(Candidate(**doc.to_dict()))
-            except Exception:
-                pass  # skip docs missing required fields (e.g. crawler stubs)
-        return result
+        def _sync():
+            result = []
+            for doc in db.collection("candidates").stream():
+                try:
+                    result.append(Candidate(**doc.to_dict()))
+                except Exception:
+                    pass  # skip docs missing required fields (e.g. crawler stubs)
+            return result
+        return await asyncio.get_event_loop().run_in_executor(None, _sync)
 
     return await _cached_get("candidates", _fetch)
 
