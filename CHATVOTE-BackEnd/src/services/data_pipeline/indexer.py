@@ -57,13 +57,17 @@ class IndexerNode(DataSourceNode):
         t0 = _time.monotonic()
         classify_themes = settings.get("classify_themes", True)
 
-        # Allow env vars to override phase selection (useful for K8s Jobs)
+        # Allow env vars to override phase selection and tuning (useful for K8s Jobs)
         if os.getenv("INDEX_SKIP_MANIFESTOS", "").lower() in ("true", "1", "yes"):
             settings["index_manifestos"] = False
         if os.getenv("INDEX_SKIP_CANDIDATES", "").lower() in ("true", "1", "yes"):
             settings["index_candidates"] = False
         if os.getenv("INDEX_SKIP_PROFESSIONS", "").lower() in ("true", "1", "yes"):
             settings["index_professions"] = False
+        if os.getenv("CLASSIFY_THEMES", "").lower() in ("false", "0", "no"):
+            classify_themes = False
+        if os.getenv("MAX_CONCURRENT_INDEX"):
+            settings["max_concurrent_index"] = int(os.getenv("MAX_CONCURRENT_INDEX"))
 
         # --- Manifesto indexing -------------------------------------------
         if settings.get("index_manifestos", True):
