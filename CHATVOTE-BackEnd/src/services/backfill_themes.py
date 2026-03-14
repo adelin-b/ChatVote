@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointIdsList
+from qdrant_client.models import PointIdsList, SetPayloadOperation, SetPayload
 
 from src.services.theme_classifier import classify_chunks, ThemeResult
 
@@ -158,28 +158,41 @@ async def _backfill_collection(
             f"Fixing {len(stale_points)} points with stale top-level "
             f"'metadata.theme' keys in '{collection_name}'"
         )
-        for point in stale_points:
-            payload = point.payload or {}
-            existing_metadata = dict(payload.get("metadata", {}))
-            top_theme = payload.get("metadata.theme")
-            top_sub = payload.get("metadata.sub_theme")
-            # Migrate into nested metadata if not already set
-            if top_theme and not existing_metadata.get("theme"):
-                existing_metadata["theme"] = top_theme
-            if top_sub and not existing_metadata.get("sub_theme"):
-                existing_metadata["sub_theme"] = top_sub
-            if not dry_run:
-                _get_client().set_payload(
-                    collection_name=collection_name,
-                    payload={"metadata": existing_metadata},
-                    points=PointIdsList(points=[point.id]),
+        if not dry_run:
+            from qdrant_client.models import DeletePayloadOperation, DeletePayload
+
+            set_ops: list[SetPayloadOperation] = []
+            del_ops: list[DeletePayloadOperation] = []
+            for point in stale_points:
+                payload = point.payload or {}
+                existing_metadata = dict(payload.get("metadata", {}))
+                top_theme = payload.get("metadata.theme")
+                top_sub = payload.get("metadata.sub_theme")
+                if top_theme and not existing_metadata.get("theme"):
+                    existing_metadata["theme"] = top_theme
+                if top_sub and not existing_metadata.get("sub_theme"):
+                    existing_metadata["sub_theme"] = top_sub
+                set_ops.append(
+                    SetPayloadOperation(
+                        set_payload=SetPayload(
+                            payload={"metadata": existing_metadata},
+                            points=[point.id],
+                        )
+                    )
                 )
-                # Delete the stale top-level keys
-                _get_client().delete_payload(
-                    collection_name=collection_name,
-                    keys=["metadata.theme", "metadata.sub_theme"],
-                    points=PointIdsList(points=[point.id]),
+                del_ops.append(
+                    DeletePayloadOperation(
+                        delete_payload=DeletePayload(
+                            keys=["metadata.theme", "metadata.sub_theme"],
+                            points=[point.id],
+                        )
+                    )
                 )
+            _get_client().batch_update_points(
+                collection_name=collection_name,
+                update_operations=set_ops + del_ops,
+                wait=True,
+            )
         logger.info(f"Fixed {len(stale_points)} stale points")
 
         # Re-evaluate which points still need themes after migration
@@ -250,36 +263,39 @@ async def _backfill_collection(
         if dry_run:
             continue
 
-        # Write back to Qdrant — only update points that got a theme
-        for list_idx, (point_idx, result) in enumerate(
-            zip(valid_point_indices, theme_results)
-        ):
+        # Write back to Qdrant — batch all updates in a single API call
+        ops: list[SetPayloadOperation] = []
+        for point_idx, result in zip(valid_point_indices, theme_results):
             if result.theme is None:
                 continue
 
             point = batch_points[point_idx]
-            point_id = point.id
-
-            try:
-                # Read the existing metadata, update theme fields, write back.
-                # Qdrant set_payload with dotted keys creates top-level keys
-                # (e.g. "metadata.theme") instead of updating nested fields,
-                # so we must update the full metadata dict.
-                existing_metadata = dict(
-                    (point.payload or {}).get("metadata", {})
+            existing_metadata = dict(
+                (point.payload or {}).get("metadata", {})
+            )
+            existing_metadata["theme"] = result.theme
+            existing_metadata["sub_theme"] = result.sub_theme or ""
+            ops.append(
+                SetPayloadOperation(
+                    set_payload=SetPayload(
+                        payload={"metadata": existing_metadata},
+                        points=[point.id],
+                    )
                 )
-                existing_metadata["theme"] = result.theme
-                existing_metadata["sub_theme"] = result.sub_theme or ""
-                _get_client().set_payload(
+            )
+
+        if ops:
+            try:
+                _get_client().batch_update_points(
                     collection_name=collection_name,
-                    payload={"metadata": existing_metadata},
-                    points=PointIdsList(points=[point_id]),
+                    update_operations=ops,
+                    wait=True,
                 )
             except Exception as e:
                 logger.error(
-                    f"Failed to set_payload for point {point_id} in '{collection_name}': {e}"
+                    f"Batch set_payload failed for {len(ops)} points in '{collection_name}': {e}"
                 )
-                stats.errors += 1
+                stats.errors += len(ops)
 
     return stats
 
