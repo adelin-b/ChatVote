@@ -240,7 +240,7 @@ class ChatUserMessageDto(BaseModel):
     @field_validator("session_id")
     def session_id_must_not_be_empty(cls, value):
         if not value.strip():  # Check for empty or whitespace-only strings
-            raise ValidationError("Session ID cannot be empty or whitespace.")
+            raise ValueError("Session ID cannot be empty or whitespace.")
         return value
 
 

@@ -52,6 +52,7 @@ ruff = "~0.8.6"
 deepeval = "^3.8.8"
 google-genai = "^1.66.0"
 playwright = "^1.40.0"
+pytest-cov = "^6.0"
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -109,7 +110,29 @@ docstring-code-line-length = "dynamic"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = "--dist loadfile -n auto"
+markers = [
+    "integration: requires running backend services (deselect with -m 'not integration')",
+    "eval: DeepEval metric tests requiring LLM judge",
+    "slow: tests taking > 10 seconds",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/scripts/*", "tests/*"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "if __name__",
+]
 
 [build-system]
 requires = ["poetry-core"]
