@@ -168,20 +168,158 @@ def _is_ocr_visual_description(text: str) -> bool:
     return False
 
 
+_PAGINATION_PATTERN = re.compile(
+    r"(?:category|categorie|tag|page|archive|actualit|evenement|event|blog|article)"
+    r"[_\-].*?[_\-]?(?:page[_\-]?\d+)",
+    re.I,
+)
+
+# Pages that are never useful for RAG — matched against filename/URL
+_NOISE_PAGE_PATTERNS = [
+    # Legal / privacy / cookies
+    re.compile(r"(?:politique.de.cookies|cookie.?policy|declaration.de.confidentialite|privacy.?policy|mentions?.?legale|imprint|cgu|rgpd|gdpr)", re.I),
+    # Fundraising / donation / lending / volunteer recruitment pages
+    re.compile(r"(?:financer|pretez|prete[rz]|don(?:ation|er)|soutenir.campagne|merci.(?:de.soutenir|pret|beaucoup|pour.votre)|formu.?choix.montant|je.prete|action.pour.nous.aider)", re.I),
+    # Event logistics (not policy content)
+    re.compile(r"(?:grand.meeting|etre.assesseur|bulletin.de.vote|procuration)", re.I),
+    # Support / endorsement lists (names, not policy)
+    re.compile(r"(?:les.soutiens|comite.de.soutien|nos.soutiens|(?:liste|comit).*.soutien)", re.I),
+    # Category listing pages (just links, no real content)
+    re.compile(r"^category_", re.I),
+    # Comparison tools / navigation pages
+    re.compile(r"(?:comparateur.de.programme|comparatif)", re.I),
+    # Contact / form confirmation pages
+    re.compile(r"(?:^contact$|merci.?$|confirmation|formulaire.?envoy)", re.I),
+]
+
+
+def _is_noise_page(page: ScrapedPage) -> bool:
+    """Return True if the page is non-political noise (legal, fundraising, cookies, etc.)."""
+    name = page.url or ""
+    return any(pat.search(name) for pat in _NOISE_PAGE_PATTERNS)
+
+
+def _is_pagination_page(page: ScrapedPage) -> bool:
+    """Return True if the page is a paginated listing (category_plans_page_13.md, etc.).
+
+    These pages repeat the same listing template with different offsets — they add
+    noise without new political content.  We keep page 1 (or no page number) and
+    drop pages 2+.
+    """
+    # Check the filename / URL
+    name = page.url or ""
+    if _PAGINATION_PATTERN.search(name):
+        return True
+    # Also catch numeric-only page suffixes like blog-page-5.md
+    if re.search(r"[_\-]page[_\-]?\d{1,4}(?:\.md)?$", name, re.I):
+        # Keep page 1
+        m = re.search(r"page[_\-]?(\d+)", name, re.I)
+        if m and int(m.group(1)) > 1:
+            return True
+    return False
+
+
+def _deduplicate_pages(pages: list[ScrapedPage]) -> list[ScrapedPage]:
+    """Remove near-duplicate pages based on content fingerprint (first 500 chars)."""
+    seen: set[str] = set()
+    unique = []
+    for page in pages:
+        # Fingerprint: first 500 non-whitespace chars
+        fp = re.sub(r"\s+", "", page.content[:500])
+        if fp in seen:
+            logger.debug("[crawl_scraper] dropping duplicate page: %s", page.url)
+            continue
+        seen.add(fp)
+        unique.append(page)
+    return unique
+
+
+def _drop_aggregate_pages(pages: list[ScrapedPage]) -> list[ScrapedPage]:
+    """Drop mega-pages that are aggregations of other pages already in the set.
+
+    If a page is >100KB and >60% of its content is found in other smaller pages,
+    it's an aggregate listing (e.g. 'prises-de-position' containing all 'notre-plan-*')
+    and should be dropped to avoid massive redundancy.
+    """
+    AGGREGATE_THRESHOLD = 100_000  # only check pages > 100KB
+    OVERLAP_RATIO = 0.6  # drop if >60% of content found in smaller pages
+
+    large_pages = [p for p in pages if len(p.content) > AGGREGATE_THRESHOLD]
+    if not large_pages:
+        return pages
+
+    small_pages = [p for p in pages if len(p.content) <= AGGREGATE_THRESHOLD]
+    if not small_pages:
+        return pages
+
+    # Build a set of 100-char shingles from all small pages
+    small_shingles: set[str] = set()
+    for p in small_pages:
+        text = re.sub(r"\s+", " ", p.content)
+        for i in range(0, len(text) - 100, 50):
+            small_shingles.add(text[i:i + 100])
+
+    result = list(small_pages)
+    for page in large_pages:
+        text = re.sub(r"\s+", " ", page.content)
+        total_shingles = max(1, (len(text) - 100) // 50)
+        matched = sum(
+            1 for i in range(0, len(text) - 100, 50)
+            if text[i:i + 100] in small_shingles
+        )
+        overlap = matched / total_shingles
+        if overlap > OVERLAP_RATIO:
+            logger.info(
+                "[crawl_scraper] dropping aggregate page: %s (%.0f%% overlap with smaller pages, %dKB)",
+                page.url, overlap * 100, len(page.content) // 1024,
+            )
+        else:
+            result.append(page)
+
+    return result
+
+
 def _clean_scraped_pages(pages: list[ScrapedPage]) -> list[ScrapedPage]:
     """Filter out junk pages and return only useful content."""
     cleaned = []
+    dropped_junk = 0
+    dropped_noise = 0
+    dropped_pagination = 0
     for page in pages:
         if _is_junk_content(page.content):
             logger.debug("[crawl_scraper] dropping junk page: %s (len=%d)", page.url, len(page.content))
+            dropped_junk += 1
             continue
         if _is_sitemap_xml(page.content):
             logger.debug("[crawl_scraper] dropping sitemap XML: %s", page.url)
+            dropped_junk += 1
             continue
         if _is_social_media_wall(page.content, page.url):
             logger.debug("[crawl_scraper] dropping social media wall: %s", page.url)
+            dropped_junk += 1
+            continue
+        if _is_noise_page(page):
+            logger.debug("[crawl_scraper] dropping noise page: %s", page.url)
+            dropped_noise += 1
+            continue
+        if _is_pagination_page(page):
+            logger.debug("[crawl_scraper] dropping pagination page: %s", page.url)
+            dropped_pagination += 1
             continue
         cleaned.append(page)
+    # Deduplicate near-identical content
+    before_dedup = len(cleaned)
+    cleaned = _deduplicate_pages(cleaned)
+    dropped_dupes = before_dedup - len(cleaned)
+    # Drop aggregate mega-pages that duplicate smaller individual pages
+    before_agg = len(cleaned)
+    cleaned = _drop_aggregate_pages(cleaned)
+    dropped_aggregate = before_agg - len(cleaned)
+    if dropped_pagination or dropped_dupes or dropped_noise or dropped_aggregate:
+        logger.info(
+            "[crawl_scraper] content filter: %d kept, %d junk, %d noise, %d pagination, %d duplicates, %d aggregate",
+            len(cleaned), dropped_junk, dropped_noise, dropped_pagination, dropped_dupes, dropped_aggregate,
+        )
     return cleaned
 
 SHEETS_API_URL = "https://sheets.googleapis.com/v4/spreadsheets"

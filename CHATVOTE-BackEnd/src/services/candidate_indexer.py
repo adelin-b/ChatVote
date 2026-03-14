@@ -48,13 +48,24 @@ env = os.getenv("ENV", "dev")
 env_suffix = f"_{env}" if env in ["prod", "dev"] else "_dev"
 CANDIDATES_INDEX_NAME = f"candidates_websites{env_suffix}"
 
-# Text splitter configuration
+# Text splitter configuration — adaptive based on content length
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
+LARGE_PAGE_THRESHOLD = 50_000  # pages > 50KB get larger chunks
+LARGE_CHUNK_SIZE = 2000
+LARGE_CHUNK_OVERLAP = 300
+MAX_CHUNKS_PER_PAGE = 80  # cap to avoid one page dominating the index
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,
     chunk_overlap=CHUNK_OVERLAP,
+    length_function=len,
+    separators=["\n\n", "\n", ". ", "? ", "! ", "; ", " ", ""],
+)
+
+_large_text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=LARGE_CHUNK_SIZE,
+    chunk_overlap=LARGE_CHUNK_OVERLAP,
     length_function=len,
     separators=["\n\n", "\n", ". ", "? ", "! ", "; ", " ", ""],
 )
@@ -268,25 +279,68 @@ def create_documents_from_scraped_website(
             f"party-based filtering will not find this candidate's chunks"
         )
 
+    _debug = os.getenv("DEBUG_INDEXER", "").lower() in ("1", "true", "yes")
+    _dropped_short = 0
+    _dropped_a11y = 0
+    _dropped_dedup = 0
+    _dropped_consent_stripped = 0
+
     for page in scraped_website.pages:
-        chunks = text_splitter.split_text(page.content)
+        # Adaptive chunking: large pages get bigger chunks + cap
+        splitter = _large_text_splitter if len(page.content) > LARGE_PAGE_THRESHOLD else text_splitter
+        chunks = splitter.split_text(page.content)
+        if len(chunks) > MAX_CHUNKS_PER_PAGE:
+            logger.info(
+                f"[CHUNK_CAP] page {page.url}: {len(chunks)} chunks → capped to {MAX_CHUNKS_PER_PAGE}"
+            )
+            chunks = chunks[:MAX_CHUNKS_PER_PAGE]
+        if _debug:
+            logger.info(
+                f"[DEBUG] page url={page.url} type={page.page_type} "
+                f"content_len={len(page.content)} raw_chunks={len(chunks)}"
+                f"{' (large splitter)' if splitter is _large_text_splitter else ''}"
+            )
 
         for chunk in chunks:
+            original_chunk = chunk
             # Strip consent boilerplate (keeps surrounding content)
             chunk = _strip_consent_boilerplate(chunk)
+            if chunk != original_chunk:
+                _dropped_consent_stripped += 1
+                if _debug:
+                    logger.info(
+                        f"[DEBUG][CONSENT_STRIPPED] removed={len(original_chunk)-len(chunk)} chars "
+                        f"preview_before='{original_chunk[:80]}...' preview_after='{chunk[:80]}...'"
+                    )
 
             if len(chunk.strip()) < 30:
+                _dropped_short += 1
+                if _debug:
+                    logger.info(f"[DEBUG][DROPPED_SHORT] len={len(chunk.strip())} text='{chunk.strip()}'")
                 continue
 
             # Drop accessibility widget chunks
             if _is_a11y_widget_chunk(chunk):
+                _dropped_a11y += 1
+                if _debug:
+                    logger.info(f"[DEBUG][DROPPED_A11Y] text='{chunk[:120]}...'")
                 continue
 
             # Deduplicate — skip chunks we've already seen for this candidate
             chunk_hash = hashlib.md5(chunk.strip().encode()).hexdigest()
             if chunk_hash in seen_hashes:
+                _dropped_dedup += 1
+                if _debug:
+                    logger.info(f"[DEBUG][DROPPED_DEDUP] hash={chunk_hash} text='{chunk[:80]}...'")
                 continue
             seen_hashes.add(chunk_hash)
+
+            if _debug:
+                source_doc = _infer_source_document(page)
+                logger.info(
+                    f"[DEBUG][KEPT] chunk#{chunk_index} source={source_doc} "
+                    f"len={len(chunk)} text='{chunk[:150]}...'"
+                )
 
             cm = ChunkMetadata(
                 namespace=candidate.candidate_id,
@@ -310,6 +364,13 @@ def create_documents_from_scraped_website(
             doc = Document(page_content=chunk, metadata=cm.to_qdrant_payload())
             documents.append(doc)
             chunk_index += 1
+
+    logger.info(
+        f"[FILTER_STATS] {candidate.full_name}: "
+        f"kept={len(documents)} dropped_short={_dropped_short} dropped_a11y={_dropped_a11y} "
+        f"dropped_dedup={_dropped_dedup} consent_stripped={_dropped_consent_stripped} "
+        f"pages={len(scraped_website.pages)}"
+    )
 
     for doc in documents:
         doc.metadata["total_chunks"] = len(documents)
@@ -386,6 +447,8 @@ async def index_candidate_website(
         logger.warning(f"No documents created for candidate {candidate.candidate_id}")
         return 0
 
+    _debug = os.getenv("DEBUG_INDEXER", "").lower() in ("1", "true", "yes")
+
     # Classify themes (LLM-primary with keyword fast-path) — optional, adds 20-45s
     if classify_themes:
         _ts = _t.monotonic()
@@ -394,11 +457,35 @@ async def index_candidate_website(
             chunk_texts = [doc.page_content for doc in documents]
             theme_results = await classify_chunks(chunk_texts)
             apply_themes_to_documents(documents, theme_results)
+
+            # Detailed theme stats
+            keyword_count = sum(1 for r in theme_results if r.method == "keyword")
+            llm_count = sum(1 for r in theme_results if r.method == "llm")
+            none_count = sum(1 for r in theme_results if r.method == "none")
             classified = sum(1 for r in theme_results if r.theme is not None)
+
+            # Theme distribution
+            theme_dist: dict[str, int] = {}
+            for r in theme_results:
+                if r.theme:
+                    theme_dist[r.theme] = theme_dist.get(r.theme, 0) + 1
+
             logger.info(
                 f"[TIMING] theme classify {candidate.full_name}: {_t.monotonic()-_ts:.1f}s — "
-                f"{classified}/{len(documents)} classified"
+                f"{classified}/{len(documents)} classified "
+                f"(keyword={keyword_count} llm={llm_count} none={none_count})"
             )
+            logger.info(
+                f"[THEME_DIST] {candidate.full_name}: {dict(sorted(theme_dist.items(), key=lambda x: -x[1]))}"
+            )
+
+            if _debug:
+                for i, (doc, tr) in enumerate(zip(documents, theme_results)):
+                    logger.info(
+                        f"[DEBUG][THEME] chunk#{i} method={tr.method} theme={tr.theme} "
+                        f"sub_theme={tr.sub_theme} conf={tr.confidence:.2f} "
+                        f"text='{doc.page_content[:120]}...'"
+                    )
         except Exception as e:
             logger.warning(
                 f"[TIMING] theme classify {candidate.full_name}: {_t.monotonic()-_ts:.1f}s — "
@@ -424,15 +511,22 @@ async def index_candidate_website(
         await vector_store.aadd_documents(batch)
         # Yield to event loop between batches so Socket.IO pings are not starved
         await asyncio.sleep(0)
+        elapsed_batch = _t.monotonic() - _tb
+        docs_per_sec = len(batch) / elapsed_batch if elapsed_batch > 0 else 0
         logger.info(
             f"[TIMING] embed+upload batch {i // batch_size + 1} ({len(batch)} docs) "
-            f"{candidate.full_name}: {_t.monotonic()-_tb:.1f}s"
+            f"{candidate.full_name}: {elapsed_batch:.1f}s ({docs_per_sec:.1f} docs/s)"
         )
-    logger.info(f"[TIMING] total embed+upload {candidate.full_name}: {_t.monotonic()-_ts:.1f}s")
-
+    total_embed = _t.monotonic() - _ts
     logger.info(
-        f"[TIMING] TOTAL {candidate.full_name}: {_t.monotonic()-_t0:.1f}s — "
-        f"{len(documents)} chunks indexed"
+        f"[TIMING] total embed+upload {candidate.full_name}: {total_embed:.1f}s "
+        f"({len(documents) / total_embed:.1f} docs/s overall)"
+    )
+
+    total_time = _t.monotonic() - _t0
+    logger.info(
+        f"[TIMING] TOTAL {candidate.full_name}: {total_time:.1f}s — "
+        f"{len(documents)} chunks indexed ({len(documents) / total_time:.1f} chunks/s)"
     )
     return len(documents)
 

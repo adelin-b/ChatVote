@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # Minimum keyword hits to use the keyword fast-path instead of LLM.
 # Must also have a clear margin (2x the second-best theme).
-_KEYWORD_FAST_PATH_MIN_HITS = 3
+_KEYWORD_FAST_PATH_MIN_HITS = 2
 
 
 @dataclass
@@ -177,10 +177,10 @@ def classify_theme_keywords(text: str) -> ThemeResult:
     if best_count < _KEYWORD_FAST_PATH_MIN_HITS:
         return ThemeResult(method="none")
 
-    # Require clear margin: best must be at least 2x the runner-up
+    # Require clear margin: best must be at least 1.5x the runner-up
     if len(sorted_themes) >= 2:
         second_count = sorted_themes[1][1]
-        if best_count < 2 * second_count:
+        if best_count < 1.5 * second_count:
             return ThemeResult(method="none")
 
     confidence = best_count / (best_count + 2)
@@ -234,6 +234,10 @@ _LLM_PROMPT = (
 
 async def _llm_classify_single(chunk_text: str) -> ThemeResult:
     """Classify a single chunk using LLM structured output."""
+    import os
+    import time as _t
+    _debug = os.getenv("DEBUG_INDEXER", "").lower() in ("1", "true", "yes")
+    _ts = _t.monotonic()
     try:
         from langchain_core.messages import HumanMessage
         from src.llms import DETERMINISTIC_LLMS, get_structured_output_from_llms
@@ -246,6 +250,7 @@ async def _llm_classify_single(chunk_text: str) -> ThemeResult:
             messages,
             ChunkThemeClassification,
         )
+        elapsed = _t.monotonic() - _ts
 
         if isinstance(result, ChunkThemeClassification):
             theme = result.theme
@@ -254,15 +259,26 @@ async def _llm_classify_single(chunk_text: str) -> ThemeResult:
             theme = result.get("theme")
             sub_theme = result.get("sub_theme")
         else:
+            if _debug:
+                logger.info(f"[DEBUG][LLM_CLASSIFY] {elapsed:.2f}s → none (bad result type: {type(result).__name__})")
             return ThemeResult(method="none")
 
         # Validate theme is in taxonomy
         if theme and theme not in THEME_TAXONOMY:
+            if _debug:
+                logger.info(f"[DEBUG][LLM_CLASSIFY] {elapsed:.2f}s → invalid theme '{theme}' not in taxonomy")
             theme = None
+
+        if _debug:
+            logger.info(
+                f"[DEBUG][LLM_CLASSIFY] {elapsed:.2f}s → theme={theme} sub={sub_theme} "
+                f"input='{chunk_text[:100]}...'"
+            )
         return ThemeResult(theme=theme, sub_theme=sub_theme, method="llm", confidence=1.0)
 
     except Exception as e:
-        logger.warning(f"LLM theme classification failed: {e}")
+        elapsed = _t.monotonic() - _ts
+        logger.warning(f"LLM theme classification failed after {elapsed:.2f}s: {e}")
         return ThemeResult(method="none")
 
 
@@ -275,7 +291,7 @@ async def classify_chunks(
     *,
     use_llm: bool = True,
     keyword_fast_path: bool = True,
-    max_concurrent_llm: int = 5,
+    max_concurrent_llm: int = 10,
 ) -> list[ThemeResult]:
     """Classify a batch of chunks. LLM-primary with optional keyword fast-path.
 
@@ -292,6 +308,11 @@ async def classify_chunks(
     Returns:
         List of ThemeResult, one per input chunk.
     """
+    import os
+    import time as _t
+    _debug = os.getenv("DEBUG_INDEXER", "").lower() in ("1", "true", "yes")
+    _t0 = _t.monotonic()
+
     results: list[ThemeResult] = [ThemeResult() for _ in chunks]
     llm_indices: list[int] = []
 
@@ -301,8 +322,21 @@ async def classify_chunks(
             fast_result = _keyword_fast_path(chunk)
             if fast_result is not None:
                 results[i] = fast_result
+                if _debug:
+                    scores = _keyword_scores(chunk)
+                    logger.info(
+                        f"[DEBUG][KEYWORD_HIT] chunk#{i} theme={fast_result.theme} "
+                        f"conf={fast_result.confidence:.2f} scores={scores} "
+                        f"text='{chunk[:100]}...'"
+                    )
             else:
                 llm_indices.append(i)
+                if _debug:
+                    scores = _keyword_scores(chunk)
+                    logger.info(
+                        f"[DEBUG][KEYWORD_MISS] chunk#{i} scores={scores} → sending to LLM "
+                        f"text='{chunk[:100]}...'"
+                    )
     else:
         llm_indices = list(range(len(chunks)))
 
@@ -317,9 +351,13 @@ async def classify_chunks(
         return results
 
     # Step 2: LLM classification for everything else (the main classifier)
-    logger.info(f"LLM classification: {len(llm_indices)} chunks...")
+    logger.info(
+        f"LLM classification: {len(llm_indices)} chunks "
+        f"(concurrency={max_concurrent_llm})..."
+    )
 
     semaphore = asyncio.Semaphore(max_concurrent_llm)
+    _llm_start = _t.monotonic()
 
     async def _bounded_classify(text: str) -> ThemeResult:
         async with semaphore:
@@ -327,15 +365,19 @@ async def classify_chunks(
 
     llm_tasks = [_bounded_classify(chunks[i]) for i in llm_indices]
     llm_results = await asyncio.gather(*llm_tasks)
+    _llm_elapsed = _t.monotonic() - _llm_start
 
     for idx, llm_result in zip(llm_indices, llm_results):
         results[idx] = llm_result
 
     total_classified = sum(1 for r in results if r.theme is not None)
     llm_classified = sum(1 for r in llm_results if r.theme is not None)
+    total_elapsed = _t.monotonic() - _t0
     logger.info(
         f"Theme classification complete: {total_classified}/{len(chunks)} "
-        f"({keyword_classified} keyword fast-path, {llm_classified} LLM)"
+        f"({keyword_classified} keyword fast-path, {llm_classified} LLM) "
+        f"total={total_elapsed:.1f}s llm_batch={_llm_elapsed:.1f}s "
+        f"({len(llm_indices) / _llm_elapsed:.1f} chunks/s LLM throughput)"
     )
 
     return results
