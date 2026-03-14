@@ -180,8 +180,8 @@ _NOISE_PAGE_PATTERNS = [
     re.compile(r"(?:politique.de.cookies|cookie.?policy|declaration.de.confidentialite|privacy.?policy|mentions?.?legale|imprint|cgu|rgpd|gdpr)", re.I),
     # Fundraising / donation / lending / volunteer recruitment pages
     re.compile(r"(?:financer|pretez|prete[rz]|don(?:ation|er)|soutenir.campagne|merci.(?:de.soutenir|pret|beaucoup|pour.votre)|formu.?choix.montant|je.prete|action.pour.nous.aider)", re.I),
-    # Event logistics (not policy content)
-    re.compile(r"(?:grand.meeting|etre.assesseur|bulletin.de.vote|procuration)", re.I),
+    # Event logistics / ballot logistics (not policy content)
+    re.compile(r"(?:grand.meeting|etre.assesseur|bulletins?.de.vote|procuration)", re.I),
     # Support / endorsement lists (names, not policy)
     re.compile(r"(?:les.soutiens|comite.de.soutien|nos.soutiens|(?:liste|comit).*.soutien)", re.I),
     # Category listing pages (just links, no real content)
@@ -190,6 +190,10 @@ _NOISE_PAGE_PATTERNS = [
     re.compile(r"(?:comparateur.de.programme|comparatif)", re.I),
     # Contact / form confirmation pages
     re.compile(r"(?:^contact$|merci.?$|confirmation|formulaire.?envoy)", re.I),
+    # Homepage / index (mostly navigation, cookie banners)
+    re.compile(r"^index\.md$", re.I),
+    # Candidate list pages (names, not policy)
+    re.compile(r"(?:les.candidat|tetes?.de.liste|nos.candidat).*arrondissement", re.I),
 ]
 
 
