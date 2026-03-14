@@ -259,7 +259,7 @@ _LLM_BATCH_PROMPT = (
     "Textes à classifier :\n{chunks_text}"
 )
 
-_BATCH_SIZE = 5  # chunks per LLM call — keeps total input under ~4K tokens
+_BATCH_SIZE = 20  # chunks per LLM call
 
 
 async def _llm_classify_batch(chunk_texts: list[str]) -> list[ThemeResult]:
