@@ -20,6 +20,37 @@ type Props = {
   getReferenceTooltip?: (number: number) => string | null;
 };
 
+/**
+ * Turn ugly raw URLs into human-friendly labels.
+ * - ChatVote PDF viewer URLs → "Profession de foi"
+ * - Raw URLs used as link text → extract hostname
+ * - Already-nice text → return null (keep original)
+ */
+function prettifyLinkLabel(
+  text: string | undefined,
+  href: string | undefined,
+): string | null {
+  if (!text || !href) return null;
+
+  // Only transform when the visible text IS a URL (LLM dumped the raw link)
+  const looksLikeUrl =
+    text.startsWith("http://") || text.startsWith("https://");
+  if (!looksLikeUrl) return null;
+
+  // ChatVote PDF viewer links → "Profession de foi"
+  if (href.includes("/pdf/view") && href.includes("pdf=")) {
+    return "📄 Profession de foi";
+  }
+
+  // External website URLs → pretty hostname (e.g. "rachidadati2026.com")
+  try {
+    const { hostname } = new URL(href);
+    return "🔗 " + hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
 const NonMemoizedMarkdown = ({
   children,
   onReferenceClick,
@@ -137,6 +168,11 @@ const NonMemoizedMarkdown = ({
       return checkAndBuildReference("p", { children, ...props });
     },
     a: ({ children, href, ...props }) => {
+      const label = prettifyLinkLabel(
+        typeof children === "string" ? children : undefined,
+        href,
+      );
+
       return (
         <Link
           className="text-blue-500 hover:underline"
@@ -145,7 +181,7 @@ const NonMemoizedMarkdown = ({
           href={href ?? "#"}
           {...props}
         >
-          {children}
+          {label ?? children}
         </Link>
       );
     },

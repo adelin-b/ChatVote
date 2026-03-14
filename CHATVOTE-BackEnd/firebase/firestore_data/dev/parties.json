@@ -21,7 +21,8 @@
         "election_manifesto_url": "",
         "background_color": "#B71C1C",
         "is_already_in_parliament": false,
-        "is_small_party": true
+        "is_small_party": true,
+        "election_result_forecast_percent": 1
     },
     "lfi": {
         "party_id": "lfi",
@@ -33,7 +34,8 @@
         "election_manifesto_url": "",
         "background_color": "#CC2443",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 12
     },
     "union_gauche": {
         "party_id": "union_gauche",
@@ -45,7 +47,8 @@
         "election_manifesto_url": "",
         "background_color": "#E91E63",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 28
     },
     "ps": {
         "party_id": "ps",
@@ -57,7 +60,8 @@
         "election_manifesto_url": "",
         "background_color": "#F06292",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 10
     },
     "europe-ecologie-les-verts": {
         "party_id": "europe-ecologie-les-verts",
@@ -69,7 +73,8 @@
         "election_manifesto_url": "",
         "background_color": "#4CAF50",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 6
     },
     "divers_gauche": {
         "party_id": "divers_gauche",
@@ -81,7 +86,8 @@
         "election_manifesto_url": "",
         "background_color": "#EF5350",
         "is_already_in_parliament": false,
-        "is_small_party": true
+        "is_small_party": true,
+        "election_result_forecast_percent": 2
     },
     "divers_centre": {
         "party_id": "divers_centre",
@@ -93,7 +99,8 @@
         "election_manifesto_url": "",
         "background_color": "#FF9800",
         "is_already_in_parliament": false,
-        "is_small_party": true
+        "is_small_party": true,
+        "election_result_forecast_percent": 1
     },
     "union_centre": {
         "party_id": "union_centre",
@@ -105,7 +112,8 @@
         "election_manifesto_url": "",
         "background_color": "#FFB300",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 17
     },
     "divers": {
         "party_id": "divers",
@@ -117,7 +125,8 @@
         "election_manifesto_url": "",
         "background_color": "#9E9E9E",
         "is_already_in_parliament": false,
-        "is_small_party": true
+        "is_small_party": true,
+        "election_result_forecast_percent": 2
     },
     "divers_droite": {
         "party_id": "divers_droite",
@@ -129,7 +138,8 @@
         "election_manifesto_url": "",
         "background_color": "#42A5F5",
         "is_already_in_parliament": false,
-        "is_small_party": true
+        "is_small_party": true,
+        "election_result_forecast_percent": 2
     },
     "lr": {
         "party_id": "lr",
@@ -141,7 +151,8 @@
         "election_manifesto_url": "",
         "background_color": "#1565C0",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 7
     },
     "union_droite": {
         "party_id": "union_droite",
@@ -153,7 +164,8 @@
         "election_manifesto_url": "",
         "background_color": "#1976D2",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 5
     },
     "rn": {
         "party_id": "rn",
@@ -165,7 +177,8 @@
         "election_manifesto_url": "",
         "background_color": "#0D47A1",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 30
     },
     "reconquete": {
         "party_id": "reconquete",
@@ -177,7 +190,8 @@
         "election_manifesto_url": "",
         "background_color": "#1A237E",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 3
     },
     "extreme_droite": {
         "party_id": "extreme_droite",
@@ -189,6 +203,7 @@
         "election_manifesto_url": "",
         "background_color": "#263238",
         "is_already_in_parliament": true,
-        "is_small_party": false
+        "is_small_party": false,
+        "election_result_forecast_percent": 1
     }
 }

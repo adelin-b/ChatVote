@@ -89,6 +89,41 @@ def wait_for_emulator(host: str, timeout: int = 30) -> bool:
     return False
 
 
+def _resolve_doc_ref(db, collection_name: str, doc_id: str):
+    """Resolve a doc_id (possibly with subcollection path) to a Firestore ref."""
+    path = doc_id
+    if path.startswith(collection_name + "/"):
+        path = path[len(collection_name) + 1:]
+
+    parts = path.split("/")
+    if len(parts) == 1:
+        return db.collection(collection_name).document(parts[0])
+    elif len(parts) % 2 == 0:
+        ref = db.collection(collection_name)
+        for i in range(0, len(parts) - 1, 2):
+            ref = ref.document(parts[i]).collection(parts[i + 1])
+        return ref.document(parts[-1])
+    else:
+        ref = db.collection(collection_name).document(parts[0])
+        for i in range(1, len(parts), 2):
+            ref = ref.collection(parts[i]).document(parts[i + 1])
+        return ref
+
+
+# Max docs to seed per collection for local dev (keeps emulator fast).
+# Small/static collections are unlimited; large data collections are capped.
+_COLLECTION_LIMITS: dict[str, int | None] = {
+    "parties": None,
+    "system_status": None,
+    "election_types": None,
+    "proposed_questions": None,
+    "chat_sessions": None,
+    "candidates": 2000,
+    "municipalities": 2000,
+    "electoral_lists": 2000,
+}
+
+
 def seed_firestore():
     """Seed Firestore emulator with data from JSON files."""
     import firebase_admin
@@ -118,41 +153,41 @@ def seed_firestore():
         # Filter out metadata keys (starting with _)
         entries = {k: v for k, v in data.items() if not k.startswith("_")}
 
+        # Cap large collections for local dev performance
+        limit = _COLLECTION_LIMITS.get(collection_name)
+        if limit and len(entries) > limit:
+            logger.info(f"  Capping {collection_name} from {len(entries)} to {limit} docs (local dev)")
+            entries = dict(list(entries.items())[:limit])
+
         count = 0
+        committed = 0
         batch = db.batch()
         for doc_id, doc_data in entries.items():
-            # Handle nested Firestore paths (e.g. "proposed_questions/chat-vote/questions/q1")
-            # Strip the collection prefix if present, then use the remaining path segments
-            path = doc_id
-            if path.startswith(collection_name + "/"):
-                path = path[len(collection_name) + 1:]
-
-            parts = path.split("/")
-            if len(parts) == 1:
-                # Simple doc ID
-                ref = db.collection(collection_name).document(parts[0])
-            elif len(parts) % 2 == 0:
-                # Even segments: subcollection path (doc/subcol/doc/...)
-                ref = db.collection(collection_name)
-                for i in range(0, len(parts) - 1, 2):
-                    ref = ref.document(parts[i]).collection(parts[i + 1])
-                ref = ref.document(parts[-1])
-            else:
-                # Odd segments: ends at a document (doc/subcol/doc)
-                ref = db.collection(collection_name).document(parts[0])
-                for i in range(1, len(parts), 2):
-                    ref = ref.collection(parts[i]).document(parts[i + 1])
-
+            ref = _resolve_doc_ref(db, collection_name, doc_id)
             batch.set(ref, doc_data)
             count += 1
 
             # Firestore batch limit is 500
             if count % 400 == 0:
-                batch.commit()
+                try:
+                    batch.commit()
+                    committed += 400
+                    if committed % 2000 == 0:
+                        logger.info(f"  {collection_name}: {committed}/{len(entries)} docs committed...")
+                except Exception as e:
+                    logger.error(f"  Batch commit failed at {count} docs: {e}")
                 batch = db.batch()
 
-        batch.commit()
-        logger.info(f"  Seeded {count} documents into '{collection_name}'")
+        # Commit remaining docs
+        remaining = count - committed
+        if remaining > 0:
+            try:
+                batch.commit()
+                committed += remaining
+            except Exception as e:
+                logger.error(f"  Final batch commit failed ({remaining} docs): {e}")
+
+        logger.info(f"  Seeded {committed}/{count} documents into '{collection_name}'")
 
     logger.info("Firestore seeding complete.")
 

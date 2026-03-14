@@ -775,9 +775,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "21_Côte-d'Or/21231_Dijon/panneau_3_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/21_Côte-d'Or/21231_Dijon/panneau_3_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-21231-4": {
     "candidate_id": "cand-21231-4",
@@ -919,10 +919,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_1_FAIRE MIEUX POUR BESANÇON.pdf",
     "has_website": true,
     "website_url": "https://fairemieuxbesancon.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_1_FAIRE MIEUX POUR BESANÇON.pdf"
   },
   "cand-25056-2": {
     "candidate_id": "cand-25056-2",
@@ -944,10 +944,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_2_ENSEMBLE BESANCON AVANCE.pdf",
     "has_website": true,
     "website_url": "https://besancon-maintenant.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_2_ENSEMBLE BESANCON AVANCE.pdf"
   },
   "cand-25056-3": {
     "candidate_id": "cand-25056-3",
@@ -969,10 +969,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_3_BESANCON MERITE MIEUX.pdf",
     "has_website": true,
     "website_url": "https://www.edlb2026.net",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_3_BESANCON MERITE MIEUX.pdf"
   },
   "cand-25056-4": {
     "candidate_id": "cand-25056-4",
@@ -994,9 +994,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_4_CHANGEONS BESANÇON.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_4_CHANGEONS BESANÇON.pdf"
   },
   "cand-25056-5": {
     "candidate_id": "cand-25056-5",
@@ -1018,9 +1018,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_5_LUTTE OUVRIÉRE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_5_LUTTE OUVRIÉRE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-25056-6": {
     "candidate_id": "cand-25056-6",
@@ -1042,10 +1042,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "25_Doubs/25056_Besançon/panneau_6_BESANCON _ VIVANTE_ JUSTE ET HUMAINE.pdf",
     "has_website": true,
     "website_url": "https://annevignot2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/25_Doubs/25056_Besançon/panneau_6_BESANCON _ VIVANTE_ JUSTE ET HUMAINE.pdf"
   },
   "cand-29019-1": {
     "candidate_id": "cand-29019-1",
@@ -1422,10 +1422,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_1_Vivre mieux La gauche unie_ écologiste_ citoyenne et solidai.pdf",
     "has_website": true,
     "website_url": "https://vivremieuxtoulouse.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_1_Vivre mieux La gauche unie_ écologiste_ citoyenne et solidai.pdf"
   },
   "cand-31555-2": {
     "candidate_id": "cand-31555-2",
@@ -1447,9 +1447,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_2_NPA Révolutionnaires- Toulouse ouvriére et révolutionnaire..pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_2_NPA Révolutionnaires- Toulouse ouvriére et révolutionnaire..pdf"
   },
   "cand-31555-3": {
     "candidate_id": "cand-31555-3",
@@ -1471,9 +1471,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_3_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_3_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-31555-4": {
     "candidate_id": "cand-31555-4",
@@ -1495,9 +1495,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_4_Toulouse pour les jeunes_ les travailleurs et les services p.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_4_Toulouse pour les jeunes_ les travailleurs et les services p.pdf"
   },
   "cand-31555-5": {
     "candidate_id": "cand-31555-5",
@@ -1519,10 +1519,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_5_Avec Jean-Luc MOUDENC_ Protégeons l_Avenir de Toulouse.pdf",
     "has_website": true,
     "website_url": "https://moudenc2026.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_5_Avec Jean-Luc MOUDENC_ Protégeons l_Avenir de Toulouse.pdf"
   },
   "cand-31555-6": {
     "candidate_id": "cand-31555-6",
@@ -1544,10 +1544,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_6_Le bon sens toulousain.pdf",
     "has_website": true,
     "website_url": "https://lebonsenstoulousain.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_6_Le bon sens toulousain.pdf"
   },
   "cand-31555-7": {
     "candidate_id": "cand-31555-7",
@@ -1593,10 +1593,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_8_Nouvel air.pdf",
     "has_website": true,
     "website_url": "https://www.toulouse-nouvel-air.fr/qui-sommes-nous",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_8_Nouvel air.pdf"
   },
   "cand-31555-9": {
     "candidate_id": "cand-31555-9",
@@ -1618,10 +1618,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_9_Demain Toulouse à gauche et écologiste.pdf",
     "has_website": true,
     "website_url": "https://piquemal2026.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_9_Demain Toulouse à gauche et écologiste.pdf"
   },
   "cand-31555-10": {
     "candidate_id": "cand-31555-10",
@@ -1643,10 +1643,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "31_Haute-Garonne/31555_Toulouse/panneau_10_UNE TRAVAILLEUSE AU CAPITOLE.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/vanessa_pedinotti/?hl=en",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/31_Haute-Garonne/31555_Toulouse/panneau_10_UNE TRAVAILLEUSE AU CAPITOLE.pdf"
   },
   "cand-33063-1": {
     "candidate_id": "cand-33063-1",
@@ -1668,10 +1668,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_1_NPA Révolutionnaires - Bordeaux Ouvrière et Révolutionnaire.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/philippepoutou_officiel/?hl=en",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_1_NPA Révolutionnaires - Bordeaux Ouvrière et Révolutionnaire.pdf"
   },
   "cand-33063-2": {
     "candidate_id": "cand-33063-2",
@@ -1693,10 +1693,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_2_Faire Gagner Bordeaux.pdf",
     "has_website": true,
     "website_url": "https://www.fairegagnerbordeaux.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_2_Faire Gagner Bordeaux.pdf"
   },
   "cand-33063-3": {
     "candidate_id": "cand-33063-3",
@@ -1718,9 +1718,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_3_ARRACHER BORDEAUX AUX RICHES ET AUX SPÉCULATEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_3_ARRACHER BORDEAUX AUX RICHES ET AUX SPÉCULATEURS.pdf"
   },
   "cand-33063-4": {
     "candidate_id": "cand-33063-4",
@@ -1742,10 +1742,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_4_BORDEAUX EN CONFIANCE.pdf",
     "has_website": true,
     "website_url": "https://pierrehurmic2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_4_BORDEAUX EN CONFIANCE.pdf"
   },
   "cand-33063-5": {
     "candidate_id": "cand-33063-5",
@@ -1767,10 +1767,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_5_FAIRE MIEUX POUR BORDEAUX.pdf",
     "has_website": true,
     "website_url": "https://nordineraymond.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_5_FAIRE MIEUX POUR BORDEAUX.pdf"
   },
   "cand-33063-6": {
     "candidate_id": "cand-33063-6",
@@ -1792,9 +1792,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_6_A LA RECONQUÊTE DE BORDEAUX.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_6_A LA RECONQUÊTE DE BORDEAUX.pdf"
   },
   "cand-33063-7": {
     "candidate_id": "cand-33063-7",
@@ -1816,10 +1816,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_7_PHILIPPE DESSERTINE- L_OPTIMISME EST UNE FORCE.pdf",
     "has_website": true,
     "website_url": "https://dessertine2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_7_PHILIPPE DESSERTINE- L_OPTIMISME EST UNE FORCE.pdf"
   },
   "cand-33063-8": {
     "candidate_id": "cand-33063-8",
@@ -1841,9 +1841,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_8_Lutte ouvrière - le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_8_Lutte ouvrière - le camp des travailleurs.pdf"
   },
   "cand-33063-9": {
     "candidate_id": "cand-33063-9",
@@ -1865,10 +1865,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_9_RASSEMBLEMENT NATIONAL POUR BORDEAUX.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/julierchx/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_9_RASSEMBLEMENT NATIONAL POUR BORDEAUX.pdf"
   },
   "cand-33063-10": {
     "candidate_id": "cand-33063-10",
@@ -1890,10 +1890,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_10_UNION DE LA GAUCHE.pdf",
     "has_website": true,
     "website_url": "https://www.medhisaboulard.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_10_UNION DE LA GAUCHE.pdf"
   },
   "cand-33063-11": {
     "candidate_id": "cand-33063-11",
@@ -1915,9 +1915,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "33_Gironde/33063_Bordeaux/panneau_11_ROUGE BORDEAUX ANTICAPITALISTE.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/33_Gironde/33063_Bordeaux/panneau_11_ROUGE BORDEAUX ANTICAPITALISTE.pdf"
   },
   "cand-34172-1": {
     "candidate_id": "cand-34172-1",
@@ -2010,9 +2010,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "34_Hérault/34172_Montpellier/panneau_4_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/34_Hérault/34172_Montpellier/panneau_4_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-34172-5": {
     "candidate_id": "cand-34172-5",
@@ -2269,9 +2269,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "35_Ille-et-Vilaine/35238_Rennes/panneau_2_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/35_Ille-et-Vilaine/35238_Rennes/panneau_2_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-35238-3": {
     "candidate_id": "cand-35238-3",
@@ -2506,10 +2506,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_1_Faire Mieux pour Tours.pdf",
     "has_website": true,
     "website_url": "https://fairemieuxpourtours.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_1_Faire Mieux pour Tours.pdf"
   },
   "cand-37261-2": {
     "candidate_id": "cand-37261-2",
@@ -2531,10 +2531,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_2_Tours inspire.pdf",
     "has_website": true,
     "website_url": "https://linktr.ee/toursinspire2026",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_2_Tours inspire.pdf"
   },
   "cand-37261-3": {
     "candidate_id": "cand-37261-3",
@@ -2556,9 +2556,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_3_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_3_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-37261-4": {
     "candidate_id": "cand-37261-4",
@@ -2580,10 +2580,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_4_CHANGEONS TOURS _.pdf",
     "has_website": true,
     "website_url": "https://www.changeonstours.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_4_CHANGEONS TOURS _.pdf"
   },
   "cand-37261-5": {
     "candidate_id": "cand-37261-5",
@@ -2605,10 +2605,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_5_À NOTRE TOURS.pdf",
     "has_website": true,
     "website_url": "https://www.facebook.com/people/Tours-Vivante-Bertrand-Rouzier/61586291704916/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_5_À NOTRE TOURS.pdf"
   },
   "cand-37261-6": {
     "candidate_id": "cand-37261-6",
@@ -2630,9 +2630,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_6_TOURS POUR LES TRAVAILLEURS ET LES JEUNES.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_6_TOURS POUR LES TRAVAILLEURS ET LES JEUNES.pdf"
   },
   "cand-37261-7": {
     "candidate_id": "cand-37261-7",
@@ -2654,10 +2654,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_7_NATURELLEMENT TOURS.pdf",
     "has_website": true,
     "website_url": "https://www.naturellement-tours.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_7_NATURELLEMENT TOURS.pdf"
   },
   "cand-37261-8": {
     "candidate_id": "cand-37261-8",
@@ -2679,10 +2679,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "37_Indre-et-Loire/37261_Tours/panneau_8_TOURS POUR TOUS.pdf",
     "has_website": true,
     "website_url": "https://tourspourtous.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/37_Indre-et-Loire/37261_Tours/panneau_8_TOURS POUR TOUS.pdf"
   },
   "cand-38185-1": {
     "candidate_id": "cand-38185-1",
@@ -2704,10 +2704,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "38_Isère/38185_Grenoble/panneau_1_GRENOBLE ALPES COLLECTIF.pdf",
     "has_website": true,
     "website_url": "https://grenoblealpescollectif.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/38_Isère/38185_Grenoble/panneau_1_GRENOBLE ALPES COLLECTIF.pdf"
   },
   "cand-38185-2": {
     "candidate_id": "cand-38185-2",
@@ -2729,10 +2729,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "38_Isère/38185_Grenoble/panneau_2_RASSEMBLEMENT NATIONAL - GRENOBLE CAPITALE DES ALPES.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/valentingabriac/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/38_Isère/38185_Grenoble/panneau_2_RASSEMBLEMENT NATIONAL - GRENOBLE CAPITALE DES ALPES.pdf"
   },
   "cand-38185-3": {
     "candidate_id": "cand-38185-3",
@@ -2777,10 +2777,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "38_Isère/38185_Grenoble/panneau_4_Faire mieux pour Grenoble.pdf",
     "has_website": true,
     "website_url": "https://brunon2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/38_Isère/38185_Grenoble/panneau_4_Faire mieux pour Grenoble.pdf"
   },
   "cand-38185-5": {
     "candidate_id": "cand-38185-5",
@@ -2802,9 +2802,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "38_Isère/38185_Grenoble/panneau_5_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/38_Isère/38185_Grenoble/panneau_5_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-38185-6": {
     "candidate_id": "cand-38185-6",
@@ -3183,9 +3183,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "44_Loire-Atlantique/44109_Nantes/panneau_3_Lutte ouvrière-Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/44_Loire-Atlantique/44109_Nantes/panneau_3_Lutte ouvrière-Le camp des travailleurs.pdf"
   },
   "cand-44109-4": {
     "candidate_id": "cand-44109-4",
@@ -3586,10 +3586,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "49_Maine-et-Loire/49007_Angers/panneau_3_Angers Pour Vous.pdf",
     "has_website": true,
     "website_url": "https://www.angersbechu.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/49_Maine-et-Loire/49007_Angers/panneau_3_Angers Pour Vous.pdf"
   },
   "cand-49007-4": {
     "candidate_id": "cand-49007-4",
@@ -3611,10 +3611,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "49_Maine-et-Loire/49007_Angers/panneau_4_ANGERS POPULAIRE.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/aurore.lahondes/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/49_Maine-et-Loire/49007_Angers/panneau_4_ANGERS POPULAIRE.pdf"
   },
   "cand-49007-5": {
     "candidate_id": "cand-49007-5",
@@ -3659,9 +3659,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "49_Maine-et-Loire/49007_Angers/panneau_6_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/49_Maine-et-Loire/49007_Angers/panneau_6_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-49007-7": {
     "candidate_id": "cand-49007-7",
@@ -4745,9 +4745,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_2_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_2_LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-63113-3": {
     "candidate_id": "cand-63113-3",
@@ -4769,10 +4769,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_3_LE SURSAUT CLERMONTOIS.pdf",
     "has_website": true,
     "website_url": "https://bony2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_3_LE SURSAUT CLERMONTOIS.pdf"
   },
   "cand-63113-4": {
     "candidate_id": "cand-63113-4",
@@ -4818,10 +4818,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_5_Clermont-Fd Fière et Solidaire.pdf",
     "has_website": true,
     "website_url": "https://mariannemaximi2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_5_Clermont-Fd Fière et Solidaire.pdf"
   },
   "cand-63113-6": {
     "candidate_id": "cand-63113-6",
@@ -4843,10 +4843,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_6_VIVRE CLERMONT _.pdf",
     "has_website": true,
     "website_url": "https://bianchi2026.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/63_Puy-de-Dôme/63113_Clermont-Ferrand/panneau_6_VIVRE CLERMONT _.pdf"
   },
   "cand-66136-1": {
     "candidate_id": "cand-66136-1",
@@ -5033,10 +5033,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_2_Strasbourg fière et solidaire.pdf",
     "has_website": true,
     "website_url": "http://kobryn2026.eu",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_2_Strasbourg fière et solidaire.pdf"
   },
   "cand-67482-3": {
     "candidate_id": "cand-67482-3",
@@ -5058,9 +5058,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_3_Strasbourg pour les jeunes et les travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_3_Strasbourg pour les jeunes et les travailleurs.pdf"
   },
   "cand-67482-4": {
     "candidate_id": "cand-67482-4",
@@ -5082,9 +5082,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_4_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_4_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-67482-5": {
     "candidate_id": "cand-67482-5",
@@ -5106,10 +5106,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_5_Aimer Strasbourg.pdf",
     "has_website": true,
     "website_url": "https://www.aimerstrasbourg.alsace",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_5_Aimer Strasbourg.pdf"
   },
   "cand-67482-6": {
     "candidate_id": "cand-67482-6",
@@ -5131,10 +5131,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_6_UTILES POUR STRASBOURG.pdf",
     "has_website": true,
     "website_url": "https://www.mohamed-sylla.com",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_6_UTILES POUR STRASBOURG.pdf"
   },
   "cand-67482-8": {
     "candidate_id": "cand-67482-8",
@@ -5156,10 +5156,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_8_DU NOUVEAU POUR STRASBOURG.pdf",
     "has_website": true,
     "website_url": "https://pierrejakubowicz.eu/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_8_DU NOUVEAU POUR STRASBOURG.pdf"
   },
   "cand-67482-9": {
     "candidate_id": "cand-67482-9",
@@ -5181,10 +5181,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_9_ENGAGÉ-E-S POUR STRASBOURG.pdf",
     "has_website": true,
     "website_url": "https://www.parti-ers.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_9_ENGAGÉ-E-S POUR STRASBOURG.pdf"
   },
   "cand-67482-10": {
     "candidate_id": "cand-67482-10",
@@ -5206,10 +5206,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_10_Strasbourg Juste et Vivante.pdf",
     "has_website": true,
     "website_url": "https://barseghian.eu",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_10_Strasbourg Juste et Vivante.pdf"
   },
   "cand-67482-11": {
     "candidate_id": "cand-67482-11",
@@ -5231,10 +5231,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_11_Pour Strasbourg.pdf",
     "has_website": true,
     "website_url": "https://www.facebook.com/CatherineTrautmannStrasbourg/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_11_Pour Strasbourg.pdf"
   },
   "cand-67482-12": {
     "candidate_id": "cand-67482-12",
@@ -5256,10 +5256,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_12_Strasbourg sans frontières.pdf",
     "has_website": true,
     "website_url": "https://fahadrajamuhammad.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_12_Strasbourg sans frontières.pdf"
   },
   "cand-67482-13": {
     "candidate_id": "cand-67482-13",
@@ -5281,9 +5281,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "67_Bas-Rhin/67482_Strasbourg/panneau_13_NPA Révolutionnaires-STRASBOURG_ ouvrière et révolutionnaire.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/67_Bas-Rhin/67482_Strasbourg/panneau_13_NPA Révolutionnaires-STRASBOURG_ ouvrière et révolutionnaire.pdf"
   },
   "cand-68224-1": {
     "candidate_id": "cand-68224-1",
@@ -5329,10 +5329,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_2_RM.pdf",
     "has_website": true,
     "website_url": "https://www.rassemblementpourmulhouse.fr/conseil-régional",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_2_RM.pdf"
   },
   "cand-68224-3": {
     "candidate_id": "cand-68224-3",
@@ -5354,10 +5354,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_3_FQCA.pdf",
     "has_website": true,
     "website_url": "https://laramillion2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_3_FQCA.pdf"
   },
   "cand-68224-4": {
     "candidate_id": "cand-68224-4",
@@ -5426,10 +5426,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_6_NSM.pdf",
     "has_website": true,
     "website_url": "https://noussommesmulhouse.odoo.com",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_6_NSM.pdf"
   },
   "cand-68224-7": {
     "candidate_id": "cand-68224-7",
@@ -5475,10 +5475,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_8_RMUDD.pdf",
     "has_website": true,
     "website_url": "https://www.restaurermulhouse.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_8_RMUDD.pdf"
   },
   "cand-68224-9": {
     "candidate_id": "cand-68224-9",
@@ -5500,10 +5500,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_9_DHPM.pdf",
     "has_website": true,
     "website_url": "https://sornin2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_9_DHPM.pdf"
   },
   "cand-68224-10": {
     "candidate_id": "cand-68224-10",
@@ -5525,10 +5525,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_10_LCPVPMM2026.pdf",
     "has_website": true,
     "website_url": "https://marquet2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_10_LCPVPMM2026.pdf"
   },
   "cand-68224-11": {
     "candidate_id": "cand-68224-11",
@@ -5550,10 +5550,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "68_Haut-Rhin/68224_Mulhouse/panneau_11_MCLM.pdf",
     "has_website": true,
     "website_url": "https://loic-minery2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/68_Haut-Rhin/68224_Mulhouse/panneau_11_MCLM.pdf"
   },
   "cand-69123-1": {
     "candidate_id": "cand-69123-1",
@@ -5575,10 +5575,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_1_POUR VIVRE LYON_ L_UNION DE LA GAUCHE ET DES ECOLOGISTES AVE.pdf",
     "has_website": true,
     "website_url": "https://www.pourvivrelyonmunicipales2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_1_POUR VIVRE LYON_ L_UNION DE LA GAUCHE ET DES ECOLOGISTES AVE.pdf"
   },
   "cand-69123-2": {
     "candidate_id": "cand-69123-2",
@@ -5600,10 +5600,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_2_Coeur Lyonnais.pdf",
     "has_website": true,
     "website_url": "https://coeurlyonnais.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_2_Coeur Lyonnais.pdf"
   },
   "cand-69123-3": {
     "candidate_id": "cand-69123-3",
@@ -5625,10 +5625,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_3_LYON C_EST MAINTENANT.pdf",
     "has_website": true,
     "website_url": "https://www.georgeskepenekian2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_3_LYON C_EST MAINTENANT.pdf"
   },
   "cand-69123-4": {
     "candidate_id": "cand-69123-4",
@@ -5650,9 +5650,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_4_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_4_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-69123-5": {
     "candidate_id": "cand-69123-5",
@@ -5674,9 +5674,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_5_Lyon pour les travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_5_Lyon pour les travailleurs.pdf"
   },
   "cand-69123-6": {
     "candidate_id": "cand-69123-6",
@@ -5698,10 +5698,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_6_Retrouver Lyon.pdf",
     "has_website": true,
     "website_url": "https://www.dupalais2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_6_Retrouver Lyon.pdf"
   },
   "cand-69123-7": {
     "candidate_id": "cand-69123-7",
@@ -5746,10 +5746,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_8_LYON AVEC VOUS _.pdf",
     "has_website": true,
     "website_url": "https://www.lyonavecvous.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_8_LYON AVEC VOUS _.pdf"
   },
   "cand-69123-9": {
     "candidate_id": "cand-69123-9",
@@ -5771,9 +5771,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69123_Lyon/panneau_9_NPA - Révolutionnaires - Lyon_ ouvrière et révolutionnaire.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69123_Lyon/panneau_9_NPA - Révolutionnaires - Lyon_ ouvrière et révolutionnaire.pdf"
   },
   "cand-69266-1": {
     "candidate_id": "cand-69266-1",
@@ -5795,10 +5795,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69266_Villeurbanne/panneau_1_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": true,
     "website_url": "https://rendeznousvilleurbanne.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69266_Villeurbanne/panneau_1_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-69266-2": {
     "candidate_id": "cand-69266-2",
@@ -5867,10 +5867,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69266_Villeurbanne/panneau_4_ENGAGE.E.S POUR VILLEURBANNE- LA GAUCHE SOCIALE_ ECOLOGISTE .pdf",
     "has_website": true,
     "website_url": "https://engagespourvilleurbanne.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69266_Villeurbanne/panneau_4_ENGAGE.E.S POUR VILLEURBANNE- LA GAUCHE SOCIALE_ ECOLOGISTE .pdf"
   },
   "cand-69266-5": {
     "candidate_id": "cand-69266-5",
@@ -5892,9 +5892,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69266_Villeurbanne/panneau_5_RENDEZ-NOUS VILLEURBANNE.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69266_Villeurbanne/panneau_5_RENDEZ-NOUS VILLEURBANNE.pdf"
   },
   "cand-69266-6": {
     "candidate_id": "cand-69266-6",
@@ -5916,10 +5916,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "69_Rhône/69266_Villeurbanne/panneau_6_Villeurbanne Insoumise.pdf",
     "has_website": true,
     "website_url": "https://villeurbanneinsoumise.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/69_Rhône/69266_Villeurbanne/panneau_6_Villeurbanne Insoumise.pdf"
   },
   "cand-72181-1": {
     "candidate_id": "cand-72181-1",
@@ -5964,10 +5964,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_2_LMNR.pdf",
     "has_website": true,
     "website_url": "https://www.facebook.com/people/Le-Mans-nous-rassemble/61585848763135/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_2_LMNR.pdf"
   },
   "cand-72181-3": {
     "candidate_id": "cand-72181-3",
@@ -5989,10 +5989,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_3_uplm.pdf",
     "has_website": true,
     "website_url": "https://mariettakaramanli.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_3_uplm.pdf"
   },
   "cand-72181-4": {
     "candidate_id": "cand-72181-4",
@@ -6014,9 +6014,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_4_LOLCDT.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_4_LOLCDT.pdf"
   },
   "cand-72181-5": {
     "candidate_id": "cand-72181-5",
@@ -6038,9 +6038,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_5_RPRLMPP.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_5_RPRLMPP.pdf"
   },
   "cand-72181-6": {
     "candidate_id": "cand-72181-6",
@@ -6062,10 +6062,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_6_LMNC.pdf",
     "has_website": true,
     "website_url": "https://www.lemans2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_6_LMNC.pdf"
   },
   "cand-72181-7": {
     "candidate_id": "cand-72181-7",
@@ -6087,9 +6087,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "72_Sarthe/72181_Le Mans/panneau_7_RLM.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/72_Sarthe/72181_Le Mans/panneau_7_RLM.pdf"
   },
   "cand-74010-1": {
     "candidate_id": "cand-74010-1",
@@ -6254,10 +6254,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_1_LO.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/marielle_saulnier_lo/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_1_LO.pdf"
   },
   "cand-75056-2": {
     "candidate_id": "cand-75056-2",
@@ -6279,10 +6279,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_2_RP.pdf",
     "has_website": true,
     "website_url": "https://www.mariani-2026.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_2_RP.pdf"
   },
   "cand-75056-3": {
     "candidate_id": "cand-75056-3",
@@ -6304,10 +6304,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_3_EG.pdf",
     "has_website": true,
     "website_url": "https://emmanuel-gregoire-2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_3_EG.pdf"
   },
   "cand-75056-4": {
     "candidate_id": "cand-75056-4",
@@ -6329,9 +6329,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_4_CP NPA.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_4_CP NPA.pdf"
   },
   "cand-75056-5": {
     "candidate_id": "cand-75056-5",
@@ -6353,9 +6353,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_5_SK UVH.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_5_SK UVH.pdf"
   },
   "cand-75056-6": {
     "candidate_id": "cand-75056-6",
@@ -6377,10 +6377,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_6_PAAPYB.pdf",
     "has_website": true,
     "website_url": "https://www.bournazel.paris",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_6_PAAPYB.pdf"
   },
   "cand-75056-7": {
     "candidate_id": "cand-75056-7",
@@ -6402,10 +6402,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_7_CPARD.pdf",
     "has_website": true,
     "website_url": "https://rachidadati2026.com",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_7_CPARD.pdf"
   },
   "cand-75056-8": {
     "candidate_id": "cand-75056-8",
@@ -6427,10 +6427,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_8_LNPP.pdf",
     "has_website": true,
     "website_url": "https://sophiapourparis.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_8_LNPP.pdf"
   },
   "cand-75056-9": {
     "candidate_id": "cand-75056-9",
@@ -6452,9 +6452,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "75_Paris/75056_Paris/panneau_9_LCBPCS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/75_Paris/75056_Paris/panneau_9_LCBPCS.pdf"
   },
   "cand-76351-1": {
     "candidate_id": "cand-76351-1",
@@ -7023,10 +7023,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_1_TOULON EN COMMUN.pdf",
     "has_website": true,
     "website_url": "https://toulonencommun2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_1_TOULON EN COMMUN.pdf"
   },
   "cand-83137-2": {
     "candidate_id": "cand-83137-2",
@@ -7048,9 +7048,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_2_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_2_LUTTE OUVRIÈRE - LE CAMP DES TRAVAILLEURS.pdf"
   },
   "cand-83137-3": {
     "candidate_id": "cand-83137-3",
@@ -7072,10 +7072,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_3_Liste d_union populaire avec la France Insoumise.pdf",
     "has_website": true,
     "website_url": "https://lfitoulon2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_3_Liste d_union populaire avec la France Insoumise.pdf"
   },
   "cand-83137-4": {
     "candidate_id": "cand-83137-4",
@@ -7097,10 +7097,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_4_TOULON EN GRAND _.pdf",
     "has_website": true,
     "website_url": "https://toulonengrand.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_4_TOULON EN GRAND _.pdf"
   },
   "cand-83137-5": {
     "candidate_id": "cand-83137-5",
@@ -7122,10 +7122,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_5_UN AVENIR POUR TOULON.pdf",
     "has_website": true,
     "website_url": "https://laurelavalette.fr/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_5_UN AVENIR POUR TOULON.pdf"
   },
   "cand-83137-6": {
     "candidate_id": "cand-83137-6",
@@ -7147,10 +7147,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "83_Var/83137_Toulon/panneau_6_TOULON MON PARTI.pdf",
     "has_website": true,
     "website_url": "https://joseemassi.com/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/83_Var/83137_Toulon/panneau_6_TOULON MON PARTI.pdf"
   },
   "cand-84007-1": {
     "candidate_id": "cand-84007-1",
@@ -7761,10 +7761,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "92_Hauts-de-Seine/92012_Boulogne-Billancourt/panneau_4_Boulogne-Billancourt Nous Rassemble.pdf",
     "has_website": true,
     "website_url": "https://judithshan2026.fr",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/92_Hauts-de-Seine/92012_Boulogne-Billancourt/panneau_4_Boulogne-Billancourt Nous Rassemble.pdf"
   },
   "cand-92012-5": {
     "candidate_id": "cand-92012-5",
@@ -7834,9 +7834,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "92_Hauts-de-Seine/92050_Nanterre/panneau_1_A NANTERRE_ CHANGEONS L_AVENIR.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/92_Hauts-de-Seine/92050_Nanterre/panneau_1_A NANTERRE_ CHANGEONS L_AVENIR.pdf"
   },
   "cand-92050-2": {
     "candidate_id": "cand-92050-2",
@@ -8020,9 +8020,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "92_Hauts-de-Seine/92050_Nanterre/panneau_9_FAIRE MIEUX POUR NANTERRE.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/92_Hauts-de-Seine/92050_Nanterre/panneau_9_FAIRE MIEUX POUR NANTERRE.pdf"
   },
   "cand-92050-10": {
     "candidate_id": "cand-92050-10",
@@ -8531,9 +8531,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "94_Val-de-Marne/94028_Créteil/panneau_1_Lutte ouvrière - Le camps des Travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/94_Val-de-Marne/94028_Créteil/panneau_1_Lutte ouvrière - Le camps des Travailleurs.pdf"
   },
   "cand-94028-2": {
     "candidate_id": "cand-94028-2",
@@ -8555,9 +8555,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "94_Val-de-Marne/94028_Créteil/panneau_2_Créteil pour les travailleurs et jeunes_ contre la guerre et.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/94_Val-de-Marne/94028_Créteil/panneau_2_Créteil pour les travailleurs et jeunes_ contre la guerre et.pdf"
   },
   "cand-94028-3": {
     "candidate_id": "cand-94028-3",
@@ -8743,9 +8743,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "94_Val-de-Marne/94081_Vitry-sur-Seine/panneau_3_Lutte ouvrière - le camps des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/94_Val-de-Marne/94081_Vitry-sur-Seine/panneau_3_Lutte ouvrière - le camps des travailleurs.pdf"
   },
   "cand-94081-4": {
     "candidate_id": "cand-94081-4",
@@ -8767,10 +8767,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "94_Val-de-Marne/94081_Vitry-sur-Seine/panneau_4_Vitry En Mieux La Liste Ecolo 100_ Citoyenne.pdf",
     "has_website": true,
     "website_url": "https://vitryenmieux.org",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/94_Val-de-Marne/94081_Vitry-sur-Seine/panneau_4_Vitry En Mieux La Liste Ecolo 100_ Citoyenne.pdf"
   },
   "cand-94081-5": {
     "candidate_id": "cand-94081-5",
@@ -8839,9 +8839,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "95_Val-d'Oise/95018_Argenteuil/panneau_1_Lutte ouvrière - Le camp des travailleurs.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/95_Val-d'Oise/95018_Argenteuil/panneau_1_Lutte ouvrière - Le camp des travailleurs.pdf"
   },
   "cand-95018-2": {
     "candidate_id": "cand-95018-2",
@@ -8982,10 +8982,10 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "95_Val-d'Oise/95018_Argenteuil/panneau_7_Argenteuil La Gauche Rassemblée.pdf",
     "has_website": true,
     "website_url": "https://www.instagram.com/bougeard.nicolas/",
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/95_Val-d'Oise/95018_Argenteuil/panneau_7_Argenteuil La Gauche Rassemblée.pdf"
   },
   "cand-97411-1": {
     "candidate_id": "cand-97411-1",
@@ -9076,9 +9076,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "974_La Réunion/97411_Saint-Denis/panneau_4_SAINT-DENIS_ UNE TERRE UN PEUPLE _.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/974_La Réunion/97411_Saint-Denis/panneau_4_SAINT-DENIS_ UNE TERRE UN PEUPLE _.pdf"
   },
   "cand-97411-5": {
     "candidate_id": "cand-97411-5",
@@ -9123,9 +9123,9 @@
     "presence_score": 0,
     "is_incumbent": false,
     "has_manifesto": true,
-    "manifesto_pdf_path": "974_La Réunion/97411_Saint-Denis/panneau_6_LA VOIX CITOYENNE A SAINT-DENIS.pdf",
     "has_website": false,
-    "is_tete_de_liste": true
+    "is_tete_de_liste": true,
+    "manifesto_pdf_url": "https://programme-candidats.interieur.gouv.fr/elections-municipales-2026/data-pdf/974_La Réunion/97411_Saint-Denis/panneau_6_LA VOIX CITOYENNE A SAINT-DENIS.pdf"
   },
   "cand-97411-7": {
     "candidate_id": "cand-97411-7",
