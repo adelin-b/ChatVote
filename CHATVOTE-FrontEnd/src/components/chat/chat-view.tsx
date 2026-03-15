@@ -13,6 +13,7 @@ import ChatHeader from "./chat-header";
 import ChatMainContent from "./chat-main-content";
 import ChatScrollDownIndicator from "./chat-scroll-down-indicator";
 import ChatViewSsr from "./chat-view-ssr";
+import ChatViewSwitcher from "./chat-view-switcher";
 import DevMetadataSidebarWrapper from "./dev-metadata-sidebar-wrapper";
 
 type Props = {
@@ -44,43 +45,45 @@ async function ChatView({
         <ChatHeader />
         {/* Main content - adds padding when sidebar is expanded */}
         <ChatMainContent>
-          <Suspense
-            fallback={
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2">
-                <LoadingSpinner />
-                <p className="text-muted-foreground text-center text-sm">
-                  Loading Chat Session...
-                </p>
-              </div>
-            }
-          >
-            <ChatViewSsr
-              chatId={sessionId}
-              partyIds={partyIds}
-              initialQuestion={initialQuestion}
-              municipalityCode={municipalityCode}
-            />
-          </Suspense>
-          <div
-            className={cn(
-              "from-background/50 absolute right-0 bottom-0 left-0 z-20 w-full bg-linear-to-t to-transparent transition-all",
-              !sessionId && !municipalityCode && !partyIds?.length
-                ? "h-1/3 backdrop-blur-xs dark:h-1/2"
-                : "pointer-events-none h-0",
-            )}
-          />
-          <div className="bg-background relative mx-auto w-full max-w-192 shrink-0 p-3 md:p-4">
-            <ChatScrollDownIndicator />
-            <ChatDynamicChatInput
-              initialSystemStatus={systemStatus}
-              hasValidServerUser={
-                auth.session !== null && !auth.session.isAnonymous
+          <ChatViewSwitcher sessionId={sessionId} municipalityCode={municipalityCode}>
+            <Suspense
+              fallback={
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2">
+                  <LoadingSpinner />
+                  <p className="text-muted-foreground text-center text-sm">
+                    Loading Chat Session...
+                  </p>
+                </div>
               }
-              municipalityCode={municipalityCode}
-              sessionId={sessionId}
+            >
+              <ChatViewSsr
+                chatId={sessionId}
+                partyIds={partyIds}
+                initialQuestion={initialQuestion}
+                municipalityCode={municipalityCode}
+              />
+            </Suspense>
+            <div
+              className={cn(
+                "from-background/50 absolute right-0 bottom-0 left-0 z-20 w-full bg-linear-to-t to-transparent transition-all",
+                !sessionId && !municipalityCode && !partyIds?.length
+                  ? "h-1/3 backdrop-blur-xs dark:h-1/2"
+                  : "pointer-events-none h-0",
+              )}
             />
-            <AiDisclaimer />
-          </div>
+            <div className="bg-background relative mx-auto w-full max-w-192 shrink-0 p-3 md:p-4">
+              <ChatScrollDownIndicator />
+              <ChatDynamicChatInput
+                initialSystemStatus={systemStatus}
+                hasValidServerUser={
+                  auth.session !== null && !auth.session.isAnonymous
+                }
+                municipalityCode={municipalityCode}
+                sessionId={sessionId}
+              />
+              <AiDisclaimer />
+            </div>
+          </ChatViewSwitcher>
         </ChatMainContent>
       </div>
     </div>

@@ -273,6 +273,121 @@ class IndexerNode(DataSourceNode):
         else:
             logger.info("[indexer] candidate indexing disabled, skipping")
 
+        # --- Social media indexing ----------------------------------------
+        social_indexed: int = 0
+        skip_social = os.getenv("INDEX_SKIP_SOCIAL", "true").lower() in ("true", "1", "yes")
+        if settings.get("index_social", True) and not skip_social:
+            logger.info("[indexer] starting social media indexing phase...")
+            await update_status(
+                cfg.node_id, NodeStatus.RUNNING,
+                counts={
+                    "phase": "social",
+                    "parties_indexed": parties_indexed,
+                    "candidates_chunks": candidates_indexed,
+                    "social_chunks": 0,
+                },
+            )
+            try:
+                from src.services.data_pipeline.social_scraper import (
+                    detect_platform,
+                    scrape_social_candidates,
+                )
+                from src.services.data_pipeline.crawl_scraper import (
+                    CrawlScraperNode,
+                    _get_crawl_credentials,
+                )
+                from src.services.candidate_indexer import index_candidate_website
+                import aiohttp
+
+                # Read Google Sheet for social media URLs
+                creds = _get_crawl_credentials()
+                node = CrawlScraperNode()
+                sheet_id = node.default_settings["sheet_id"]
+
+                async with aiohttp.ClientSession() as session:
+                    token = node._ensure_token(creds)
+                    rows = await node._fetch_sheet_rows(session, sheet_id, token)
+
+                # Build list of social-only candidates
+                # Respect top_communes filter (same as candidate/profession indexing)
+                from src.services.data_pipeline.population import get_top_communes
+                top_communes = get_top_communes()
+                top_commune_codes = set(top_communes.keys()) if top_communes else None
+
+                already_social = cfg.checkpoints.get("social_indexed_candidates", {})
+                social_candidates = []
+                for row in rows:
+                    if len(row) < 9:
+                        continue
+                    cid = row[0].strip()
+                    url = row[8].strip() if len(row) > 8 else ""
+                    name = f"{row[1]} {row[2]}".strip() if len(row) > 2 else cid
+
+                    if not url or not url.startswith("http"):
+                        continue
+                    if not detect_platform(url):
+                        continue
+                    if not force and cid in already_social:
+                        continue
+                    # Filter by top communes if the population node ran
+                    if top_commune_codes is not None:
+                        parts = cid.split("-")
+                        commune_code = parts[1] if len(parts) >= 3 else None
+                        if commune_code not in top_commune_codes:
+                            continue
+
+                    social_candidates.append({"candidate_id": cid, "url": url, "name": name})
+
+                logger.info("[indexer] %d social media candidates to scrape", len(social_candidates))
+
+                if social_candidates:
+                    scraped = scrape_social_candidates(social_candidates)
+                    logger.info("[indexer] scraped %d/%d social candidates", len(scraped), len(social_candidates))
+
+                    from src.firebase_service import aget_candidate_by_id, async_db
+
+                    for cid, sw in scraped.items():
+                        try:
+                            candidate = await aget_candidate_by_id(cid)
+                            if not candidate:
+                                logger.warning("[indexer] social candidate %s not in Firestore", cid)
+                                continue
+
+                            count = await index_candidate_website(
+                                candidate, sw, classify_themes=classify_themes,
+                            )
+                            social_indexed += count
+
+                            # Mark has_scraped in Firestore
+                            await async_db.collection("candidates").document(cid).set(
+                                {"has_scraped": True}, merge=True,
+                            )
+
+                            # Save checkpoint
+                            cfg.checkpoints.setdefault("social_indexed_candidates", {})[cid] = (
+                                datetime.now(timezone.utc).isoformat()
+                            )
+
+                            logger.info("[indexer] social %s: %d chunks indexed", cid, count)
+                        except Exception as exc:
+                            logger.error("[indexer] social indexing failed for %s: %s", cid, exc)
+
+                    await update_status(
+                        cfg.node_id, NodeStatus.RUNNING,
+                        counts={
+                            "phase": "social",
+                            "social_chunks": social_indexed,
+                            "social_candidates": len(scraped),
+                        },
+                    )
+
+            except Exception as exc:
+                msg = f"social media indexing failed: {exc}"
+                logger.exception("[indexer] %s", msg)
+                errors.append(msg)
+        else:
+            logger.info("[indexer] social media indexing disabled, skipping")
+
         # --- Profession de foi indexing -----------------------------------
         if settings.get("index_professions", True):
             logger.info("[indexer] starting profession de foi indexing phase...")
@@ -403,6 +518,7 @@ class IndexerNode(DataSourceNode):
         cfg.counts = {
             "parties_indexed": parties_indexed,
             "chunks_indexed": candidates_indexed,
+            "social_indexed": social_indexed,
             "professions_indexed": professions_indexed,
             "elapsed_s": round(elapsed, 1),
         }

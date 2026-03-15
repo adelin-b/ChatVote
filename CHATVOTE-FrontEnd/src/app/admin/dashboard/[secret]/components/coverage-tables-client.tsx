@@ -279,6 +279,12 @@ function ScoreBreakdown({
 
   const ingestionItems = [
     {
+      label: "Profession de foi indexed",
+      ok: total > 0 && withManifesto === total,
+      detail: total > 0 ? `${withManifesto} / ${total}` : "—",
+      pct: total > 0 ? Math.round(100 * (withManifesto / total)) : 0,
+    },
+    {
       label: "Scraped successfully",
       ok: withWebsite > 0 && withScraped === withWebsite,
       detail: withWebsite > 0 ? `${withScraped} / ${withWebsite}` : "—",
@@ -286,9 +292,9 @@ function ScoreBreakdown({
     },
     {
       label: "Indexed in RAG",
-      ok: withWebsite > 0 && withIndexed >= withWebsite,
-      detail: withWebsite > 0 ? `${withIndexed} / ${withWebsite}` : "—",
-      pct: withWebsite > 0 ? Math.round(100 * (withIndexed / withWebsite)) : 0,
+      ok: total > 0 && withIndexed === total,
+      detail: total > 0 ? `${withIndexed} / ${total}` : "—",
+      pct: total > 0 ? Math.round(100 * (withIndexed / total)) : 0,
     },
   ];
 
@@ -350,7 +356,7 @@ function ScoreBreakdown({
       {total > 0 && (
         <p className="text-muted-foreground/60 text-[11px]">
           {total} candidates — {withWebsite} with website · {withManifesto} with
-          manifesto · {withIndexed} indexed in RAG
+          manifesto · {withIndexed} indexed in RAG (manifesto + web)
         </p>
       )}
     </div>

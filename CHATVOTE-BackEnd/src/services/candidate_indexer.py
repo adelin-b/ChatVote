@@ -146,6 +146,10 @@ def _infer_source_document(page) -> str:  # page: ScrapedPage
       candidate_website_html       → PRESS    (3) fallback
     PDFs keep their original page_type suffix (e.g. pdf_transcription).
     """
+    # Social media pages get their own source_document prefix (not "website")
+    if page.page_type in ("social_bio", "social_post"):
+        return f"candidate_{page.page_type}"
+
     # Non-HTML pages (pdf, sitemap, …) keep the original type suffix as-is.
     if page.page_type != "html":
         return f"candidate_website_{page.page_type}"

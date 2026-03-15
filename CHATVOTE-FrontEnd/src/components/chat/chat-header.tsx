@@ -10,7 +10,10 @@ import { SidebarTrigger } from "@components/ui/sidebar";
 import { IS_EMBEDDED } from "@lib/utils";
 import { Heart, HelpCircleIcon, XIcon } from "lucide-react";
 
+import { AI_SDK_ENABLED } from "@lib/ai/feature-flags";
+
 import ChatEmbedHeader from "./chat-embed-header";
+import { ChatModeToggle } from "./chat-mode-toggle";
 import CreateNewChatDropdownButton from "./create-new-chat-dropdown-button";
 import SocketDisconnectedBanner from "./socket-disconnected-banner";
 import { ThemeModeToggle } from "./theme-mode-toggle";
@@ -67,6 +70,7 @@ function ChatHeader() {
             </div>
             <ThemeModeToggle />
             <LanguageSwitcher />
+            {AI_SDK_ENABLED && <ChatModeToggle />}
           </div>
           {/* Right side - Help, Share, New Chat */}
           <div className="flex items-center gap-1">

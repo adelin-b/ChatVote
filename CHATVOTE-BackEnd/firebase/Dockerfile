@@ -12,4 +12,4 @@ COPY package.json package-lock.json firebase.json firestore.rules firestore.inde
 RUN npm install
 
 # Default: start both emulators (override via command for single-emulator mode)
-CMD ["npx", "firebase", "emulators:start", "--project", "chat-vote-dev", "--only", "firestore,auth", "--host", "0.0.0.0"]
+CMD ["npx", "firebase", "emulators:start", "--project", "chat-vote-dev", "--only", "firestore,auth,storage", "--host", "0.0.0.0"]

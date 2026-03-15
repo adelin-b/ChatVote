@@ -31,6 +31,8 @@ _SOURCE_FIABILITE_MAP: dict[str, Fiabilite] = {
     "candidate_website_blog": Fiabilite.PRESS,
     "candidate_website_actualite": Fiabilite.PRESS,
     "candidate_website": Fiabilite.PRESS,
+    "candidate_social_bio": Fiabilite.OFFICIAL,
+    "candidate_social_post": Fiabilite.SOCIAL_MEDIA,
 }
 
 

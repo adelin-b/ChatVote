@@ -278,7 +278,7 @@ stop:
 			echo "  $$svc stopped."; \
 		fi; \
 	done
-	@lsof -ti :9099,:8081 2>/dev/null | sort -u | xargs kill 2>/dev/null && echo "  native firebase emulators stopped." || true
+	@lsof -ti :9099,:8081,:9199 2>/dev/null | sort -u | xargs kill 2>/dev/null && echo "  native firebase emulators stopped." || true
 	@echo "All services stopped."
 
 # ---------------------------------------------------------------------------

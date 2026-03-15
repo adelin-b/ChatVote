@@ -1260,6 +1260,26 @@ async def commune_candidate_chunks(request):
         loop.run_in_executor(None, _fetch_candidates),
     )
 
+    # ── 2b. Build Drive slug→folder_id map (single API call) ─────────────────
+    _drive_root = "1rLVC3BTVKhOxxGu2GzIfq9BOexleIcRE"
+    drive_slug_to_id: dict[str, str] = {}
+    try:
+        from src.services.data_pipeline.crawl_scraper import (
+            CrawlScraperNode, _get_crawl_credentials, _slugify_url,
+        )
+        _creds = _get_crawl_credentials()
+        _node = CrawlScraperNode()
+        _token = _node._ensure_token(_creds)
+        async with aiohttp.ClientSession() as _session:
+            _subfolders = await _node._drive_list(
+                _session, _drive_root, _token,
+                mime_filter="application/vnd.google-apps.folder",
+            )
+        for sf in _subfolders:
+            drive_slug_to_id[sf["name"]] = sf["id"]
+    except Exception as exc:
+        logger.warning("Drive subfolder listing failed (debug links will use root): %s", exc)
+
     # ── 3. Compute per-candidate stats ────────────────────────────────────────
     manifesto_keywords = ("profession_de_foi", "election_manifesto")
 
@@ -1337,19 +1357,21 @@ async def commune_candidate_chunks(request):
         qdrant_dashboard = f"{qdrant_url}/dashboard#/collections/{CANDIDATES_INDEX_NAME}"
         qdrant_query = f"{qdrant_url}/dashboard#/collections/{CANDIDATES_INDEX_NAME}/points?filter=metadata.namespace%3D%3D{ns}"
         firestore_url = f"https://console.firebase.google.com/project/{firebase_project}/firestore/databases/-default-/data/~2Fcandidates~2F{ns}"
-        # Build candidate-level Drive folder link using website URL slug
-        _drive_root = "1rLVC3BTVKhOxxGu2GzIfq9BOexleIcRE"
+        # Build candidate-level Drive folder link — direct subfolder if found
         website_url = fs.get("website_url") or ""
-        if website_url:
-            from src.services.data_pipeline.crawl_scraper import _slugify_url
-            from urllib.parse import quote
+        drive_folder_url = f"https://drive.google.com/drive/folders/{_drive_root}"
+        if website_url and drive_slug_to_id:
             _slug = _slugify_url(website_url)
-            drive_folder_url = (
-                f"https://drive.google.com/drive/search"
-                f"?q=type%3Afolder%20{quote(_slug)}"
-            )
-        else:
-            drive_folder_url = f"https://drive.google.com/drive/folders/{_drive_root}"
+            # Try exact match, then prefix match, then substring match
+            _folder_id = drive_slug_to_id.get(_slug)
+            if not _folder_id:
+                _folder_id = next(
+                    (fid for fname, fid in drive_slug_to_id.items()
+                     if fname.startswith(_slug) or _slug in fname),
+                    None,
+                )
+            if _folder_id:
+                drive_folder_url = f"https://drive.google.com/drive/folders/{_folder_id}"
 
         candidates_out.append({
             "candidate_id": ns,
