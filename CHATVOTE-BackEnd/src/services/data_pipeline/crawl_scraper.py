@@ -615,15 +615,44 @@ class CrawlScraperNode(DataSourceNode):
         3. images/*/descriptions.json — OCR fallback
 
         Optimized: single listing of site folder children, parallel file downloads.
+        Uses report.csv to map .md filenames back to original source URLs.
         """
         pages: list[ScrapedPage] = []
 
         # Single API call to list all subfolders in the site folder
         all_children = await self._drive_list(session, site_folder_id, token)
         subfolder_map: dict[str, str] = {}
+        report_file_id: str | None = None
         for child in all_children:
             if child.get("mimeType") == "application/vnd.google-apps.folder":
                 subfolder_map[child["name"]] = child["id"]
+            elif child["name"] == "report.csv":
+                report_file_id = child["id"]
+
+        # Build filename → original URL mapping from report.csv
+        url_map: dict[str, str] = {}
+        if report_file_id:
+            try:
+                raw_csv = await self._drive_download(session, report_file_id, token)
+                import csv as _csv
+                import io as _io
+                import posixpath as _posixpath
+
+                reader = _csv.DictReader(
+                    _io.StringIO(raw_csv.decode("utf-8", errors="replace"))
+                )
+                for row in reader:
+                    saved_as = row.get("saved_as", "")
+                    source_url = row.get("url", "")
+                    if saved_as and source_url:
+                        filename = _posixpath.basename(saved_as)
+                        url_map[filename] = source_url
+                logger.info(
+                    "[crawl_scraper] report.csv: %d filename→URL mappings loaded",
+                    len(url_map),
+                )
+            except Exception as exc:
+                logger.warning("[crawl_scraper] report.csv parse failed: %s", exc)
 
         async def _download_md(f: dict, page_type: str, title_prefix: str) -> ScrapedPage | None:
             try:
@@ -633,8 +662,9 @@ class CrawlScraperNode(DataSourceNode):
                     title = f["name"].replace(".md", "").replace("-", " ").title()
                     if title_prefix:
                         title = f"{title_prefix} {title}"
+                    source_url = url_map.get(f["name"], f["name"])
                     return ScrapedPage(
-                        url=f["name"], title=title,
+                        url=source_url, title=title,
                         content=text, page_type=page_type,
                     )
             except Exception as exc:
