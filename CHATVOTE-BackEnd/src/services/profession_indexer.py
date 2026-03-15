@@ -20,6 +20,7 @@ Pipeline:
 import asyncio
 import logging
 import os
+import re
 from pathlib import Path
 import tempfile
 
@@ -44,6 +45,193 @@ from src.services.manifesto_indexer import extract_pages_from_pdf
 from src.vector_store_helper import qdrant_client
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Content quality checks (ported from chunk_health_audit.py)
+# ---------------------------------------------------------------------------
+
+_FRENCH_WORD_RE = re.compile(r"[a-zA-ZÀ-ÿ]{2,}", re.UNICODE)
+_FILE_ARTIFACT_RE = re.compile(r"\.\w{2,4}(?:\s|$)")
+_MIN_REAL_WORDS = 10
+
+
+def _is_metadata_only(content: str) -> bool:
+    """True if content looks like a filename/InDesign artifact rather than real text."""
+    stripped = content.strip()
+    if not stripped:
+        return False
+
+    stripped_lower = stripped.lower()
+
+    # InDesign/print artefacts
+    if ".indd" in stripped_lower or "_bat." in stripped_lower or " bat." in stripped_lower:
+        return True
+
+    file_matches = _FILE_ARTIFACT_RE.findall(stripped)
+    if file_matches:
+        words = stripped.split()
+        file_ratio = len(file_matches) / max(len(words), 1)
+        if file_ratio > 0.5:
+            return True
+
+    real_words = _FRENCH_WORD_RE.findall(stripped)
+    if len(real_words) < _MIN_REAL_WORDS:
+        alpha_chars = sum(1 for c in stripped if c.isalpha())
+        if len(stripped) > 0 and alpha_chars / len(stripped) < 0.3:
+            return True
+
+    return False
+
+
+def _is_real_content(pages: list[tuple[int, str]], min_words: int = 30) -> bool:
+    """Check if extracted pages contain real French content, not just file metadata."""
+    full_text = " ".join(t for _, t in pages)
+    real_words = _FRENCH_WORD_RE.findall(full_text)
+    if len(real_words) < min_words:
+        return False
+    if _is_metadata_only(full_text):
+        return False
+    return True
+
+
+# ---------------------------------------------------------------------------
+# OCR tier 2: tesseract (300 DPI, French)
+# ---------------------------------------------------------------------------
+
+
+def _ocr_pdf_tesseract(pdf_bytes: bytes) -> list[tuple[int, str]]:
+    """OCR PDF pages with tesseract (fra, 300 DPI) via pymupdf + pytesseract."""
+    pages: list[tuple[int, str]] = []
+    try:
+        import io as _io
+
+        import fitz  # pymupdf
+        import pytesseract
+        from PIL import Image
+
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            mat = fitz.Matrix(300 / 72, 300 / 72)  # 300 DPI
+            pix = page.get_pixmap(matrix=mat)
+            img = Image.open(_io.BytesIO(pix.tobytes("png")))
+            text = pytesseract.image_to_string(img, lang="fra", config="--psm 6")
+            if text and text.strip():
+                pages.append((page_num + 1, text))
+        doc.close()
+        logger.info(f"[profession_indexer] tesseract: {len(pages)} pages extracted")
+        return pages
+    except Exception as e:
+        logger.warning(f"[profession_indexer] tesseract OCR failed: {e}")
+        return []
+
+
+# ---------------------------------------------------------------------------
+# OCR tier 3: Scaleway vision (Mistral Small 3.2)
+# ---------------------------------------------------------------------------
+
+
+async def _ocr_pdf_scaleway(pdf_bytes: bytes) -> list[tuple[int, str]]:
+    """OCR via Scaleway Generative API (Mistral Small 3.2 vision model).
+
+    Uses a single aiohttp session and parallel requests for all pages.
+    """
+    import base64
+    import io
+
+    import aiohttp
+
+    api_key = os.getenv("SCALEWAY_EMBED_API_KEY", "")
+    if not api_key:
+        logger.warning("[profession_indexer] SCALEWAY_EMBED_API_KEY not set, skipping Scaleway OCR")
+        return []
+
+    try:
+        import fitz  # pymupdf
+        from PIL import Image
+
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+        # Render all pages to base64 PNGs first
+        page_images: list[tuple[int, str]] = []
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            mat = fitz.Matrix(300 / 72, 300 / 72)  # 300 DPI
+            pix = page.get_pixmap(matrix=mat)
+            img = Image.open(io.BytesIO(pix.tobytes("png")))
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            img_b64 = base64.standard_b64encode(buf.getvalue()).decode("utf-8")
+            page_images.append((page_num + 1, img_b64))
+        doc.close()
+
+        # OCR all pages in parallel with a single session
+        async def _ocr_page(
+            session: aiohttp.ClientSession, page_num: int, img_b64: str
+        ) -> tuple[int, str] | None:
+            async with session.post(
+                "https://api.scaleway.ai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "mistral-small-3.2-24b-instruct-2506",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/png;base64,{img_b64}",
+                                    },
+                                },
+                                {
+                                    "type": "text",
+                                    "text": (
+                                        "Extrais le texte complet de cette image de document. "
+                                        "Retourne UNIQUEMENT le texte brut, sans commentaire, "
+                                        "sans formatage markdown. Préserve la structure des paragraphes."
+                                    ),
+                                },
+                            ],
+                        }
+                    ],
+                    "max_tokens": 8192,
+                    "temperature": 0.0,
+                },
+            ) as resp:
+                if resp.status != 200:
+                    body = await resp.text()
+                    logger.warning(
+                        f"[profession_indexer] Scaleway OCR page {page_num}: "
+                        f"HTTP {resp.status} — {body[:200]}"
+                    )
+                    return None
+                data = await resp.json()
+                text = data["choices"][0]["message"]["content"]
+                if text and text.strip():
+                    return (page_num, text.strip())
+                return None
+
+        async with aiohttp.ClientSession() as session:
+            results = await asyncio.gather(
+                *[_ocr_page(session, pn, b64) for pn, b64 in page_images]
+            )
+
+        pages = sorted([r for r in results if r is not None], key=lambda x: x[0])
+        logger.info(f"[profession_indexer] Scaleway OCR: {len(pages)} pages extracted (parallel)")
+        return pages
+
+    except Exception as e:
+        logger.warning(f"[profession_indexer] Scaleway OCR failed: {e}")
+        return []
+
+
+# ---------------------------------------------------------------------------
+# OCR tier 4: Gemini vision (existing)
+# ---------------------------------------------------------------------------
 
 
 async def _extract_pages_with_gemini(pdf_content: bytes) -> list[tuple[int, str]]:
@@ -328,21 +516,46 @@ async def index_candidate_profession(candidate_id: str, pdf_path: str) -> int:
         logger.error(f"Failed to upload PDF to Firebase Storage for {candidate_id}: {e}")
         return 0
 
-    # Step 4: Extract PDF text (page-aware), with OCR fallback for image PDFs
-    pages = extract_pages_from_pdf(pdf_content)
-    if not pages:
-        logger.info(f"[profession_indexer] no text from pypdf for {candidate_id}, trying Gemini vision...")
-        pages = await _extract_pages_with_gemini(pdf_content)
-    if not pages:
-        logger.warning(f"No text extracted from PDF for {candidate_id} (even with Gemini) — skipping indexing")
-        # Still update Firestore with the storage URL
+    # Step 4: Extract PDF text — 4-tier OCR cascade with content quality checks
+    # Order: pypdf (free/fast) → Scaleway (cleanest OCR) → tesseract (free/local) → Gemini (last resort)
+    ocr_method = "none"
+    pages: list[tuple[int, str]] = []
+
+    for tier_name, tier_fn in [
+        ("pypdf", lambda: extract_pages_from_pdf(pdf_content)),
+        ("scaleway", None),  # async — handled specially
+        ("tesseract", lambda: _ocr_pdf_tesseract(pdf_content)),
+        ("gemini", None),  # async — handled specially
+    ]:
+        if tier_name == "scaleway":
+            pages = await _ocr_pdf_scaleway(pdf_content)
+        elif tier_name == "gemini":
+            pages = await _extract_pages_with_gemini(pdf_content)
+        else:
+            pages = tier_fn()
+
+        total_chars = sum(len(t) for _, t in pages) if pages else 0
+
+        if pages and total_chars > 200 and _is_real_content(pages):
+            ocr_method = tier_name
+            logger.info(
+                f"[profession_indexer] {tier_name}: {total_chars:,} chars from "
+                f"{len(pages)} pages for {candidate_id} (real content)"
+            )
+            break
+        else:
+            reason = "metadata/noise" if total_chars > 200 else f"too little text ({total_chars} chars)"
+            logger.info(f"[profession_indexer] {tier_name}: {reason} for {candidate_id}, trying next tier...")
+
+    if not pages or ocr_method == "none":
+        logger.warning(f"[profession_indexer] No text extracted for {candidate_id} after all OCR tiers — skipping")
         await _update_firestore_url(candidate_id, storage_url)
         return 0
 
     total_chars = sum(len(t) for _, t in pages)
     logger.info(
-        f"[profession_indexer] extracted {total_chars} chars from "
-        f"{len(pages)} pages for {candidate_id}"
+        f"[profession_indexer] extracted {total_chars:,} chars from "
+        f"{len(pages)} pages for {candidate_id} (method={ocr_method})"
     )
 
     # Step 5: Create documents (chunks with real page numbers)
