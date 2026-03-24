@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langfuse
+  namespace: chatvote-prod
+  labels:
+    app: langfuse
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: langfuse
+  template:
+    metadata:
+      labels:
+        app: langfuse
+    spec:
+      nodeSelector:
+        k8s.scaleway.com/pool-name: pool-par-2-8gb
+      containers:
+        - name: langfuse
+          image: ghcr.io/langfuse/langfuse:3
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: database-url
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: nextauth-secret
+            - name: SALT
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: salt
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: encryption-key
+            - name: NEXTAUTH_URL
+              value: "http://51.159.207.188:3000"
+            - name: AUTH_DISABLE_SIGNUP
+              value: "true"
+            - name: LANGFUSE_INIT_ORG_ID
+              value: chatvote-prod
+            - name: LANGFUSE_INIT_ORG_NAME
+              value: ChatVote
+            - name: LANGFUSE_INIT_PROJECT_ID
+              value: chatvote
+            - name: LANGFUSE_INIT_PROJECT_NAME
+              value: ChatVote
+            - name: LANGFUSE_INIT_PROJECT_PUBLIC_KEY
+              value: pk-lf-prod-515918b36f3ced9bdc8cf5bd5a69e14d
+            - name: LANGFUSE_INIT_PROJECT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: langfuse-init-secret-key
+            - name: LANGFUSE_INIT_USER_EMAIL
+              value: admin@chatvote.org
+            - name: LANGFUSE_INIT_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: langfuse-init-user-password
+            - name: LANGFUSE_INIT_USER_NAME
+              value: Admin
+            - name: LANGFUSE_S3_EVENT_UPLOAD_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-bucket
+            - name: LANGFUSE_S3_EVENT_UPLOAD_REGION
+              value: "fr-par"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-access-key-id
+            - name: LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-secret-access-key
+            - name: LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT
+              value: "https://s3.fr-par.scw.cloud"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE
+              value: "true"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_PREFIX
+              value: "events/"
+            - name: CLICKHOUSE_URL
+              value: "http://langfuse-clickhouse:8123"
+            - name: CLICKHOUSE_MIGRATION_URL
+              value: "clickhouse://langfuse-clickhouse:9000"
+            - name: CLICKHOUSE_USER
+              value: clickhouse
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: clickhouse-password
+            - name: CLICKHOUSE_CLUSTER_ENABLED
+              value: "false"
+            - name: REDIS_HOST
+              value: langfuse-redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-bucket
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_REGION
+              value: "fr-par"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-access-key-id
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-secret-access-key
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT
+              value: "https://s3.fr-par.scw.cloud"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE
+              value: "true"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_PREFIX
+              value: "media/"
+          startupProbe:
+            httpGet:
+              path: /api/public/health
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/public/health
+              port: 3000
+            periodSeconds: 15
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/public/health
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"

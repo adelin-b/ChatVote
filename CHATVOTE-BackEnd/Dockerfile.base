@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2025 chatvote
+#
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+# ── Base image: all deps pre-installed, rebuild only on poetry.lock change ──
+FROM python:3.11.3-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install poetry && \
+    poetry self add poetry-plugin-export
+
+COPY pyproject.toml poetry.lock /app/
+WORKDIR /app
+
+RUN poetry export --only main --without-hashes -f requirements.txt -o requirements.txt
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install -r requirements.txt
+
+# ── Runtime stage ───────────────────────────────────────────────────
+FROM python:3.11.3-slim
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app

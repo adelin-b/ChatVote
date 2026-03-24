@@ -1,0 +1,27 @@
+# .gitleaksignore — known false positives for gitleaks
+# These are dummy/local dev credentials, not real secrets.
+
+# .devcontainer/firebase-dummy-credentials.json — dummy dev key, not a real secret
+8751971db95e44ae135db9fc12144fc885a81236:.devcontainer/firebase-dummy-credentials.json:private-key:5
+
+# docker-compose.dev.yml — local dev Langfuse encryption keys (not real secrets)
+d314ea8b2d75ef0e1a62533157717c98c09b9fc2:docker-compose.dev.yml:generic-api-key:238
+93d3e5a03e053843b85a815c2fd3f31d13776c8d:docker-compose.dev.yml:generic-api-key:182
+
+# k8s/prod/langfuse/langfuse-secrets.yaml — template placeholders (REPLACE_WITH_*)
+93d3e5a03e053843b85a815c2fd3f31d13776c8d:k8s/prod/langfuse/langfuse-secrets.yaml:generic-api-key:33
+
+# .github/workflows/production-deploy.yml — NEXT_PUBLIC_FIREBASE_API_KEY is a public key
+d9fa295c7a2f18ccb9f2ca0b3eac3ec728a24fe5:.github/workflows/production-deploy.yml:gcp-api-key:173
+
+# CHATVOTE-BackEnd/.env.example — placeholder example value
+7d66392caa9e109001e37d1d3da6f667afccb692:CHATVOTE-BackEnd/.env.example:generic-api-key:25
+
+# Stale git-history hits for QDRANT_API_KEY that was hardcoded in audit scripts.
+# The key has been rotated and the working-tree files now read from os.environ.
+# These fingerprints suppress the historical commits where the value appeared.
+82a972b0f230550130d0e88f806f9adf4ab95acb:CHATVOTE-BackEnd/scripts/ocr_fidelity_audit.py:generic-api-key:26
+82a972b0f230550130d0e88f806f9adf4ab95acb:CHATVOTE-BackEnd/scripts/candidate_id_audit.py:generic-api-key:25
+82a972b0f230550130d0e88f806f9adf4ab95acb:CHATVOTE-BackEnd/scripts/municipality_audit.py:generic-api-key:23
+82a972b0f230550130d0e88f806f9adf4ab95acb:CHATVOTE-BackEnd/scripts/paris_chunk_audit.py:generic-api-key:37
+82a972b0f230550130d0e88f806f9adf4ab95acb:CHATVOTE-BackEnd/scripts/pipeline_audit.py:generic-api-key:17

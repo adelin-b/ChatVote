@@ -1,0 +1,290 @@
+"""
+RAG Generator evaluation tests.
+
+Tests generation quality by providing pre-built retrieval context
+and measuring faithfulness, relevancy, and hallucination.
+
+Run:
+    poetry run deepeval test run tests/eval/test_rag_generator.py -v
+"""
+
+import asyncio
+import json
+import os
+import sys
+from pathlib import Path
+
+import pytest
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+DATASETS_DIR = Path(__file__).parent / "datasets"
+
+
+def _load_golden(category: str) -> list[dict]:
+    data = json.loads((DATASETS_DIR / "golden_questions.json").read_text())
+    return data.get(category, [])
+
+
+_module_loop = None
+
+
+def _get_loop():
+    global _module_loop
+    if _module_loop is None or _module_loop.is_closed():
+        _module_loop = asyncio.new_event_loop()
+    return _module_loop
+
+
+def teardown_module(module):
+    global _module_loop
+    if _module_loop and not _module_loop.is_closed():
+        _module_loop.close()
+        _module_loop = None
+
+
+def _skip_if_no_llm():
+    """Skip if no LLM API key is available."""
+    if not any(
+        os.environ.get(k)
+        for k in ["GOOGLE_API_KEY", "OPENAI_API_KEY", "AZURE_OPENAI_API_KEY"]
+    ):
+        pytest.skip("No LLM API key set — cannot run generator tests")
+
+
+# ---------------------------------------------------------------------------
+# Static mock contexts (fallback when Qdrant is unavailable)
+# ---------------------------------------------------------------------------
+
+MOCK_CONTEXTS = {
+    "reconquete": [
+        "Reconquête - Programme politique : Reconquête propose un programme couvrant l'écologie, "
+        "l'agriculture, la ruralité et l'engagement citoyen pour la France.",
+        "Reconquête - Développement durable : Le parti propose d'investir dans des filières de "
+        "développement durable et innovantes, notamment le recyclage des plastiques et la "
+        "valorisation des déchets.",
+    ],
+    "union_centre": [
+        "Renaissance - 50 ambitions pour les communes : Renaissance présente un programme de "
+        "50 ambitions pour les communes incluant la qualité de vie, les déplacements, l'accès "
+        "aux soins et le soutien aux citoyens au quotidien.",
+        "Renaissance - Artisanat local : Le parti propose de soutenir l'artisanat local avec des "
+        "bourses de formation, l'aide à l'installation et la promotion des productions locales.",
+    ],
+    "ps": [
+        "Place Publique - Immigration : Place Publique propose de partir des faits sur "
+        "l'immigration et refuse les mensonges. Le parti ancre le sujet des migrations dans un "
+        "projet juste et utile pour les Français.",
+        "Place Publique est un parti citoyen qui propose des actions concrètes et de terrain "
+        "pour les communes et les quartiers.",
+    ],
+    "lfi": [
+        "La France Insoumise - Municipales 2026 : LFI propose une boîte à outils programmatique "
+        "pour les élections municipales 2026 à destination des candidats et des collectifs citoyens.",
+        "La France Insoumise - Économie : planification écologique, nationalisation des autoroutes "
+        "et des énergies, augmentation du SMIC à 1 600€ net, blocage des prix de première nécessité.",
+    ],
+    "europe-ecologie-les-verts": [
+        "Les Écologistes - Programme 2026 : Nous proposons la sortie progressive du nucléaire "
+        "d'ici 2040 et un investissement massif dans les énergies renouvelables : éolien, solaire, "
+        "géothermie. Notre objectif est d'atteindre 100% d'énergies renouvelables.",
+        "Politique environnementale des Écologistes : interdiction du glyphosate, promotion de "
+        "l'agriculture biologique, création de 500 000 emplois verts dans la rénovation thermique.",
+    ],
+}
+
+
+def _try_snapshot_from_qdrant(
+    party_id: str, rag_query: str = "programme politique"
+) -> list[str] | None:
+    """Try to get real context from Qdrant if available, for more realistic tests."""
+    qdrant_url = os.environ.get("QDRANT_URL", "http://localhost:6333")
+    try:
+        import urllib.request
+
+        urllib.request.urlopen(qdrant_url, timeout=1)
+    except Exception:
+        return None
+
+    try:
+        os.environ.setdefault("ENV", "dev")
+        from src.vector_store_helper import identify_relevant_docs
+        from src.models.party import Party
+
+        party = Party(
+            party_id=party_id,
+            name=party_id,
+            long_name=party_id,
+            description="",
+            website_url="",
+            candidate="",
+            election_manifesto_url="",
+        )
+
+        loop = _get_loop()
+        docs = loop.run_until_complete(
+            identify_relevant_docs(party=party, rag_query=rag_query, n_docs=3)
+        )
+        if docs:
+            return [doc.page_content for doc in docs]
+    except Exception:
+        pass
+
+    return None
+
+
+@pytest.fixture(scope="module")
+def llm_generator():
+    """Import the chatbot generator (requires LLM API key)."""
+    _skip_if_no_llm()
+
+    os.environ.setdefault("ENV", "dev")
+
+    from src.chatbot_async import generate_streaming_chatbot_response
+    from src.models.party import Party
+    from src.models.general import LLMSize
+    from langchain_core.documents import Document
+
+    return generate_streaming_chatbot_response, Party, LLMSize, Document
+
+
+def _build_docs(party_id: str, rag_query: str = "programme politique") -> list:
+    """Build LangChain Documents from real Qdrant data or fallback to mock contexts."""
+    from langchain_core.documents import Document
+
+    # Try real data first
+    real_contexts = _try_snapshot_from_qdrant(party_id, rag_query=rag_query)
+    if real_contexts:
+        return [
+            Document(
+                page_content=ctx,
+                metadata={"party_id": party_id, "source_document": "qdrant_snapshot"},
+            )
+            for ctx in real_contexts
+        ]
+
+    # Fallback to static mocks
+    contexts = MOCK_CONTEXTS.get(party_id, [])
+    return [
+        Document(
+            page_content=ctx,
+            metadata={"party_id": party_id, "source_document": "test_manifesto"},
+        )
+        for ctx in contexts
+    ]
+
+
+@pytest.mark.parametrize(
+    "golden",
+    _load_golden("single_party"),
+    ids=lambda g: g.get("category", "unknown"),
+)
+def test_generator_faithfulness(
+    golden,
+    llm_generator,
+    faithfulness_metric,
+    answer_relevancy_metric,
+    source_attribution_metric,
+):
+    """Test that generated responses are faithful to retrieved context and cite sources."""
+    generate_fn, Party, LLMSize, Document = llm_generator
+
+    party_id = golden["party_ids"][0]
+    party = Party(
+        party_id=party_id,
+        name=party_id,
+        long_name=party_id,
+        description="",
+        website_url="",
+        candidate="",
+        election_manifesto_url="",
+    )
+
+    docs = _build_docs(party_id, rag_query=golden["input"])
+    retrieval_context = [doc.page_content for doc in docs]
+
+    if not retrieval_context:
+        pytest.skip(f"No mock context for party {party_id}")
+
+    async def _generate():
+        stream = await generate_fn(
+            responder=party,
+            conversation_history="",
+            user_message=golden["input"],
+            relevant_docs=docs,
+            all_parties=[party],
+            chat_response_llm_size=LLMSize.SMALL,
+        )
+        chunks = []
+        async for chunk in stream:
+            chunks.append(chunk.content if hasattr(chunk, "content") else str(chunk))
+        return "".join(chunks)
+
+    loop = _get_loop()
+    actual_output = loop.run_until_complete(_generate())
+
+    test_case = LLMTestCase(
+        input=golden["input"],
+        actual_output=actual_output,
+        expected_output=golden["expected_output"],
+        retrieval_context=retrieval_context,
+    )
+
+    assert_test(
+        test_case,
+        [faithfulness_metric, answer_relevancy_metric, source_attribution_metric],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Standalone generator tests with static input/output (no LLM call needed)
+# ---------------------------------------------------------------------------
+
+STATIC_TEST_CASES = [
+    {
+        "input": "Quelle est la position des Écologistes sur le nucléaire ?",
+        "actual_output": (
+            "Les Écologistes proposent une sortie progressive du nucléaire d'ici 2040 "
+            "et un investissement massif dans les énergies renouvelables comme l'éolien, "
+            "le solaire et la géothermie. Leur objectif est d'atteindre 100% d'énergies "
+            "renouvelables. (Source : Programme des Écologistes 2026)"
+        ),
+        "retrieval_context": MOCK_CONTEXTS["europe-ecologie-les-verts"],
+        "expected_output": "Les Écologistes sont opposés au nucléaire et proposent une transition vers les énergies renouvelables.",
+    },
+    {
+        "input": "Que propose LFI pour les retraites ?",
+        "actual_output": (
+            "La France Insoumise propose le rétablissement du droit à la retraite à 60 ans, "
+            "avec 40 annuités de cotisation. Le programme défend un système de retraite par "
+            "répartition renforcé, avec une pension minimale au niveau du SMIC. "
+            "(Source : Programme LFI)"
+        ),
+        "retrieval_context": MOCK_CONTEXTS["lfi"],
+        "expected_output": "LFI propose la retraite à 60 ans avec un système par répartition renforcé.",
+    },
+]
+
+
+@pytest.mark.parametrize(
+    "case",
+    STATIC_TEST_CASES,
+    ids=["ecologistes_nucleaire", "lfi_retraites"],
+)
+def test_generator_static_faithfulness(
+    case,
+    faithfulness_metric,
+    answer_relevancy_metric,
+):
+    """Test faithfulness with pre-built static examples (no LLM call needed)."""
+    test_case = LLMTestCase(
+        input=case["input"],
+        actual_output=case["actual_output"],
+        expected_output=case["expected_output"],
+        retrieval_context=case["retrieval_context"],
+    )
+
+    assert_test(test_case, [faithfulness_metric, answer_relevancy_metric])

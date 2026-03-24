@@ -1,0 +1,130 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Java 21+ is required by firebase-tools emulators
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: CHATVOTE-FrontEnd/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: CHATVOTE-FrontEnd
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache firebase-tools
+        uses: actions/cache@v4
+        id: firebase-cache
+        with:
+          path: ~/.npm/_npx
+          key: firebase-tools-${{ runner.os }}-${{ hashFiles('CHATVOTE-BackEnd/firebase/firebase-test.json') }}
+
+      - name: Install firebase-tools
+        run: npm i -g firebase-tools
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: CHATVOTE-FrontEnd/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-${{ hashFiles('CHATVOTE-FrontEnd/src/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}
+
+      - name: Install Playwright Chromium
+        working-directory: CHATVOTE-FrontEnd
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install-deps chromium
+          fi
+
+      # Start Firebase emulators BEFORE Playwright so that:
+      #   1. next build can SSR pages that read Firestore (production mode in CI)
+      #   2. global-setup.ts detects them as "already running" and just seeds data
+      - name: Start Firebase emulators
+        run: |
+          firebase emulators:start \
+            --project chat-vote-dev \
+            --only auth,firestore \
+            --config firebase-test.json &
+          # Wait until both emulators are reachable (fail if not ready in 60s)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8081 > /dev/null 2>&1 && \
+               curl -sf http://localhost:9099 > /dev/null 2>&1; then
+              echo "Firebase emulators ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ERROR: Firebase emulators failed to start"
+          exit 1
+        working-directory: CHATVOTE-BackEnd/firebase
+
+      # global-setup.ts handles: Firestore seeding, mock Socket.IO server, and
+      # Next.js warmup. playwright.config.ts webServer builds + starts Next.js.
+      - name: Run Playwright E2E tests (shard ${{ matrix.shard }}/2)
+        working-directory: CHATVOTE-FrontEnd
+        run: npx playwright test --reporter=list --shard=${{ matrix.shard }}/2
+        env:
+          CI: 'true'
+          FIRESTORE_EMULATOR_HOST: localhost:8081
+          FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: CHATVOTE-FrontEnd/playwright-report/
+          retention-days: 7
+
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-traces-shard-${{ matrix.shard }}
+          path: CHATVOTE-FrontEnd/test-results/
+          retention-days: 7

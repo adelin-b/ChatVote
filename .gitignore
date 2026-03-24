@@ -1,0 +1,36 @@
+# Credentials
+*.pass.txt
+
+# Worktrees
+.worktrees/
+
+# Tool/plugin state
+.osgrep
+.omc/
+.quint/
+.claude/todos
+.playwright-mcp/
+
+# Editor/IDE
+.mcp.json
+
+# Logs
+.logs/
+
+# Emulator/runtime artifacts
+.qdrant-initialized
+
+# OS
+.DS_Store
+
+# Qdrant snapshots (too large for git)
+*.snapshot
+
+# MegaLinter
+megalinter-reports/
+mega-linter.log
+
+# Visual QA screenshots
+*.png
+.vercel
+.env*.local

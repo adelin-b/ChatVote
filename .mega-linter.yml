@@ -1,0 +1,56 @@
+# MegaLinter Configuration
+# https://megalinter.io/latest/configuration/
+
+# Only lint changed files (not full codebase)
+VALIDATE_ALL_CODEBASE: false
+
+# Enabled linters — curated for this monorepo
+# NOTE: ESLint (TYPESCRIPT_ES/JAVASCRIPT_ES) disabled because MegaLinter bundles
+# ESLint v8 which can't parse our flat config (eslint.config.mjs / ESLint 10).
+# TypeScript/JS linting runs via pre-commit hook + CI lint step instead.
+ENABLE_LINTERS:
+  # Python (mypy runs in pre-commit with project deps; MegaLinter lacks pydantic plugin)
+  - PYTHON_RUFF
+  # JSON/YAML/Markdown
+  - JSON_JSONLINT
+  - YAML_YAMLLINT
+  - MARKDOWN_MARKDOWNLINT
+  # Security (secretlint disabled — crashes on large files; gitleaks covers secret detection)
+  - REPOSITORY_GITLEAKS
+  # Spell checking (cspell disabled — needs @cspell/dict-fr-fr npm package not in container;
+  # French project words handled by .cspell/ config for local dev use)
+  # Dockerfile
+  - DOCKERFILE_HADOLINT
+  # GitHub Actions
+  - ACTION_ACTIONLINT
+
+# Directories to exclude
+EXCLUDED_DIRECTORIES:
+  - node_modules
+  - .next
+  - .pnpm-store
+  - firebase
+  - __pycache__
+  - .git
+  - megalinter-reports
+  - .omc
+  - .claude
+
+# Reduce gitignored file scanning overhead
+ADDITIONAL_EXCLUDED_DIRECTORIES:
+  - CHATVOTE-BackEnd/firebase
+  - CHATVOTE-FrontEnd/.next
+  - CHATVOTE-FrontEnd/node_modules
+
+# Python config
+PYTHON_RUFF_CONFIG_FILE: CHATVOTE-BackEnd/pyproject.toml
+# Spell checking config
+SPELL_CSPELL_CONFIG_FILE: cspell.json
+# Don't apply fixes automatically in CI
+APPLY_FIXES: none
+
+# Fail on errors only, not warnings
+FAIL_IF_MISSING_LINTER_IN_FLAVOR: false
+
+# Report format
+REPORT_OUTPUT_FOLDER: megalinter-reports

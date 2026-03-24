@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langfuse-worker
+  namespace: chatvote-prod
+  labels:
+    app: langfuse-worker
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: langfuse-worker
+  template:
+    metadata:
+      labels:
+        app: langfuse-worker
+    spec:
+      nodeSelector:
+        k8s.scaleway.com/pool-name: pool-par-2-8gb
+      containers:
+        - name: langfuse-worker
+          image: langfuse/langfuse-worker:3
+          ports:
+            - containerPort: 3030
+              name: worker
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: database-url
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: nextauth-secret
+            - name: SALT
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: salt
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: encryption-key
+            - name: CLICKHOUSE_URL
+              value: "http://langfuse-clickhouse:8123"
+            - name: CLICKHOUSE_MIGRATION_URL
+              value: "clickhouse://langfuse-clickhouse:9000"
+            - name: CLICKHOUSE_USER
+              value: clickhouse
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: clickhouse-password
+            - name: CLICKHOUSE_CLUSTER_ENABLED
+              value: "false"
+            - name: REDIS_HOST
+              value: langfuse-redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-bucket
+            - name: LANGFUSE_S3_EVENT_UPLOAD_REGION
+              value: "fr-par"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-access-key-id
+            - name: LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-secret-access-key
+            - name: LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT
+              value: "https://s3.fr-par.scw.cloud"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE
+              value: "true"
+            - name: LANGFUSE_S3_EVENT_UPLOAD_PREFIX
+              value: "events/"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-bucket
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_REGION
+              value: "fr-par"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-access-key-id
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: s3-secret-access-key
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT
+              value: "https://s3.fr-par.scw.cloud"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE
+              value: "true"
+            - name: LANGFUSE_S3_MEDIA_UPLOAD_PREFIX
+              value: "media/"
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 3030
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3030
+            periodSeconds: 15
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3030
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

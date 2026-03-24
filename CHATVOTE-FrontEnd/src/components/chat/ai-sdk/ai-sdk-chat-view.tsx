@@ -1,0 +1,603 @@
+"use client";
+
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+import { useChat } from "@ai-sdk/react";
+import { MunicipalitySearch } from "@components/election-flow";
+import {
+  ChatStoreContext,
+  useChatStore,
+} from "@components/providers/chat-store-provider";
+import { type Municipality } from "@lib/election/election.types";
+import { auth as firebaseAuth } from "@lib/firebase/firebase";
+import { useAiSdkFeaturesStore } from "@lib/stores/ai-sdk-features-store";
+import { generateUuid } from "@lib/utils";
+import {
+  DefaultChatTransport,
+  getToolName,
+  isToolUIPart,
+  type UIDataTypes,
+  type UIMessage,
+  type UITools,
+} from "ai";
+
+import ChatPostcodePrompt from "../chat-postcode-prompt";
+import SponsorPartners from "../sponsor-partners";
+
+import AiSdkFeatureRibbon from "./ai-sdk-feature-ribbon";
+import AiSdkMessage from "./ai-sdk-message";
+import AiSdkStreamingIndicator from "./ai-sdk-streaming-indicator";
+
+type AiMessage = {
+  role: string;
+  content: string;
+  parts?: Array<Record<string, unknown>>;
+};
+
+type Props = {
+  chatId?: string;
+  locale: string;
+  municipalityCode?: string;
+  initialMessages?: AiMessage[];
+};
+
+export default function AiSdkChatView({
+  chatId,
+  locale,
+  municipalityCode: municipalityCodeProp,
+  initialMessages,
+}: Props) {
+  const partyIds = useChatStore((s) => s.partyIds);
+  const scope = useChatStore((s) => s.scope);
+  const storeMunicipalityCode = useChatStore((s) => s.municipalityCode);
+  const municipalityCode = municipalityCodeProp ?? storeMunicipalityCode;
+  const selectedElectoralLists = useChatStore((s) => s.selectedElectoralLists);
+  const getEnabledFeatureIds = useAiSdkFeaturesStore(
+    (s) => s.getEnabledFeatureIds,
+  );
+  const setPartyIds = useChatStore((s) => s.setPartyIds);
+  const storeApi = useContext(ChatStoreContext);
+
+  // Sync store from URL prop on mount (e.g. /chat?municipality_code=69123)
+  useEffect(() => {
+    if (municipalityCodeProp && storeApi) {
+      const { municipalityCode: current, scope: currentScope } =
+        storeApi.getState();
+      if (current !== municipalityCodeProp || currentScope !== "local") {
+        storeApi.setState({
+          municipalityCode: municipalityCodeProp,
+          scope: "local",
+        });
+      }
+    }
+  }, [municipalityCodeProp, storeApi]);
+
+  // Sync sidebar electoral list selection → AI SDK partyIds
+  // Fetch panel_number → party_ids mapping, then derive partyIds from sidebar selection
+  type CandidateListItem = {
+    panel_number: number;
+    party_ids: string[];
+    candidate_id: string | null;
+  };
+  const [candidateListMap, setCandidateListMap] = useState<CandidateListItem[]>(
+    [],
+  );
+
+  useEffect(() => {
+    if (!municipalityCode) {
+      setCandidateListMap([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(
+      `/api/candidate-lists?municipalityCode=${encodeURIComponent(municipalityCode)}`,
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.lists) setCandidateListMap(data.lists);
+      })
+      .catch((err) => {
+        console.error("[chat] Failed to load candidate lists:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [municipalityCode]);
+
+  // When sidebar selection changes, derive partyIds
+  useEffect(() => {
+    if (candidateListMap.length === 0) return;
+    const selectedPartyIds = [
+      ...new Set(
+        candidateListMap
+          .filter((c) => selectedElectoralLists.includes(c.panel_number))
+          .flatMap((c) => c.party_ids),
+      ),
+    ];
+    if (storeApi) {
+      storeApi.setState({ partyIds: new Set(selectedPartyIds) });
+    }
+  }, [selectedElectoralLists, candidateListMap, storeApi]);
+
+  // Municipality search
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [selectedMunicipality, setSelectedMunicipality] =
+    useState<Municipality | null>(null);
+
+  const handleSelectMunicipality = useCallback(
+    (municipality: Municipality) => {
+      setSelectedMunicipality(municipality);
+      // Update store so municipalityCode changes immediately (candidate bar appears)
+      if (storeApi) {
+        storeApi.setState({
+          municipalityCode: municipality.code,
+          scope: "local",
+          selectedElectoralLists: [],
+          partyIds: new Set<string>(),
+        });
+      }
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("municipality_code", municipality.code);
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams, storeApi],
+  );
+
+  // Stabilize partyIds — only update ref when the actual values change
+  const partyIdsRef = useRef<string[]>([]);
+  const currentIds = Array.from(partyIds).sort().join(",");
+  const prevIds = [...partyIdsRef.current].sort().join(",");
+  if (currentIds !== prevIds) {
+    partyIdsRef.current = Array.from(partyIds);
+  }
+
+  // Show tool toggles in dev always, in prod only with ?mode=ai&tools=1 (persists across navigation)
+  const showToolsRef = useRef(
+    process.env.NODE_ENV === "development" ||
+      (typeof window !== "undefined" &&
+        (() => {
+          const params = new URLSearchParams(window.location.search);
+          return params.get("mode") === "ai" && params.get("tools") === "1";
+        })()),
+  );
+
+  const [input, setInput] = useState("");
+
+  // Generate a stable chat ID for this session
+  const aiChatIdRef = useRef<string>(chatId ?? "");
+
+  // Keep a ref with the latest body values so the memoized transport
+  // always sends fresh data (Resolvable<object> accepts a function).
+  const bodyRef = useRef({
+    partyIds: partyIdsRef.current,
+    locale,
+    chatId: aiChatIdRef.current || chatId,
+    scope,
+    municipalityCode,
+    enabledFeatures: getEnabledFeatureIds(),
+  });
+  bodyRef.current = {
+    partyIds: partyIdsRef.current,
+    locale,
+    chatId: aiChatIdRef.current || chatId,
+    scope,
+    municipalityCode,
+    enabledFeatures: getEnabledFeatureIds(),
+  };
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai-chat",
+        body: () => bodyRef.current,
+        headers: async (): Promise<Record<string, string>> => {
+          const token = await firebaseAuth.currentUser?.getIdToken();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
+      }),
+
+    [],
+  );
+
+  // Convert Firestore messages to UIMessage format for useChat initialMessages.
+  // Reconstructs full parts (text + tool results) when saved parts are available.
+  const convertedInitialMessages = useMemo(() => {
+    if (!initialMessages?.length) return undefined;
+    return initialMessages.map((m, i) => {
+      // If saved parts exist (new format), reconstruct them
+      if (m.parts?.length) {
+        const uiParts: Record<string, unknown>[] = [];
+        for (const p of m.parts) {
+          if (p.type === "text" && String(p.text ?? "").trim()) {
+            uiParts.push({ type: "text", text: String(p.text) });
+          } else if (p.type === "tool") {
+            uiParts.push({
+              type: `tool-${p.toolName}`,
+              toolCallId: `restored-tc-${i}-${uiParts.length}`,
+              toolName: String(p.toolName ?? ""),
+              state: "output-available",
+              input: p.args ?? {},
+              output: p.output ?? null,
+            });
+          }
+        }
+        return {
+          id: `restored-${i}`,
+          role: m.role as "user" | "assistant",
+          parts:
+            uiParts.length > 0 ? uiParts : [{ type: "text", text: m.content }],
+          createdAt: new Date(),
+        };
+      }
+      // Fallback: text-only (old format)
+      return {
+        id: `restored-${i}`,
+        role: m.role as "user" | "assistant",
+        parts: [{ type: "text" as const, text: m.content }],
+        createdAt: new Date(),
+      };
+    }) as unknown as UIMessage<unknown, UIDataTypes, UITools>[];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { messages, sendMessage, regenerate, stop, status, error } = useChat({
+    transport,
+    // Throttle UI updates to prevent "Maximum update depth exceeded" on long
+    // streaming responses (known AI SDK issue: github.com/vercel/ai/issues/1610)
+    experimental_throttle: 50,
+    ...(convertedInitialMessages ? { messages: convertedInitialMessages } : {}),
+  });
+
+  // Apply context tool results to the store when messages arrive.
+  // Deferred via setTimeout to prevent synchronous re-render loops:
+  // messages change → effect → setState → Zustand re-render → new messages ref → effect → loop
+  const processedToolCallsRef = useRef(new Set<string>());
+  useEffect(() => {
+    const pendingUpdates: Array<() => void> = [];
+
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+      for (let i = 0; i < message.parts.length; i++) {
+        const part = message.parts[i];
+        if (
+          !isToolUIPart(part) ||
+          (part as { state?: string }).state !== "output-available"
+        )
+          continue;
+        const key = `${message.id}:${i}`;
+        if (processedToolCallsRef.current.has(key)) continue;
+        processedToolCallsRef.current.add(key);
+        const toolName = getToolName(part);
+
+        if (toolName === "changeCity") {
+          const result = (part as { output?: unknown }).output as {
+            municipalityCode?: string;
+            cityName?: string;
+          };
+          if (result.municipalityCode && storeApi) {
+            pendingUpdates.push(() => {
+              storeApi.setState({
+                municipalityCode: result.municipalityCode,
+                scope: "local",
+                selectedElectoralLists: [],
+                partyIds: new Set<string>(),
+              });
+              const next = new URLSearchParams(window.location.search);
+              next.set("municipality_code", result.municipalityCode!);
+              window.history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}?${next.toString()}`,
+              );
+            });
+          }
+        } else if (toolName === "changeCandidates") {
+          const result = (part as { output?: unknown }).output as {
+            partyIds: string[];
+            operation: string;
+          };
+          pendingUpdates.push(() => {
+            if (result.operation === "set") {
+              setPartyIds(result.partyIds);
+            } else if (result.operation === "add") {
+              const current = Array.from(storeApi?.getState().partyIds ?? []);
+              setPartyIds([...new Set([...current, ...result.partyIds])]);
+            } else if (result.operation === "remove") {
+              const current = Array.from(storeApi?.getState().partyIds ?? []);
+              setPartyIds(
+                current.filter((id) => !result.partyIds.includes(id)),
+              );
+            }
+          });
+        } else if (toolName === "removeRestrictions") {
+          pendingUpdates.push(() => {
+            if (storeApi) {
+              storeApi.setState({
+                municipalityCode: undefined,
+                scope: "national",
+              });
+            }
+            setPartyIds([]);
+          });
+        }
+      }
+    }
+
+    if (pendingUpdates.length === 0) return;
+    // Defer store updates to break the synchronous re-render cycle
+    const id = setTimeout(() => pendingUpdates.forEach((fn) => fn()), 0);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
+
+  // Ensure a chat ID is generated for this session and update the URL.
+  // Uses window.history.replaceState — the official Next.js App Router approach
+  // for shallow URL updates (no server round-trip, no component remount).
+  const ensureChatId = useCallback(() => {
+    if (!aiChatIdRef.current) {
+      const newChatId = generateUuid();
+      aiChatIdRef.current = newChatId;
+      // Use path format /chat/[chatId] so shared URLs work with the [chatId] route
+      const params = new URLSearchParams(window.location.search);
+      params.delete("chat_id");
+      const queryString = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        `/chat/${newChatId}${queryString ? `?${queryString}` : ""}`,
+      );
+    }
+  }, []);
+
+  // Wrapper that ensures chat ID before sending (used by suggestions & follow-ups)
+  const handleSendMessage = useCallback(
+    (text: string) => {
+      if (!text.trim() || status === "streaming") return;
+      ensureChatId();
+      bodyRef.current.chatId = aiChatIdRef.current;
+      sendMessage({ text });
+    },
+    [ensureChatId, sendMessage, status],
+  );
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || status === "streaming") return;
+    ensureChatId();
+    bodyRef.current.chatId = aiChatIdRef.current;
+    sendMessage({ text });
+    setInput("");
+  };
+
+  // Dev-only UI invariant guards (candidate selection is now in the sidebar)
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+    const timer = setTimeout(() => {
+      const hasMunicipalitySearch = !!document.querySelector(
+        '[data-testid="municipality-search"]',
+      );
+      const hasSuggestions = !!document.querySelector(
+        '[data-testid="quick-suggestions"]',
+      );
+
+      // Rule: If no municipality, municipality search MUST be visible (when no messages)
+      if (
+        !municipalityCode &&
+        messages.length === 0 &&
+        !hasMunicipalitySearch
+      ) {
+        console.error(
+          "[UI Guard] No municipality set but municipality-search is NOT visible",
+        );
+      }
+      // Rule: Quick suggestions only visible when municipality is set and no messages
+      if (municipalityCode && messages.length === 0 && !hasSuggestions) {
+        console.warn(
+          "[UI Guard] Municipality set with no messages but quick-suggestions not visible",
+        );
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [municipalityCode, messages.length]);
+
+  // ── Sticky auto-scroll ──────────────────────────────────────────────────
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
+
+  // Track whether the user has scrolled away from bottom
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const threshold = 40;
+      isAtBottomRef.current =
+        el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Auto-scroll to bottom when new content arrives (messages or streaming)
+  useLayoutEffect(() => {
+    if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [messages, status]);
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Candidate selection is handled by ChatContextSidebar */}
+
+      {/* New chat button removed — use header button instead */}
+
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-4 md:px-9">
+        <div className="mx-auto max-w-3xl space-y-6">
+          {messages.length === 0 && (
+            <div className="flex h-full flex-col items-center justify-center gap-5 py-8">
+              <Image
+                src="/images/logos/chatvote.svg"
+                alt="ChatVote"
+                width={260}
+                height={87}
+                priority
+              />
+
+              <p className="text-muted-foreground text-center text-sm">
+                {municipalityCode
+                  ? "Sélectionnez les candidats dans le panneau latéral puis posez une question"
+                  : "Avant de poser votre question, renseignez votre commune ou code postal"}
+              </p>
+
+              {!municipalityCode && (
+                <div
+                  className="mx-auto w-full max-w-md"
+                  data-testid="municipality-search"
+                >
+                  <MunicipalitySearch
+                    selectedMunicipality={selectedMunicipality}
+                    onSelectMunicipality={handleSelectMunicipality}
+                    municipalityCode={undefined}
+                  />
+                </div>
+              )}
+
+              {municipalityCode && (
+                <div
+                  className="mt-2 flex flex-wrap justify-center gap-2"
+                  data-testid="quick-suggestions"
+                >
+                  {[
+                    "Quels sont les engagements des candidats pour ma commune ?",
+                    "Que proposent les candidats sur la sécurité ?",
+                    "Quelles sont les positions des candidats sur l'écologie ?",
+                    "Que disent les candidats sur le pouvoir d'achat ?",
+                  ].map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => handleSendMessage(q)}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs transition-colors hover:bg-white/10"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <SponsorPartners />
+            </div>
+          )}
+
+          {messages.length > 0 && (
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                <ChatPostcodePrompt />
+              </div>
+            </div>
+          )}
+
+          {messages
+            .filter(
+              (msg, idx, arr) => arr.findIndex((m) => m.id === msg.id) === idx,
+            )
+            .map((message) => (
+              <AiSdkMessage
+                key={message.id}
+                message={message}
+                onSendMessage={handleSendMessage}
+              />
+            ))}
+
+          {status === "streaming" && <AiSdkStreamingIndicator onStop={stop} />}
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+              <p className="text-sm text-red-800 dark:text-red-200">
+                {process.env.NODE_ENV === "development"
+                  ? error.message
+                  : "Une erreur est survenue. Veuillez réessayer."}
+                {process.env.NODE_ENV === "development" &&
+                  (() => {
+                    console.error("[ai-sdk-error]", error.message);
+                    return null;
+                  })()}
+              </p>
+              <button
+                onClick={() => regenerate()}
+                className="mt-2 rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Input */}
+      <div
+        className={`px-3 py-3 md:px-9 ${!municipalityCode ? "pointer-events-none opacity-40 blur-[1px]" : ""}`}
+      >
+        <form
+          onSubmit={handleSubmit}
+          className="relative mx-auto flex max-w-3xl items-center gap-4 overflow-hidden rounded-4xl border border-white/10 bg-white/5 px-4 py-3 transition-colors focus-within:border-white/20"
+        >
+          <input
+            className="placeholder:text-muted-foreground flex-1 text-base whitespace-pre focus-visible:ring-0 focus-visible:outline-none disabled:cursor-not-allowed"
+            placeholder={
+              municipalityCode
+                ? "Posez une question..."
+                : "Sélectionnez une commune d'abord..."
+            }
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={status === "streaming" || !municipalityCode}
+          />
+          {status === "streaming" ? (
+            <button
+              type="button"
+              onClick={stop}
+              className="bg-foreground text-background hover:bg-foreground/80 flex size-8 flex-none items-center justify-center rounded-full transition-colors"
+            >
+              <span className="size-3 rounded-sm bg-current" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!input.length}
+              className="bg-foreground text-background hover:bg-foreground/80 disabled:bg-foreground/20 disabled:text-muted flex size-8 flex-none items-center justify-center rounded-full transition-colors"
+            >
+              <svg
+                className="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
+            </button>
+          )}
+        </form>
+        {showToolsRef.current && <AiSdkFeatureRibbon />}
+      </div>
+    </div>
+  );
+}

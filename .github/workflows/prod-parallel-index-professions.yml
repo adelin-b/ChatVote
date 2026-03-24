@@ -1,0 +1,146 @@
+name: "Prod: Parallel Index Professions"
+
+on:
+  workflow_dispatch:
+    inputs:
+      workers:
+        description: "Number of parallel workers (max 5)"
+        required: false
+        default: "3"
+        type: choice
+        options: ["1", "2", "3", "4", "5"]
+      force:
+        description: "Re-index all candidates (even already indexed)"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  ENV: prod
+  API_NAME: chatvote-api
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  FIREBASE_CREDENTIALS_BASE64: ${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}
+  QDRANT_URL: ${{ secrets.QDRANT_URL }}
+
+jobs:
+  # Step 1: Enqueue remaining work items into Firestore
+  enqueue:
+    runs-on: ubuntu-latest
+    environment: PROD
+    timeout-minutes: 15
+    outputs:
+      run_id: ${{ steps.enqueue.outputs.run_id }}
+      total: ${{ steps.enqueue.outputs.total }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        working-directory: CHATVOTE-BackEnd
+        run: poetry install --only main
+
+      - name: Enqueue work items
+        id: enqueue
+        working-directory: CHATVOTE-BackEnd
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ inputs.force }}" = "true" ]; then
+            FORCE_FLAG="--force"
+          fi
+
+          OUTPUT=$(poetry run python -m src.parallel_profession_indexer enqueue $FORCE_FLAG 2>&1)
+          echo "$OUTPUT"
+
+          RUN_ID=$(echo "$OUTPUT" | grep "^run_id:" | awk '{print $2}')
+          TOTAL=$(echo "$OUTPUT" | grep "^total items:" | awk '{print $3}')
+
+          if [ -z "$RUN_ID" ]; then
+            echo "No work items to process — all candidates already indexed."
+            echo "run_id=" >> "$GITHUB_OUTPUT"
+            echo "total=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+            echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+            echo "Enqueued $TOTAL items with run_id=$RUN_ID"
+          fi
+
+  # Step 2: Run parallel workers (each claims items from the Firestore queue)
+  worker:
+    needs: enqueue
+    if: needs.enqueue.outputs.run_id != ''
+    runs-on: ubuntu-latest
+    environment: PROD
+    timeout-minutes: 180
+    strategy:
+      matrix:
+        worker_id: [1, 2, 3, 4, 5]
+      max-parallel: 5
+      fail-fast: false
+    steps:
+      - name: Check if this worker is needed
+        id: check
+        run: |
+          if [ ${{ matrix.worker_id }} -gt ${{ inputs.workers || 3 }} ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.skip != 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        if: steps.check.outputs.skip != 'true'
+        run: pip install poetry
+
+      - name: Install dependencies
+        if: steps.check.outputs.skip != 'true'
+        working-directory: CHATVOTE-BackEnd
+        run: poetry install --only main
+
+      - name: Run worker
+        if: steps.check.outputs.skip != 'true'
+        working-directory: CHATVOTE-BackEnd
+        run: |
+          echo "Worker ${{ matrix.worker_id }} starting on run ${{ needs.enqueue.outputs.run_id }}"
+          echo "Total items in queue: ${{ needs.enqueue.outputs.total }}"
+          poetry run python -m src.parallel_profession_indexer worker \
+            --run-id "${{ needs.enqueue.outputs.run_id }}"
+
+  # Step 3: Show final status
+  report:
+    needs: [enqueue, worker]
+    if: always() && needs.enqueue.outputs.run_id != ''
+    runs-on: ubuntu-latest
+    environment: PROD
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        working-directory: CHATVOTE-BackEnd
+        run: poetry install --only main
+
+      - name: Show final status
+        working-directory: CHATVOTE-BackEnd
+        run: |
+          poetry run python -m src.parallel_profession_indexer status \
+            --run-id "${{ needs.enqueue.outputs.run_id }}"

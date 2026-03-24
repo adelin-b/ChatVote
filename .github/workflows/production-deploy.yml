@@ -1,0 +1,325 @@
+name: Production Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  SCW_REGION: fr-par
+  SCW_REGISTRY: rg.fr-par.scw.cloud/chatvote
+  SCW_NS_ID: ${{ secrets.SCW_CONTAINER_NAMESPACE_ID }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  # ── Detect changes ──────────────────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'CHATVOTE-BackEnd/**'
+              - 'docker-compose*.yml'
+              - 'Makefile'
+            frontend:
+              - 'CHATVOTE-FrontEnd/**'
+
+  # ── Build, push, and deploy backend to Scaleway ────────────────────
+  deploy-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    environment: PROD
+    outputs:
+      backend_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Docker setup (buildx + registry login + layer cache) ──────
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: rg.fr-par.scw.cloud
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./CHATVOTE-BackEnd
+          push: true
+          tags: |
+            ${{ env.SCW_REGISTRY }}/backend:${{ github.sha }}
+            ${{ env.SCW_REGISTRY }}/backend:latest
+          cache-from: type=registry,ref=${{ env.SCW_REGISTRY }}/backend:cache
+          cache-to: type=registry,ref=${{ env.SCW_REGISTRY }}/backend:cache,mode=max
+
+      # ── Scaleway CLI + deploy ─────────────────────────────────────
+      - name: Install Scaleway CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/scaleway/scaleway-cli/master/scripts/get.sh | sh
+          scw init access-key=${{ secrets.SCW_ACCESS_KEY }} secret-key=${{ secrets.SCW_SECRET_KEY }} \
+            organization-id=${{ secrets.SCW_PROJECT_ID }} project-id=${{ secrets.SCW_PROJECT_ID }} \
+            send-telemetry=false install-autocomplete=false with-ssh-key=false
+
+      - name: Deploy production backend
+        id: deploy
+        run: |
+          EXISTING=$(scw container container list namespace-id=$SCW_NS_ID name=backend-prod region=$SCW_REGION -o json | jq -r '.[0].id // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updating existing production container..."
+            scw container container update $EXISTING \
+              registry-image=${{ env.SCW_REGISTRY }}/backend:${{ github.sha }} \
+              memory-limit=4096 \
+              cpu-limit=2240 \
+              sandbox=v1 \
+              environment-variables.API_NAME=chatvote-api \
+              environment-variables.ENV=prod \
+              environment-variables.EMBEDDING_PROVIDER=scaleway \
+              environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
+              environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
+              environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
+              environment-variables.FIRECRAWL_API_KEY=${{ secrets.FIRECRAWL_API_KEY }} \
+              environment-variables.GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }} \
+              environment-variables.EXTRA_CORS_ORIGINS=${{ secrets.EXTRA_CORS_ORIGINS }} \
+              secret-environment-variables.0.key=GOOGLE_API_KEY \
+              secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
+              secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
+              secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.3.key=QDRANT_API_KEY \
+              secret-environment-variables.3.value=${{ secrets.QDRANT_API_KEY }} \
+              secret-environment-variables.4.key=SCALEWAY_EMBED_API_KEY \
+              secret-environment-variables.4.value=${{ secrets.SCALEWAY_EMBED_API_KEY }} \
+              region=$SCW_REGION
+            scw container container deploy $EXISTING region=$SCW_REGION
+            ID=$EXISTING
+          else
+            echo "Creating production container..."
+            RESULT=$(scw container container create \
+              namespace-id=$SCW_NS_ID \
+              name=backend-prod \
+              registry-image=${{ env.SCW_REGISTRY }}/backend:${{ github.sha }} \
+              port=8080 \
+              min-scale=1 \
+              max-scale=3 \
+              memory-limit=4096 \
+              cpu-limit=2240 \
+              sandbox=v1 \
+              privacy=public \
+              deploy=true \
+              region=$SCW_REGION \
+              environment-variables.API_NAME=chatvote-api \
+              environment-variables.ENV=prod \
+              environment-variables.EMBEDDING_PROVIDER=scaleway \
+              environment-variables.QDRANT_URL=${{ secrets.QDRANT_URL }} \
+              environment-variables.ADMIN_UPLOAD_SECRET=${{ secrets.ADMIN_UPLOAD_SECRET }} \
+              environment-variables.ADMIN_SECRET=${{ secrets.ADMIN_SECRET }} \
+              environment-variables.FIRECRAWL_API_KEY=${{ secrets.FIRECRAWL_API_KEY }} \
+              environment-variables.GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }} \
+              environment-variables.EXTRA_CORS_ORIGINS=${{ secrets.EXTRA_CORS_ORIGINS }} \
+              secret-environment-variables.0.key=GOOGLE_API_KEY \
+              secret-environment-variables.0.value=${{ secrets.GOOGLE_API_KEY }} \
+              secret-environment-variables.1.key=FIREBASE_CREDENTIALS_BASE64 \
+              secret-environment-variables.1.value=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.2.key=GOOGLE_SHEETS_CREDENTIALS_BASE64 \
+              secret-environment-variables.2.value=${{ secrets.GOOGLE_SHEETS_CREDENTIALS_BASE64 }} \
+              secret-environment-variables.3.key=QDRANT_API_KEY \
+              secret-environment-variables.3.value=${{ secrets.QDRANT_API_KEY }} \
+              secret-environment-variables.4.key=SCALEWAY_EMBED_API_KEY \
+              secret-environment-variables.4.value=${{ secrets.SCALEWAY_EMBED_API_KEY }} \
+              -o json)
+            ID=$(echo "$RESULT" | jq -r '.id')
+          fi
+
+          echo "Waiting for backend-prod to be ready..."
+          for i in $(seq 1 120); do
+            STATUS=$(scw container container get $ID region=$SCW_REGION -o json | jq -r '.status')
+            if [ "$STATUS" = "error" ]; then
+              MSG=$(scw container container get $ID region=$SCW_REGION -o json | jq -r '.error_message')
+              echo "ERROR: Container entered error state: $MSG"
+              exit 1
+            fi
+            if [ "$STATUS" = "ready" ]; then
+              URL=$(scw container container get $ID region=$SCW_REGION -o json | jq -r '.domain_name')
+              echo "url=https://$URL" >> "$GITHUB_OUTPUT"
+              echo "Production backend ready at https://$URL"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "ERROR: Production backend failed to become ready"
+          exit 1
+
+  # ── Deploy frontend to Vercel (runs in parallel with backend) ──────
+  deploy-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    environment: PROD
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: CHATVOTE-FrontEnd/pnpm-lock.yaml
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Link Vercel project
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+
+      - name: Sync env vars to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SYNC_FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          SYNC_FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          SYNC_NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          SYNC_NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          SYNC_STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          SYNC_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          SYNC_NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          SYNC_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          SYNC_NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          SYNC_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          SYNC_NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+          SYNC_GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SYNC_SCALEWAY_EMBED_API_KEY: ${{ secrets.SCALEWAY_EMBED_API_KEY }}
+          SYNC_QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          SYNC_QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          SYNC_LANGCHAIN_TRACING: ${{ secrets.LANGCHAIN_TRACING }}
+          SYNC_LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          SYNC_LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          SYNC_LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          SYNC_LANGFUSE_BASEURL: ${{ secrets.LANGFUSE_BASEURL }}
+          SYNC_PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: |
+          # Sync env vars BEFORE vercel pull so pulled .env has correct values
+          sync_var() {
+            local name="$1" value="$2"
+            vercel env rm "$name" production --yes --token="$VERCEL_TOKEN" 2>/dev/null || true
+            printf '%s' "$value" | vercel env add "$name" production --token="$VERCEL_TOKEN"
+          }
+          sync_var FIREBASE_CLIENT_EMAIL "$SYNC_FIREBASE_CLIENT_EMAIL"
+          sync_var FIREBASE_PRIVATE_KEY "$SYNC_FIREBASE_PRIVATE_KEY"
+          sync_var NEXT_PUBLIC_API_URL "$SYNC_NEXT_PUBLIC_API_URL"
+          sync_var NEXT_PUBLIC_APP_URL "$SYNC_NEXT_PUBLIC_APP_URL"
+          sync_var STRIPE_SECRET_KEY "$SYNC_STRIPE_SECRET_KEY"
+          sync_var NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$SYNC_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+          sync_var NEXT_PUBLIC_FIREBASE_API_KEY "$SYNC_NEXT_PUBLIC_FIREBASE_API_KEY"
+          sync_var NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN "$SYNC_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+          sync_var NEXT_PUBLIC_FIREBASE_PROJECT_ID "$SYNC_NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET "$SYNC_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+          sync_var NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID "$SYNC_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_APP_ID "$SYNC_NEXT_PUBLIC_FIREBASE_APP_ID"
+          sync_var NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID "$SYNC_NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
+          sync_var GOOGLE_GENERATIVE_AI_API_KEY "$SYNC_GOOGLE_GENERATIVE_AI_API_KEY"
+          sync_var SCALEWAY_EMBED_API_KEY "$SYNC_SCALEWAY_EMBED_API_KEY"
+          sync_var QDRANT_URL "$SYNC_QDRANT_URL"
+          sync_var QDRANT_API_KEY "$SYNC_QDRANT_API_KEY"
+          sync_var ENV "prod"
+          sync_var LANGCHAIN_TRACING "$SYNC_LANGCHAIN_TRACING"
+          sync_var LANGCHAIN_API_KEY "$SYNC_LANGCHAIN_API_KEY"
+          sync_var LANGFUSE_PUBLIC_KEY "$SYNC_LANGFUSE_PUBLIC_KEY"
+          sync_var LANGFUSE_SECRET_KEY "$SYNC_LANGFUSE_SECRET_KEY"
+          sync_var LANGFUSE_BASEURL "$SYNC_LANGFUSE_BASEURL"
+          sync_var NEXT_PUBLIC_LANGFUSE_PUBLIC_KEY "$SYNC_LANGFUSE_PUBLIC_KEY"
+          sync_var NEXT_PUBLIC_LANGFUSE_HOST "$SYNC_LANGFUSE_BASEURL"
+          sync_var NEXT_PUBLIC_ENABLE_AI_SDK "true"
+          sync_var NEXT_PUBLIC_ENABLE_COMMUNE_DASHBOARD "true"
+          sync_var PERPLEXITY_API_KEY "$SYNC_PERPLEXITY_API_KEY"
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Ensure feature flags in env
+        run: |
+          echo "NEXT_PUBLIC_ENABLE_AI_SDK=true" >> .vercel/.env.production.local
+          echo "NEXT_PUBLIC_ENABLE_COMMUNE_DASHBOARD=true" >> .vercel/.env.production.local
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: CHATVOTE-FrontEnd/.next/cache
+          key: nextjs-prod-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-${{ hashFiles('CHATVOTE-FrontEnd/src/**') }}
+          restore-keys: |
+            nextjs-prod-${{ runner.os }}-${{ hashFiles('CHATVOTE-FrontEnd/pnpm-lock.yaml') }}-
+            nextjs-prod-${{ runner.os }}-
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+          NEXT_PUBLIC_USE_FIREBASE_EMULATORS: "false"
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SCALEWAY_EMBED_API_KEY: ${{ secrets.SCALEWAY_EMBED_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          ENV: prod
+          LANGCHAIN_TRACING: ${{ secrets.LANGCHAIN_TRACING }}
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASEURL: ${{ secrets.LANGFUSE_BASEURL }}
+          NEXT_PUBLIC_ENABLE_AI_SDK: "true"
+          NEXT_PUBLIC_ENABLE_COMMUNE_DASHBOARD: "true"
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  # ── Gate — fail if any enabled job failed ───────────────────────────
+  ci-gate:
+    needs: [deploy-backend, deploy-frontend]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all deployments
+        run: |
+          backend="${{ needs.deploy-backend.result }}"
+          frontend="${{ needs.deploy-frontend.result }}"
+          for result in "$backend" "$frontend"; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "Deployment failed: $result"
+              exit 1
+            fi
+          done
+          echo "All deployments succeeded."

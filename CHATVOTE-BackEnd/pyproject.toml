@@ -1,0 +1,148 @@
+# SPDX-FileCopyrightText: 2025 2025 chatvote
+#
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+[tool.poetry]
+name = "chat-vote-backend"
+version = "1.0.0"
+description = "The chatvote backend implements a political information chatbot that enables users to engage in a contemporary way with the positions of political parties and to receive answers to individual questions that can be substantiated with sources."
+authors = ["chatvote <info@chatvote>"]
+license = "PolyForm-Noncommercial-1.0.0"
+readme = "README.md"
+packages = [
+    {include = "src"}
+]
+repository = "https://github.com/llm-psychology-group/chat-vote-backend"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+aiohttp = "~3.9.5"
+aiohttp-cors = "~0.7.0"
+aiohttp-pydantic = "~2.4.0"
+beautifulsoup4 = "^4.12.0"
+defusedxml = "^0.7.1"
+firebase-admin = "~6.6.0"
+grpcio = ">=1.62.0,<1.70.0"  # Pin below 1.70 — grpcio 1.70+ removed _retry attr on _UnaryStreamMultiCallable, breaking google-cloud-firestore queries
+langchain = "~0.3.7"
+langchain-community = "~0.3.7"
+langchain-core = "~0.3.19"
+langchain-google-genai = "^2.0.8"
+langchain-openai = "~0.2.9"
+langchain-anthropic = "~0.3.0"
+langchain-ollama = "^0.3.0"
+langchain-text-splitters = "~0.3.2"
+openai = "~1.59.8"
+pydantic = "^2.10.0"
+pypdf = "~5.1.0"
+pytest = "~8.3.3"
+pytest-asyncio = "~0.24.0"
+python-dotenv = "^1.0.1"
+pyyaml = "~6.0.2"
+xxhash = "^3.5.0"
+qdrant-client = "^1.17.0"
+langchain-qdrant = "^0.2.0"
+apscheduler = "^3.10.4"
+boto3 = "^1.42.67"
+apify-client = "^2.5.0"
+pdfplumber = "^0.11.9"
+pymupdf = "^1.25.0"
+pillow = "^11.0.0"
+markdownify = "^0.14.1"
+openpyxl = "^3.1.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "~1.12.1"
+pre-commit = "~4.0.1"
+ruff = "~0.8.6"
+deepeval = "^3.8.8"
+google-genai = "^1.66.0"
+playwright = "^1.40.0"
+pytest-cov = "^6.0"
+watchfiles = "^1.1.1"
+vulture = "^2.15"
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
+plugins = ["pydantic.mypy"]
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "data",
+]
+
+line-length = 88
+indent-width = 4
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--dist loadfile -n auto"
+markers = [
+    "integration: requires running backend services (deselect with -m 'not integration')",
+    "eval: DeepEval metric tests requiring LLM judge",
+    "slow: tests taking > 10 seconds",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/scripts/*", "tests/*"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "if __name__",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

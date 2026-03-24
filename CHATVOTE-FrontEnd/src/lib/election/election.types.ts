@@ -1,0 +1,132 @@
+// Types for election-related data
+
+// Candidate types
+// Extends backend Candidate model. Overrides nullable fields that are guaranteed
+// non-null when read from Firestore, and drops backend-only election_type_id.
+
+interface GeneratedCandidate {
+  candidate_id: string;
+  first_name: string;
+  last_name: string;
+  municipality_code: string | null;
+  municipality_name: string | null;
+  party_ids: string[];
+  election_type_id: string;
+  presence_score: number;
+  position: string | null;
+  bio: string | null;
+  is_incumbent: boolean;
+  birth_year: number | null;
+  photo_url: string | null;
+  contact_email: string | null;
+  website_url: string | null;
+  manifesto_pdf_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  is_second_round: boolean;
+  second_round_nuance_code: string | null;
+  second_round_list_label: string | null;
+  second_round_panel_number: number | null;
+}
+
+export type Candidate = Omit<
+  GeneratedCandidate,
+  "election_type_id" | "position" | "bio" | "created_at" | "updated_at"
+> & {
+  position: string;
+  bio: string;
+  created_at: string;
+  updated_at: string;
+  is_second_round?: boolean;
+};
+
+export type CandidatesMetadata = {
+  description: string;
+  last_updated: string;
+  notes: {
+    presence_score: string;
+    party_ids: string;
+    municipality_code: string;
+  };
+};
+
+export type CandidatesDocument = {
+  _metadata: CandidatesMetadata;
+  [key: string]: Candidate | CandidatesMetadata;
+};
+
+// Municipality types
+
+export type MunicipalityEpci = {
+  code: string;
+  nom: string;
+};
+
+export type MunicipalityDepartement = {
+  code: string;
+  nom: string;
+};
+
+export type MunicipalityRegion = {
+  code: string;
+  nom: string;
+};
+
+export type Municipality = {
+  code: string; // Code INSEE
+  nom: string;
+  zone: "metro" | "dom" | "tom";
+  population: number;
+  surface: number;
+  codesPostaux: string[];
+  codeRegion: string;
+  codeDepartement: string;
+  siren: string;
+  codeEpci: string;
+  epci: MunicipalityEpci;
+  departement: MunicipalityDepartement;
+  region: MunicipalityRegion;
+  _syncedAt: string;
+  has_electoral_data?: boolean;
+};
+
+export type MunicipalitiesDocument = {
+  [code: string]: Municipality;
+};
+
+// Electoral list types (from official candidatures CSV)
+
+export type ElectoralList = {
+  panel_number: number;
+  list_label: string;
+  list_short_label: string;
+  nuance_code: string | null;
+  nuance_label: string | null;
+  head_first_name: string;
+  head_last_name: string;
+};
+
+export type FirstRoundElected = {
+  panel_number: number;
+  list_label: string;
+  list_short_label: string;
+  nuance_code: string;
+  voix: number;
+  pct_voix_exprimes: number;
+};
+
+export type ElectoralListsByCommune = {
+  commune_code: string;
+  commune_name: string;
+  list_count: number;
+  lists: ElectoralList[];
+  lists_round_2?: ElectoralList[];
+  list_count_round_2?: number;
+  first_round_elected?: FirstRoundElected;
+  is_first_round_decided?: boolean;
+};
+
+// Helper to check if a candidate is in a coalition
+export function isCoalitionCandidate(candidate: Candidate): boolean {
+  return candidate.party_ids.length >= 2;
+}
